@@ -1,0 +1,168 @@
+:host {
+  --stage-bg: radial-gradient(120% 120% at 50% 0%, #241150 0%, #170338 46%, #0f0126 100%);
+  display: block;
+}
+
+ion-content {
+  --background: #170338;
+}
+
+.splash-stage {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--stage-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--g-safe-top) + 24px) 24px calc(var(--g-safe-bottom) + 24px);
+  box-sizing: border-box;
+  transition: opacity .34s ease, transform .34s ease;
+  cursor: pointer;
+}
+.splash-stage.leaving {
+  opacity: 0;
+  transform: scale(1.03);
+}
+
+/* ---- Ambient glow ---- */
+.ambient {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: .55;
+  pointer-events: none;
+}
+.orb-a {
+  width: 340px; height: 340px;
+  top: -80px; right: -90px;
+  background: radial-gradient(circle, rgba(254,179,0,.55), rgba(254,179,0,0) 70%);
+  animation: g-fade-in 1s ease both, orbFloatA 7s ease-in-out infinite;
+}
+.orb-b {
+  width: 300px; height: 300px;
+  bottom: -70px; left: -80px;
+  background: radial-gradient(circle, rgba(123,60,180,.6), rgba(123,60,180,0) 70%);
+  animation: g-fade-in 1.2s ease both, orbFloatB 8s ease-in-out infinite;
+}
+@keyframes orbFloatA { 50% { transform: translate(-18px, 24px); } }
+@keyframes orbFloatB { 50% { transform: translate(20px, -18px); } }
+
+.grain {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: .4;
+  pointer-events: none;
+}
+
+/* ---- Core lockup ---- */
+.splash-core {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.logo-halo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  animation: g-pop .7s cubic-bezier(.2,.7,.3,1) both;
+}
+.halo-ring {
+  position: absolute;
+  width: 210px; height: 210px;
+  border-radius: 50%;
+  border: 1px solid rgba(254,179,0,.28);
+  box-shadow: 0 0 60px rgba(254,179,0,.18) inset, 0 0 40px rgba(254,179,0,.12);
+  animation: haloPulse 3s ease-in-out infinite;
+}
+@keyframes haloPulse {
+  0%,100% { transform: scale(1); opacity: .8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.splash-brand-logo {
+  width: min(272px, 68vw);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 26px rgba(0,0,0,.4));
+}
+
+/* ---- Stage 1: app icon ---- */
+.icon-stage { animation: g-fade-in .3s ease both; }
+.icon-halo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  animation: g-pop .6s cubic-bezier(.2,.7,.3,1) both;
+}
+.splash-icon-mark {
+  width: min(132px, 34vw);
+  height: auto;
+  display: block;
+  border-radius: 28px;
+  filter: drop-shadow(0 10px 30px rgba(0,0,0,.45));
+}
+
+.splash-tagline {
+  margin: 0;
+  color: rgba(255,255,255,.82);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-align: center;
+  animation: g-fade-up .8s ease .35s both;
+}
+
+/* ---- Loader ---- */
+.loader-dots {
+  display: flex;
+  gap: 7px;
+  margin-top: 4px;
+  animation: g-fade-in .6s ease .6s both;
+
+  span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--g-gold);
+    opacity: .35;
+    animation: dotPulse 1.1s ease-in-out infinite;
+  }
+  span:nth-child(2) { animation-delay: .16s; }
+  span:nth-child(3) { animation-delay: .32s; }
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: .3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* ---- Footer ---- */
+.splash-footer {
+  position: absolute;
+  z-index: 2;
+  bottom: calc(var(--g-safe-bottom) + 22px);
+  left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: g-fade-in 1s ease .8s both;
+
+  .made-in {
+    color: rgba(255,255,255,.65);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .v-tag {
+    color: rgba(255,255,255,.38);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .4px;
+  }
+}

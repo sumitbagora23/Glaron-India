@@ -1,0 +1,185 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Order Pipeline</h2>
+        <p class="page-subtitle">Real-time fulfillment tracking for all regional dealers</p>
+      </div>
+
+      <div class="header-buttons">
+        <!-- Create a new order -->
+        <button class="create-order-btn" (click)="goToCreateOrder()">
+          <svg class="btn-icon-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Create Order</span>
+        </button>
+
+        <!-- Single Filters dropdown containing all filters -->
+        <div class="orders-filter">
+          <button class="orders-filter-btn" [class.active]="activeFilterCount" (click)="toggleFilters()">
+            <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <span class="btn-text-dark">Filters</span>
+            <span class="filter-count-badge" *ngIf="activeFilterCount">{{ activeFilterCount }}</span>
+          </button>
+
+          <div class="orders-filter-backdrop" *ngIf="filtersOpen" (click)="closeFilters()"></div>
+
+          <div class="orders-filter-panel" *ngIf="filtersOpen">
+            <!-- Status -->
+            <div class="filter-field">
+              <label class="filter-field-label">Status</label>
+              <select class="filter-field-control" [(ngModel)]="statusFilter">
+                <option value="">All Statuses</option>
+                <option *ngFor="let st of stages" [value]="st.key">{{ st.label }}</option>
+              </select>
+            </div>
+
+            <!-- Dealer name (search) -->
+            <div class="filter-field">
+              <label class="filter-field-label">Dealer name</label>
+              <input type="text" class="filter-field-control" [(ngModel)]="dealerFilter" placeholder="Search by dealer name" />
+            </div>
+
+            <!-- Date -->
+            <div class="filter-field">
+              <label class="filter-field-label">Date</label>
+              <input type="date" class="filter-field-control" [(ngModel)]="dateFilter" />
+            </div>
+
+            <div class="filter-panel-actions">
+              <button class="filter-clear-link" (click)="clearFilters()">Clear all</button>
+              <button class="filter-done-btn" (click)="closeFilters()">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Pipeline List -->
+    <div class="orders-list-wrap">
+
+      <!-- Column headers -->
+      <div class="orders-list-head">
+        <span class="col col-id">ORDER</span>
+        <span class="col col-dealer">DEALER</span>
+        <span class="col col-location">LOCATION</span>
+        <span class="col col-items">ITEMS</span>
+        <span class="col col-value">VALUE</span>
+        <span class="col col-status">STATUS</span>
+        <span class="col col-action"></span>
+      </div>
+
+      <!-- Rows -->
+      <div class="orders-list-body">
+        <div class="order-row" *ngFor="let order of filteredOrders; trackBy: trackByOrderId">
+          <span class="col col-id">
+            <span class="order-id">#{{ order.id }}</span>
+          </span>
+
+          <span class="col col-dealer">
+            <span class="dealer-name">{{ order.dealer }}</span>
+          </span>
+
+          <span class="col col-location">{{ order.location }}</span>
+
+          <span class="col col-items">{{ order.itemsCount || (order.items?.length || 0) }}</span>
+
+          <span class="col col-value">Rs. {{ order.value | number }}</span>
+
+          <span class="col col-status">
+            <span class="status-pill" [ngClass]="dotClassFor(order)">
+              <span class="status-dot" [ngClass]="dotClassFor(order)"></span>
+              <select class="status-select"
+                      [ngModel]="stageOf(order)"
+                      (ngModelChange)="changeStage(order, $event)">
+                <option *ngFor="let st of stages" [value]="st.key">{{ st.label }}</option>
+              </select>
+            </span>
+          </span>
+
+          <span class="col col-action">
+            <button class="row-view-btn" (click)="openOrderDetail(order, $event)" title="View / edit items">
+              <svg class="dots-icon" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
+            </button>
+            <button class="row-delete-btn" (click)="deleteOrderFromList(order, $event)" title="Delete order">
+              <svg class="dots-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </span>
+        </div>
+
+        <!-- Empty state -->
+        <div class="orders-empty" *ngIf="filteredOrders.length === 0">
+          <svg class="empty-check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+          </svg>
+          <span class="empty-stage-text">No orders yet.</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Order Detail Popup: item list with edit / delete -->
+  <div class="order-detail-overlay" *ngIf="selectedOrder" (click)="closeOrderDetail()">
+    <div class="order-detail-sheet" (click)="$event.stopPropagation()">
+      <div class="odetail-header">
+        <div class="odetail-head-text">
+          <h3>Order #{{ selectedOrder.id }}</h3>
+          <span class="odetail-dealer">{{ selectedOrder.dealer }} · {{ stageOf(selectedOrder) }}</span>
+        </div>
+        <button class="odetail-close" (click)="closeOrderDetail()">&times;</button>
+      </div>
+
+      <div class="odetail-items">
+        <div class="odetail-item-row" *ngFor="let item of editItems; let i = index">
+          <div class="oi-info">
+            <span class="oi-name">{{ item.name }}</span>
+            <span class="oi-variant" *ngIf="item.variant">{{ item.variant }}</span>
+          </div>
+          <div class="oi-controls">
+            <div class="oi-stepper">
+              <button (click)="decItem(i)">-</button>
+              <span>{{ item.quantity }}</span>
+              <button (click)="incItem(i)">+</button>
+            </div>
+            <button class="oi-delete" (click)="deleteItem(i)" title="Remove item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="odetail-empty" *ngIf="editItems.length === 0">
+          No items in this order. Saving now will remove the order.
+        </div>
+      </div>
+
+      <div class="odetail-total">
+        <span>Order Total</span>
+        <span class="odetail-total-val">Rs. {{ editItemsTotal | number:'1.0-0' }}</span>
+      </div>
+
+      <div class="odetail-actions odetail-actions-split">
+        <button class="odetail-addproduct" (click)="goToAddProducts()">+ Add Product</button>
+        <div class="odetail-actions-right">
+          <button class="odetail-cancel" (click)="closeOrderDetail()">Cancel</button>
+          <button class="odetail-save" (click)="saveOrderChanges()">
+            {{ editItems.length === 0 ? 'Delete Order' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</ion-content>

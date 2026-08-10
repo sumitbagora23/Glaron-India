@@ -1,0 +1,108 @@
+<ion-content [scrollY]="true">
+  <div class="install-screen">
+
+    <!-- Branded hero -->
+    <div class="install-hero">
+      <span class="hero-orb orb-1"></span>
+      <span class="hero-orb orb-2"></span>
+      <div class="hero-inner">
+        <img src="assets/glaron-logo-white.png" alt="Glaron India" class="hero-logo" />
+        <h1 class="hero-title">{{ t('title') }}</h1>
+      </div>
+      <div class="hero-curve"></div>
+    </div>
+
+    <div class="install-sheet">
+
+      <!-- Installed confirmation -->
+      <div class="installed-card" *ngIf="justInstalled || pwa.installed()">
+        <div class="installed-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 class="installed-title">{{ t('installedTitle') }}</h2>
+        <p class="installed-desc">{{ t('installedDesc') }}</p>
+      </div>
+
+      <ng-container *ngIf="!justInstalled && !pwa.installed()">
+        <p class="install-lead">{{ t('lead') }}</p>
+
+        <!-- One-tap install (Chrome / Edge / Samsung Internet) -->
+        <button class="g-btn g-btn--primary install-cta" *ngIf="canPrompt && !isIos"
+                (click)="install()" [disabled]="installing">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="cta-ic" *ngIf="!installing">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+          </svg>
+          <span class="g-btn-spinner" *ngIf="installing"></span>
+          <span>{{ installing ? t('installing') : t('installBtn') }}</span>
+        </button>
+
+        <!-- Manual steps (iOS Safari, or a browser that hasn't offered the prompt) -->
+        <section class="steps-card">
+          <h3 class="steps-title">{{ isIos ? t('howToIos') : t('howTo') }}</h3>
+
+          <!-- iPhone / iPad — Safari "Add to Home Screen" -->
+          <ol class="steps-list" *ngIf="isIos">
+            <li>
+              <span class="step-num">1</span>
+              <span class="step-text">
+                {{ t('iosStep1') }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-ic" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4"/>
+                </svg>
+              </span>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <span class="step-text">
+                {{ t('iosStep2') }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline-ic" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
+                </svg>
+              </span>
+            </li>
+            <li><span class="step-num">3</span><span class="step-text">{{ t('iosStep3') }}</span></li>
+          </ol>
+
+          <!-- Only Safari can install on iOS -->
+          <div class="ios-safari-note" *ngIf="isIosNonSafari">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <span>{{ t('iosSafariOnly') }}</span>
+          </div>
+
+          <ol class="steps-list" *ngIf="!isIos">
+            <li><span class="step-num">1</span><span class="step-text">{{ t('androidStep1') }}</span></li>
+            <li><span class="step-num">2</span><span class="step-text">{{ t('androidStep2') }}</span></li>
+            <li><span class="step-num">3</span><span class="step-text">{{ t('androidStep3') }}</span></li>
+          </ol>
+        </section>
+
+        <!-- Why the app -->
+        <ul class="benefit-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ t('benefit1') }}</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ t('benefit2') }}</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ t('benefit3') }}</span>
+          </li>
+        </ul>
+
+        <p class="already-note">
+          <strong>{{ t('already') }}</strong> {{ t('openApp') }}
+        </p>
+      </ng-container>
+
+      <p class="app-version">v{{ appVersion }}</p>
+    </div>
+
+  </div>
+</ion-content>

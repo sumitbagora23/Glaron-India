@@ -1,0 +1,368 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+    
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Order Pipeline</h2>
+        <p class="page-subtitle">Real-time fulfillment tracking for all regional dealers</p>
+      </div>
+      
+      <div class="header-buttons">
+        <button class="filters-btn" (click)="openFilters()">
+          <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <span class="btn-text-dark">Filters</span>
+        </button>
+        
+        <button class="export-report-btn" (click)="exportReport()">
+          <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span class="btn-text-dark">Export Report</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Kanban Board Section -->
+    <div class="kanban-board-scroll">
+      <div class="kanban-board-container">
+        
+        <!-- Column 1: NEW -->
+        <div class="kanban-column">
+          <div class="column-header">
+            <div class="column-title-wrap">
+              <span class="status-dot dot-new"></span>
+              <h4 class="column-title">NEW</h4>
+              <div class="count-badge">
+                <span class="badge-num">{{ getOrdersByStage('New').length | number:'2.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="cards-list">
+            <div class="order-card" *ngFor="let order of getOrdersByStage('New')">
+              <div class="card-top-row">
+                <span class="order-id">#{{ order.id }}</span>
+                <button class="card-dots-btn">
+                  <svg class="dots-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+              </div>
+              
+              <h5 class="dealer-title">{{ order.dealer }}</h5>
+              <p class="location-subtitle">{{ order.location }}</p>
+              
+              <div class="card-footer-border">
+                <span class="order-value-text">Rs. {{ order.value | number }}</span>
+                <button class="stage-advance-btn" (click)="moveNext(order)">
+                  <!-- Arrow Right Icon -->
+                  <svg class="advance-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Empty state card -->
+            <div class="empty-stage-card" *ngIf="getOrdersByStage('New').length === 0">
+              <svg class="empty-check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+              </svg>
+              <span class="empty-stage-text">All new orders processed.</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Column 2: CONFIRMED -->
+        <div class="kanban-column">
+          <div class="column-header">
+            <div class="column-title-wrap">
+              <span class="status-dot dot-confirmed"></span>
+              <h4 class="column-title">CONFIRMED</h4>
+              <div class="count-badge">
+                <span class="badge-num">{{ getOrdersByStage('Confirmed').length | number:'2.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="cards-list">
+            <div class="order-card" *ngFor="let order of getOrdersByStage('Confirmed')">
+              <div class="card-top-row">
+                <span class="order-id">#{{ order.id }}</span>
+                <button class="card-dots-btn">
+                  <svg class="dots-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+              </div>
+              
+              <h5 class="dealer-title">{{ order.dealer }}</h5>
+              <p class="location-subtitle">{{ order.location }}</p>
+              
+              <div class="card-footer-border">
+                <span class="order-value-text">Rs. {{ order.value | number }}</span>
+                <button class="stage-advance-btn" (click)="moveNext(order)">
+                  <!-- Checklist Clipboard Icon -->
+                  <svg class="advance-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="empty-stage-card" *ngIf="getOrdersByStage('Confirmed').length === 0">
+              <svg class="empty-check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+              </svg>
+              <span class="empty-stage-text">No confirmed orders.</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Column 3: PACKED -->
+        <div class="kanban-column">
+          <div class="column-header">
+            <div class="column-title-wrap">
+              <span class="status-dot dot-packed"></span>
+              <h4 class="column-title">PACKED</h4>
+              <div class="count-badge">
+                <span class="badge-num">{{ getOrdersByStage('Packed').length | number:'2.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="cards-list">
+            <div class="order-card" *ngFor="let order of getOrdersByStage('Packed')">
+              <div class="card-top-row">
+                <span class="order-id">#{{ order.id }}</span>
+                <button class="card-dots-btn">
+                  <svg class="dots-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+              </div>
+              
+              <h5 class="dealer-title">{{ order.dealer }}</h5>
+              <p class="location-subtitle">{{ order.location }}</p>
+              
+              <div class="card-footer-border">
+                <span class="order-value-text">Rs. {{ order.value | number }}</span>
+                <button class="stage-advance-btn" (click)="moveNext(order)">
+                  <!-- Arrow Right Icon -->
+                  <svg class="advance-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="empty-stage-card" *ngIf="getOrdersByStage('Packed').length === 0">
+              <svg class="empty-check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+              </svg>
+              <span class="empty-stage-text">No packed orders in queue.</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Column 4: DISPATCHED -->
+        <div class="kanban-column">
+          <div class="column-header">
+            <div class="column-title-wrap">
+              <span class="status-dot dot-dispatched"></span>
+              <h4 class="column-title">DISPATCHED</h4>
+              <div class="count-badge">
+                <span class="badge-num">{{ getOrdersByStage('Dispatched').length | number:'2.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="cards-list">
+            <div class="order-card translucent-opacity" *ngFor="let order of getOrdersByStage('Dispatched')">
+              <div class="card-top-row">
+                <span class="order-id">#{{ order.id }}</span>
+                <button class="card-dots-btn">
+                  <svg class="dots-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+              </div>
+              
+              <h5 class="dealer-title">{{ order.dealer }}</h5>
+              <p class="location-subtitle">{{ order.location }}</p>
+              
+              <div class="card-footer-border">
+                <span class="order-value-text">Rs. {{ order.value | number }}</span>
+                <button class="stage-advance-btn success-green" (click)="moveNext(order)">
+                  <!-- Check Circle Icon -->
+                  <svg class="advance-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="empty-stage-card" *ngIf="getOrdersByStage('Dispatched').length === 0">
+              <svg class="empty-check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+              </svg>
+              <span class="empty-stage-text">No dispatched cargo items.</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Column 5: DELIVERED -->
+        <div class="kanban-column">
+          <div class="column-header">
+            <div class="column-title-wrap">
+              <span class="status-dot dot-delivered"></span>
+              <h4 class="column-title">DELIVERED</h4>
+              <div class="count-badge">
+                <span class="badge-num">{{ getOrdersByStage('Delivered').length | number:'2.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="cards-list">
+            <div class="order-card done-archived" *ngFor="let order of getOrdersByStage('Delivered')">
+              <div class="card-top-row">
+                <span class="order-id">#{{ order.id }}</span>
+              </div>
+              <h5 class="dealer-title">{{ order.dealer }}</h5>
+              <p class="location-subtitle">{{ order.location }}</p>
+              <div class="card-footer-border">
+                <span class="order-value-text">Rs. {{ order.value | number }}</span>
+                <span class="archive-check-text">Delivered</span>
+              </div>
+            </div>
+            
+            <!-- Dashed upload/drag here layout placeholder from Figma -->
+            <div class="dashed-delivery-dropzone">
+              <div class="drop-icon-container">
+                <svg class="box-svg-icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm2 2h8v2H6V6z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="dropzone-text">Ready for Archival</span>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Stats Bento Cards Grid Row -->
+    <div class="stats-row grid-four">
+      
+      <!-- Daily Revenue -->
+      <div class="stat-bento-card">
+        <div class="bento-icon-container bg-gold-tint">
+          <!-- Line Graph Icon -->
+          <svg class="bento-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        </div>
+        <div class="bento-content-wrap">
+          <span class="bento-label">DAILY REVENUE</span>
+          <h4 class="bento-value">{{ stats.dailyRevenue }}</h4>
+        </div>
+      </div>
+      
+      <!-- Pending Orders -->
+      <div class="stat-bento-card">
+        <div class="bento-icon-container bg-purple-tint">
+          <!-- Shopping Cart Icon -->
+          <svg class="bento-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <div class="bento-content-wrap">
+          <span class="bento-label">PENDING ORDERS</span>
+          <h4 class="bento-value">{{ stats.pendingOrders }}</h4>
+        </div>
+      </div>
+      
+      <!-- Active Dealers -->
+      <div class="stat-bento-card">
+        <div class="bento-icon-container bg-blue-tint">
+          <!-- Users Group Icon -->
+          <svg class="bento-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <div class="bento-content-wrap">
+          <span class="bento-label">ACTIVE DEALERS</span>
+          <h4 class="bento-value">{{ stats.activeDealers }}</h4>
+        </div>
+      </div>
+      
+      <!-- Fulfillment Rate -->
+      <div class="stat-bento-card">
+        <div class="bento-icon-container bg-green-tint">
+          <!-- Shield/Check Badge Icon -->
+          <svg class="bento-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div class="bento-content-wrap">
+          <span class="bento-label">FULFILLMENT RATE</span>
+          <h4 class="bento-value">{{ stats.fulfillmentRate }}</h4>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- Live Activity Feed Table Section -->
+    <section class="activity-feed-card">
+      
+      <div class="feed-header-control">
+        <h4 class="feed-title">Live Activity Feed</h4>
+        <button class="view-all-logs-btn" (click)="viewAllLogs()">
+          <span class="view-logs-text">View All Logs</span>
+        </button>
+      </div>
+      
+      <div class="feed-table-wrap">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th class="th-timestamp">Timestamp</th>
+              <th class="th-event">Event</th>
+              <th class="th-dealer">Dealer</th>
+              <th class="th-status">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loop over activity feed items -->
+            <tr *ngFor="let log of activityLogs; let idx = index" [class.shaded-row]="idx % 2 === 1">
+              <td class="td-timestamp">
+                <span class="time-text">{{ log.timestamp }}</span>
+              </td>
+              <td class="td-event">
+                <span class="event-text">{{ log.event }}</span>
+              </td>
+              <td class="td-dealer">
+                <span class="dealer-text">{{ log.dealer }}</span>
+              </td>
+              <td class="td-status">
+                <div class="feed-badge" 
+                     [class.badge-new]="log.status === 'NEW'"
+                     [class.badge-confirmed]="log.status === 'CONFIRMED'"
+                     [class.badge-packed]="log.status === 'PACKED'"
+                     [class.badge-dispatched]="log.status === 'DISPATCHED'"
+                     [class.badge-delivered]="log.status === 'DELIVERED'">
+                  <span class="feed-badge-text">{{ log.status }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </section>
+    
+  </main>
+</ion-content>

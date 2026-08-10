@@ -1,0 +1,88 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Push Notifications</h2>
+        <p class="page-subtitle">Messages broadcast to the dealers and agents who have installed the app.</p>
+      </div>
+
+      <button class="add-product-btn" (click)="newNotification()">
+        <svg class="btn-plus-white-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="btn-text-white">New Notification</span>
+      </button>
+    </div>
+
+    <!-- Sent notifications table -->
+    <section class="table-section-card">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-preview">Image</th>
+            <th class="th-name">Notification</th>
+            <th class="th-audience">Sent to</th>
+            <th class="th-target">Opens</th>
+            <th class="th-time">Sent</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let n of notifications; let last = last; trackBy: trackById" [class.last-row-border]="last">
+
+            <!-- Image Cell -->
+            <td class="td-preview">
+              <div class="notif-thumb-box" [class.no-image]="!n.image">
+                <img *ngIf="n.image" [src]="n.image" class="notif-thumb-img" alt="" loading="lazy" decoding="async" />
+                <span *ngIf="!n.image" class="no-image-label">No Image</span>
+              </div>
+            </td>
+
+            <!-- Title + body Cell -->
+            <td class="td-name">
+              <span class="notif-title">{{ n.title }}</span>
+              <span class="notif-body" *ngIf="n.body">{{ n.body }}</span>
+            </td>
+
+            <!-- Audience Cell -->
+            <td class="td-audience">
+              <span class="audience-pill" [class.agent]="n.audience === 'agent'" [class.both]="n.audience === 'both'">
+                {{ audienceLabel(n) }}
+              </span>
+            </td>
+
+            <!-- Target Cell -->
+            <td class="td-target">
+              <span class="target-pill">{{ targetLabel(n) }}</span>
+            </td>
+
+            <!-- Time Cell -->
+            <td class="td-time">
+              <span class="time-text">{{ timeAgo(n.createdAt) }}</span>
+            </td>
+
+            <!-- Actions Cell -->
+            <td class="td-actions">
+              <button class="delete-btn" (click)="removeNotification(n, $event)" title="Delete notification">
+                <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="delete-btn-text">Delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="notifications.length === 0">
+            <td colspan="6" class="td-empty">
+              Nothing sent yet. Click "New Notification" to reach dealers, agents or both.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</ion-content>

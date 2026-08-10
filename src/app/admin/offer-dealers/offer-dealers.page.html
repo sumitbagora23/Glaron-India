@@ -1,0 +1,82 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row margin-bottom-sm">
+      <div class="title-with-back">
+        <button class="back-btn" (click)="cancel()" aria-label="Back to Offer Banners">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <div class="title-container">
+          <h2 class="page-title">Offer Banner — Select Dealers</h2>
+          <p class="page-subtitle">Tick the dealers who should see the offer banner. Unticked dealers won't see it.</p>
+        </div>
+      </div>
+
+      <div class="header-buttons">
+        <button class="cancel-btn" (click)="cancel()">Cancel</button>
+        <button class="save-btn" (click)="save()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="save-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{{ saved ? 'Saved!' : 'Save Selection' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Selection Card (full width, admin theme) -->
+    <section class="table-section-card">
+
+      <!-- Toolbar: search + select all -->
+      <div class="list-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" class="search-input" [(ngModel)]="searchQuery" placeholder="Search dealers…" autocomplete="off" />
+        </div>
+
+        <label class="select-all-control" *ngIf="filteredDealers.length">
+          <input type="checkbox" class="row-checkbox" [checked]="allSelected" (change)="toggleSelectAll()" />
+          <span class="select-all-label">Select All</span>
+          <span class="selected-count-pill">{{ selectedCount }} selected</span>
+        </label>
+      </div>
+
+      <!-- Dealer rows -->
+      <div class="dealer-rows">
+        <label class="dealer-row" *ngFor="let dealer of filteredDealers; trackBy: trackByDealerId" [class.is-checked]="isSelected(dealer)">
+          <input type="checkbox" class="row-checkbox" [checked]="isSelected(dealer)" (change)="toggleDealer(dealer)" />
+          <div class="dealer-avatar">{{ dealer.initial || (dealer.name || 'D').charAt(0) }}</div>
+          <div class="dealer-info">
+            <span class="dealer-name">{{ dealer.name }}</span>
+            <span class="dealer-sub">{{ dealer.email || dealer.phone || dealer.location }}</span>
+          </div>
+          <span class="row-status" *ngIf="isSelected(dealer)">Will see banner</span>
+        </label>
+
+        <div class="empty-state" *ngIf="!filteredDealers.length">
+          <span *ngIf="dealers.length === 0">No dealers yet. Add dealers first.</span>
+          <span *ngIf="dealers.length > 0">No dealers match your search.</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="card-footer" *ngIf="dealers.length">
+        <span class="summary-text">{{ selectedCount }} of {{ dealers.length }} dealer<span *ngIf="dealers.length !== 1">s</span> selected</span>
+        <div class="footer-actions">
+          <button class="cancel-btn" (click)="cancel()">Cancel</button>
+          <button class="save-btn" (click)="save()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="save-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ saved ? 'Saved!' : 'Save Selection' }}</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</ion-content>

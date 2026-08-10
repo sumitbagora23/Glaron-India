@@ -1,0 +1,415 @@
+[
+  {
+    "pn": 4,
+    "title": "Delta",
+    "matched": "GLR-DELT-3",
+    "box": "565x714"
+  },
+  {
+    "pn": 5,
+    "title": "Curve",
+    "matched": "GLR-CURV-4",
+    "box": "768x532"
+  },
+  {
+    "pn": 6,
+    "title": "Gem",
+    "matched": "GLR-GEM-5",
+    "box": "791x592"
+  },
+  {
+    "pn": 7,
+    "title": "Glare",
+    "matched": "GLR-GLAR-6",
+    "box": "544x788"
+  },
+  {
+    "pn": 8,
+    "title": "Delta Pro",
+    "matched": "GLR-DELT-7",
+    "box": "584x664"
+  },
+  {
+    "pn": 9,
+    "title": "Vogue",
+    "matched": "GLR-VOGU-8",
+    "box": "563x887"
+  },
+  {
+    "pn": 10,
+    "title": "Glon",
+    "matched": "GLR-GLON-9",
+    "box": "641x770"
+  },
+  {
+    "pn": 11,
+    "title": "Elegance",
+    "matched": "GLR-ELEG-10",
+    "box": "579x786"
+  },
+  {
+    "pn": 12,
+    "title": "Orbit",
+    "matched": "GLR-ORBI-11",
+    "box": "906x502"
+  },
+  {
+    "pn": 13,
+    "title": "Prism",
+    "matched": "GLR-PRIS-12",
+    "box": "678x728"
+  },
+  {
+    "pn": 14,
+    "title": "Duo",
+    "matched": "GLR-DUO-13",
+    "box": "880x580"
+  },
+  {
+    "pn": 15,
+    "title": "Duo R",
+    "matched": "GLR-DUOR-14",
+    "box": "699x612"
+  },
+  {
+    "pn": 16,
+    "title": "Movable",
+    "matched": "GLR-MOVA-15",
+    "box": "831x540"
+  },
+  {
+    "pn": 17,
+    "title": "Pull Out",
+    "matched": "GLR-PULL-16",
+    "box": "821x618"
+  },
+  {
+    "pn": 18,
+    "title": "Linea",
+    "matched": "GLR-LINE-17",
+    "box": "892x456"
+  },
+  {
+    "pn": 19,
+    "title": "Spot",
+    "matched": "GLR-SPOT-18",
+    "box": "794x581"
+  },
+  {
+    "pn": 20,
+    "title": "Deep Downlight",
+    "matched": "GLR-DEEP-19",
+    "box": "580x607"
+  },
+  {
+    "pn": 21,
+    "title": "Nexus Pro",
+    "matched": "GLR-NEXU-20",
+    "box": "892x517"
+  },
+  {
+    "pn": 22,
+    "title": "Nexus surface",
+    "matched": "GLR-NEXU-21",
+    "box": "526x638"
+  },
+  {
+    "pn": 23,
+    "title": "Nova",
+    "matched": "GLR-NOVA-22",
+    "box": "595x814"
+  },
+  {
+    "pn": 24,
+    "title": "Concealed",
+    "matched": "GLR-CONC-23",
+    "box": "802x555"
+  },
+  {
+    "pn": 25,
+    "title": "Tracklight",
+    "matched": "GLR-TRAC-24",
+    "box": "666x695"
+  },
+  {
+    "pn": 26,
+    "title": "Track Wall",
+    "matched": "GLR-TRAC-25",
+    "box": "503x756"
+  },
+  {
+    "pn": 27,
+    "title": "Streak",
+    "matched": "GLR-STRE-26",
+    "box": "489x733"
+  },
+  {
+    "pn": 28,
+    "title": "Movable Cylinder",
+    "matched": "GLR-MOVA-27",
+    "box": "629x577"
+  },
+  {
+    "pn": 29,
+    "title": "Cylinder",
+    "matched": "GLR-CYLI-28",
+    "box": "635x628"
+  },
+  {
+    "pn": 30,
+    "title": "Magna",
+    "matched": "GLR-MAGN-29",
+    "box": "661x852"
+  },
+  {
+    "pn": 31,
+    "title": "Striker",
+    "matched": "GLR-STRI-30",
+    "box": "786x568"
+  },
+  {
+    "pn": 32,
+    "title": "Slim Panel",
+    "matched": "GLR-SLIM-31",
+    "box": "532x600"
+  },
+  {
+    "pn": 33,
+    "title": "Surface Panel",
+    "matched": "GLR-SURF-32",
+    "box": "559x495"
+  },
+  {
+    "pn": 34,
+    "title": "Trimless Surface",
+    "matched": "GLR-TRIM-33",
+    "box": "669x545"
+  },
+  {
+    "pn": 35,
+    "title": "Tile",
+    "matched": "GLR-TILE-34",
+    "box": "547x711"
+  },
+  {
+    "pn": 36,
+    "title": "Strip Light",
+    "matched": "GLR-STRI-35",
+    "box": "752x718"
+  },
+  {
+    "pn": 37,
+    "title": "SMPS",
+    "matched": "GLR-SMPS-36",
+    "box": "710x582"
+  },
+  {
+    "pn": 38,
+    "title": "Rope Light",
+    "matched": "GLR-ROPE-37",
+    "box": "857x560"
+  },
+  {
+    "pn": 39,
+    "title": "Profile",
+    "matched": "GLR-PROF-38",
+    "box": "719x881"
+  },
+  {
+    "pn": 40,
+    "title": "Magnetic",
+    "matched": "GLR-MAGN-39",
+    "box": "893x770"
+  },
+  {
+    "pn": 41,
+    "title": "Linear Hanging",
+    "matched": "GLR-LINE-40",
+    "box": "707x619"
+  },
+  {
+    "pn": 42,
+    "title": "K-Type",
+    "matched": "GLR-KTYP-41",
+    "box": "489x754"
+  },
+  {
+    "pn": 43,
+    "title": "Ball Light",
+    "matched": "GLR-BALL-42",
+    "box": "642x739"
+  },
+  {
+    "pn": 44,
+    "title": "Curve Wall",
+    "matched": "GLR-CURV-43",
+    "box": "553x760"
+  },
+  {
+    "pn": 45,
+    "title": "Casette",
+    "matched": "GLR-CASE-44",
+    "box": "790x605"
+  },
+  {
+    "pn": 46,
+    "title": "Updown Wall",
+    "matched": "GLR-UPDO-45",
+    "box": "507x607"
+  },
+  {
+    "pn": 47,
+    "title": "Rubik Square",
+    "matched": "GLR-RUBI-46",
+    "box": "582x621"
+  },
+  {
+    "pn": 48,
+    "title": "Foot Lights",
+    "matched": "GLR-FOOT-47",
+    "box": "877x535"
+  },
+  {
+    "pn": 49,
+    "title": "Spike",
+    "matched": "GLR-SPIK-48",
+    "box": "811x771"
+  },
+  {
+    "pn": 50,
+    "title": "Wall Washer",
+    "matched": "GLR-WALL-49",
+    "box": "940x447"
+  },
+  {
+    "pn": 51,
+    "title": "Inground",
+    "matched": "GLR-INGR-50",
+    "box": "805x538"
+  },
+  {
+    "pn": 52,
+    "title": "Swimming Pool",
+    "matched": "GLR-SWIM-51",
+    "box": "569x645"
+  },
+  {
+    "pn": 53,
+    "title": "GM Flood",
+    "matched": "GLR-GMFL-52",
+    "box": "578x734"
+  },
+  {
+    "pn": 54,
+    "title": "Slim Flood",
+    "matched": "GLR-SLIM-53",
+    "box": "629x654"
+  },
+  {
+    "pn": 55,
+    "title": "Hi-Bay",
+    "matched": "GLR-HIBA-54",
+    "box": "681x564"
+  },
+  {
+    "pn": 56,
+    "title": "Street",
+    "matched": "GLR-STRE-55",
+    "box": "498x771"
+  },
+  {
+    "pn": 57,
+    "title": "Solar Street",
+    "matched": "GLR-SOLA-56",
+    "box": "489x760"
+  },
+  {
+    "pn": 58,
+    "title": "Aura Max",
+    "matched": "GLR-AURA-57",
+    "box": "582x799"
+  },
+  {
+    "pn": 59,
+    "title": "Vista",
+    "matched": "GLR-VIST-58",
+    "box": "636x810"
+  },
+  {
+    "pn": 60,
+    "title": "Cubex",
+    "matched": "GLR-CUBE-59",
+    "box": "607x710"
+  },
+  {
+    "pn": 61,
+    "title": "Cube",
+    "matched": "GLR-CUBE-60",
+    "box": "693x714"
+  },
+  {
+    "pn": 62,
+    "title": "Mashal",
+    "matched": "GLR-MASH-61",
+    "box": "541x833"
+  },
+  {
+    "pn": 63,
+    "title": "Freedom",
+    "matched": "GLR-FREE-62",
+    "box": "590x682"
+  },
+  {
+    "pn": 64,
+    "title": "Rubik",
+    "matched": "GLR-RUBI-63",
+    "box": "670x687"
+  },
+  {
+    "pn": 65,
+    "title": "Temple",
+    "matched": "GLR-TEMP-64",
+    "box": "571x680"
+  },
+  {
+    "pn": 66,
+    "title": "Legacy",
+    "matched": "GLR-LEGA-65",
+    "box": "710x762"
+  },
+  {
+    "pn": 67,
+    "title": "Four Pillar",
+    "matched": "GLR-FOUR-66",
+    "box": "618x894"
+  },
+  {
+    "pn": 68,
+    "title": "Square",
+    "matched": "GLR-SQUA-67",
+    "box": "597x831"
+  },
+  {
+    "pn": 69,
+    "title": "Ring",
+    "matched": "GLR-RING-68",
+    "box": "610x766"
+  },
+  {
+    "pn": 70,
+    "title": "Round",
+    "matched": "GLR-ROUN-69",
+    "box": "583x715"
+  },
+  {
+    "pn": 71,
+    "title": "Oval",
+    "matched": "GLR-OVAL-70",
+    "box": "610x733"
+  },
+  {
+    "pn": 72,
+    "title": "THANK YOU",
+    "matched": null
+  }
+]

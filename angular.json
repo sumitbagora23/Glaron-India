@@ -33,14 +33,29 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              "src/manifest.webmanifest",
+              {
+                "glob": "firebase-messaging-sw.js",
+                "input": "src",
+                "output": "/"
               }
             ],
-            "styles": ["src/global.scss", "src/theme/variables.scss"],
+            "styles": [
+              "src/global.scss",
+              "src/theme/variables.scss"
+            ],
             "scripts": [],
-            "browser": "src/main.ts"
+            "browser": "src/main.ts",
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": true,
+                "fonts": false
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -49,8 +64,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "24kb",
+                  "maximumError": "64kb"
                 }
               ],
               "fileReplacements": [
@@ -65,7 +80,8 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true
+              "namedChunks": true,
+              "outputHashing": "all"
             },
             "ci": {
               "progress": false
@@ -109,7 +125,10 @@
                 "output": "assets"
               }
             ],
-            "styles": ["src/global.scss", "src/theme/variables.scss"],
+            "styles": [
+              "src/global.scss",
+              "src/theme/variables.scss"
+            ],
             "scripts": []
           },
           "configurations": {
@@ -122,14 +141,262 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
+        }
+      }
+    },
+    "admin": {
+      "projectType": "application",
+      "schematics": {
+        "@ionic/angular-toolkit:page": {
+          "styleext": "scss",
+          "standalone": true
+        }
+      },
+      "root": "admin-app",
+      "sourceRoot": "admin-app/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": {
+              "base": "www-admin",
+              "browser": ""
+            },
+            "index": "admin-app/src/index.html",
+            "polyfills": [
+              "admin-app/src/polyfills.ts"
+            ],
+            "tsConfig": "tsconfig.admin.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets",
+                "ignore": [
+                  "catalog.pdf.pdf",
+                  "pdf_all_images/**"
+                ]
+              },
+              {
+                "glob": "**/*",
+                "input": "admin-app/src/assets",
+                "output": "assets"
+              },
+              "admin-app/src/manifest.webmanifest",
+              {
+                "glob": "admin-messaging-sw.js",
+                "input": "admin-app/src",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "admin-app/src/global.scss",
+              "admin-app/src/theme/variables.scss"
+            ],
+            "scripts": [],
+            "browser": "admin-app/src/main.ts",
+            "serviceWorker": "admin-app/ngsw-config.json"
+          },
+          "configurations": {
+            "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": true,
+                "fonts": false
+              },
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "24kb",
+                  "maximumError": "48kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "admin-app/src/environments/environment.ts",
+                  "with": "admin-app/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "outputHashing": "all"
+            },
+            "ci": {
+              "progress": false
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "port": 4300
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "admin:build:production"
+            },
+            "development": {
+              "buildTarget": "admin:build:development"
+            },
+            "ci": {
+              "progress": false
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "admin-app/src/**/*.ts",
+              "admin-app/src/**/*.html"
+            ]
+          }
+        }
+      }
+    },
+    "agent": {
+      "projectType": "application",
+      "schematics": {
+        "@ionic/angular-toolkit:page": {
+          "styleext": "scss",
+          "standalone": true
+        }
+      },
+      "root": "agent-app",
+      "sourceRoot": "agent-app/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": {
+              "base": "www-agent",
+              "browser": ""
+            },
+            "index": "agent-app/src/index.html",
+            "polyfills": [
+              "agent-app/src/polyfills.ts"
+            ],
+            "tsConfig": "tsconfig.agent.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets",
+                "ignore": [
+                  "catalog.pdf.pdf",
+                  "pdf_all_images/**"
+                ]
+              },
+              {
+                "glob": "**/*",
+                "input": "agent-app/src/assets",
+                "output": "assets"
+              },
+              "agent-app/src/manifest.webmanifest"
+            ],
+            "styles": [
+              "agent-app/src/global.scss",
+              "agent-app/src/theme/variables.scss"
+            ],
+            "scripts": [],
+            "browser": "agent-app/src/main.ts",
+            "serviceWorker": "agent-app/ngsw-config.json"
+          },
+          "configurations": {
+            "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": true,
+                "fonts": false
+              },
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "24kb",
+                  "maximumError": "48kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "agent-app/src/environments/environment.ts",
+                  "with": "agent-app/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "outputHashing": "all"
+            },
+            "ci": {
+              "progress": false
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "port": 4400
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "agent:build:production"
+            },
+            "development": {
+              "buildTarget": "agent:build:development"
+            },
+            "ci": {
+              "progress": false
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "agent-app/src/**/*.ts",
+              "agent-app/src/**/*.html"
+            ]
           }
         }
       }
     }
   },
   "cli": {
-    "schematicCollections": ["@ionic/angular-toolkit"]
+    "schematicCollections": [
+      "@ionic/angular-toolkit"
+    ]
   },
   "schematics": {
     "@ionic/angular-toolkit:component": {

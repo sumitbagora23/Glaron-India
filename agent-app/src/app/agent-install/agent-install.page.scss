@@ -1,0 +1,197 @@
+/* ============================================================================
+   Agent install wall — shown when the agent app is opened in a browser tab
+   instead of the installed app. Carries the same agent teal as the auth hero
+   in global.scss, so the screen that installs the app already looks like the
+   app it installs (and not like the dealer portal).
+   ============================================================================ */
+ion-content { --background: var(--g-bg); }
+
+.install-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--g-bg);
+}
+
+/* ---- Hero ---- */
+.install-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 130% at 80% -10%, #12756B 0%, #0B4F49 42%, #04262A 100%);
+  padding: calc(var(--g-safe-top) + 44px) 26px 62px;
+  text-align: center;
+
+  .hero-orb { position: absolute; border-radius: 50%; filter: blur(48px); pointer-events: none; }
+  .orb-1 { width: 220px; height: 220px; top: -70px; right: -60px; background: radial-gradient(circle, rgba(254,179,0,.5), transparent 70%); }
+  .orb-2 { width: 200px; height: 200px; bottom: -40px; left: -70px; background: radial-gradient(circle, rgba(16,185,166,.55), transparent 70%); }
+
+  .hero-inner { position: relative; z-index: 2; animation: g-fade-up .6s ease both; }
+  .hero-logo {
+    width: min(190px, 54%);
+    height: auto;
+    display: block;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+  }
+  .hero-title {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(23px, 6.4vw, 28px);
+    font-weight: 800;
+    letter-spacing: -0.4px;
+  }
+  .hero-curve {
+    position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 34px;
+    background: var(--g-bg);
+    border-radius: 34px 34px 0 0;
+  }
+}
+
+/* ---- Sheet ---- */
+.install-sheet {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  margin-top: -22px;
+  padding: 14px 22px calc(var(--g-safe-bottom) + 28px);
+  max-width: 560px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+  animation: g-fade-up .55s ease .08s both;
+}
+
+.install-lead {
+  margin: 0 0 20px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--g-text-muted);
+  text-align: center;
+}
+
+.install-cta {
+  margin-bottom: 22px;
+  .cta-ic { width: 20px; height: 20px; }
+}
+
+/* ---- How-to steps ---- */
+.steps-card {
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-lg);
+  padding: 18px;
+  box-shadow: var(--g-shadow-sm);
+}
+.steps-title {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--g-text);
+}
+.steps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+
+  li { display: flex; align-items: center; gap: 12px; }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
+    color: var(--g-primary);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .step-text {
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--g-text);
+  }
+  .inline-ic {
+    width: 17px; height: 17px;
+    vertical-align: -3px;
+    margin-left: 4px;
+    color: var(--g-gold-strong);
+  }
+}
+
+/* iOS: only Safari can add to the home screen */
+.ios-safari-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--g-r-md);
+  background: var(--g-warn-bg);
+  color: var(--g-warn);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+
+  svg { width: 19px; height: 19px; flex-shrink: 0; margin-top: 1px; }
+}
+
+/* ---- Benefits ---- */
+.benefit-list {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+
+  li { display: flex; align-items: center; gap: 10px; }
+  svg { width: 18px; height: 18px; color: var(--g-gold-strong); flex-shrink: 0; }
+  span { font-size: 14px; font-weight: 500; color: var(--g-text-muted); }
+}
+
+.already-note {
+  margin: 22px 0 0;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--g-text-soft);
+  strong { color: var(--g-text); font-weight: 800; }
+}
+
+/* ---- Installed confirmation ---- */
+.installed-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 40px 26px;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-xl);
+  box-shadow: var(--g-shadow-md);
+  animation: g-fade-up .4s ease;
+
+  .installed-badge {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #FEB300, #F5941D);
+    color: var(--g-primary);
+    box-shadow: var(--g-shadow-gold);
+    margin-bottom: 8px;
+    animation: g-pop .5s cubic-bezier(.2,.7,.3,1);
+    svg { width: 42px; height: 42px; }
+  }
+  .installed-title { margin: 0; font-size: 22px; font-weight: 800; color: var(--g-text); }
+  .installed-desc { margin: 0; font-size: 15px; font-weight: 500; color: var(--g-text-muted); }
+}

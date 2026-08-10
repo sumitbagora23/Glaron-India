@@ -1,0 +1,150 @@
+ion-content {
+  --background: var(--g-bg);
+}
+
+.ob-stage {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(90% 60% at 80% 0%, rgba(254,179,0,.10), transparent 60%),
+    radial-gradient(80% 55% at 0% 10%, rgba(123,60,180,.08), transparent 55%),
+    var(--g-bg);
+  padding: calc(var(--g-safe-top) + 14px) 22px calc(var(--g-safe-bottom) + 20px);
+  box-sizing: border-box;
+}
+
+/* ---- Top bar ---- */
+.ob-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  flex-shrink: 0;
+}
+.ob-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+.ob-skip {
+  border: none;
+  background: transparent;
+  color: var(--g-text-soft);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+
+  &:active { background: var(--g-surface-2); color: var(--g-text); }
+}
+
+/* ---- Slides ---- */
+.ob-viewport {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.ob-track {
+  display: flex;
+  width: 100%;
+  transition: transform .45s cubic-bezier(.4, 0, .2, 1);
+}
+.ob-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6px 6px 0;
+  box-sizing: border-box;
+}
+
+.ob-art {
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 30px;
+  filter: drop-shadow(0 22px 30px rgba(23, 3, 56, .12));
+
+  svg { width: 100%; height: auto; display: block; }
+}
+
+.ob-title {
+  margin: 0 0 12px;
+  font-size: clamp(24px, 6.8vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--g-text);
+}
+.ob-desc {
+  margin: 0;
+  max-width: 340px;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--g-text-muted);
+}
+
+/* Animate content of the active slide gently on entry */
+.ob-track { will-change: transform; }
+
+/* ---- Bottom controls ---- */
+.ob-bottom {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.ob-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ob-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: var(--g-border-strong);
+  cursor: pointer;
+  transition: width .3s ease, background .3s ease;
+
+  &.active {
+    width: 26px;
+    background: var(--g-gold);
+  }
+}
+
+.ob-next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 999px;
+  background: var(--g-primary);
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  cursor: pointer;
+  box-shadow: var(--g-shadow-md);
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+
+  .ob-next-ic { width: 20px; height: 20px; transition: transform .2s ease; }
+
+  &:active {
+    transform: translateY(1px) scale(.985);
+    background: var(--g-primary-90);
+  }
+  &:hover .ob-next-ic { transform: translateX(3px); }
+}

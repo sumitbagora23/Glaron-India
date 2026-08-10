@@ -1,0 +1,228 @@
+<ion-content [scrollY]="true">
+  <div class="reg-screen">
+
+    <!-- ============ SUCCESS / ONBOARDING COMPLETION ============ -->
+    <div *ngIf="isSubmitted" class="reg-done">
+      <div class="done-hero">
+        <div class="done-ring">
+          <svg viewBox="0 0 120 120" class="done-ring-svg">
+            <circle class="ring-track" cx="60" cy="60" r="52" />
+            <circle class="ring-fill" cx="60" cy="60" r="52" />
+          </svg>
+          <div class="done-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+        </div>
+        <span class="done-pct">100% complete</span>
+      </div>
+
+      <h2 class="done-title">You're all set!</h2>
+      <p class="done-msg">
+        Your profile for <strong>+91 {{ registeredMobile }}</strong> has been submitted successfully.
+        Sign in with this mobile number once your account is approved.
+      </p>
+
+      <div class="done-status-card">
+        <div class="status-dot"></div>
+        <div class="status-text">
+          <span class="status-head">Pending admin approval</span>
+          <span class="status-sub">You'll be able to sign in to your dashboard as soon as your account is approved.</span>
+        </div>
+      </div>
+
+      <div class="done-steps">
+        <div class="dstep done"><span class="dstep-ic">✓</span> Account created</div>
+        <div class="dstep done"><span class="dstep-ic">✓</span> Profile submitted</div>
+        <div class="dstep wait"><span class="dstep-ic">•</span> Awaiting approval</div>
+      </div>
+
+      <button type="button" class="g-btn g-btn--primary" (click)="goToLogin()">
+        <span>Go to Login</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <!-- ============ MULTI-STEP REGISTRATION ============ -->
+    <ng-container *ngIf="!isSubmitted">
+      <!-- Header with back + progress -->
+      <header class="reg-header">
+        <div class="reg-head-row">
+          <button type="button" class="reg-back" (click)="currentStep === 0 ? goToLogin() : prevStep()" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="reg-head-titles">
+            <span class="reg-step-count">Step {{ currentStep + 1 }} of {{ steps.length }}</span>
+            <h1 class="reg-title">{{ steps[currentStep].title }}</h1>
+          </div>
+        </div>
+
+        <!-- Segmented progress -->
+        <div class="reg-progress">
+          <span class="reg-seg" *ngFor="let s of steps; let i = index" [class.active]="i <= currentStep"></span>
+        </div>
+        <p class="reg-subtitle">{{ steps[currentStep].subtitle }}</p>
+      </header>
+
+      <!-- Scrollable form body -->
+      <form [formGroup]="applyForm" (ngSubmit)="onSubmit()" class="reg-form" novalidate>
+        <div class="reg-scroll">
+
+          <div *ngIf="errorMessage" class="g-alert g-alert--error" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-alert-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <!-- STEP 1 : Personal details -->
+          <div class="reg-fields" *ngIf="currentStep === 0">
+            <div class="g-field">
+              <label class="g-label" for="contact-person">Contact name</label>
+              <div class="g-input-wrap" [class.is-invalid]="applyForm.get('contactPerson')?.touched && applyForm.get('contactPerson')?.invalid">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-input-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <input id="contact-person" type="text" formControlName="contactPerson" placeholder="e.g. Rajesh Sharma" class="g-input" autocomplete="name" />
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('contactPerson')?.touched && applyForm.get('contactPerson')?.invalid">Contact name is required.</span>
+            </div>
+
+            <div class="g-field">
+              <label class="g-label" for="dealer-mobile">Mobile number</label>
+              <div class="g-input-wrap" [class.is-invalid]="applyForm.get('mobile')?.touched && applyForm.get('mobile')?.invalid">
+                <span class="g-input-prefix">+91</span>
+                <input id="dealer-mobile" type="tel" inputmode="numeric" maxlength="10" formControlName="mobile" (input)="onMobileInput($any($event.target).value)" placeholder="10-digit mobile number" class="g-input" autocomplete="tel" />
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('mobile')?.touched && applyForm.get('mobile')?.invalid">Enter a valid 10-digit mobile number.</span>
+              <span class="g-field-hint" *ngIf="!(applyForm.get('mobile')?.touched && applyForm.get('mobile')?.invalid)">This is the number you'll sign in with.</span>
+            </div>
+
+            <div class="g-field">
+              <label class="g-label" for="dealer-email">Email address <span class="g-label-optional">(optional)</span></label>
+              <div class="g-input-wrap" [class.is-invalid]="applyForm.get('email')?.touched && applyForm.get('email')?.invalid">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-input-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <input id="dealer-email" type="email" inputmode="email" formControlName="email" placeholder="you@example.com" class="g-input" autocomplete="email" />
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('email')?.touched && applyForm.get('email')?.invalid">Please enter a valid email address, or leave this blank.</span>
+            </div>
+          </div>
+
+          <!-- STEP 2 : Address -->
+          <div class="reg-fields" *ngIf="currentStep === 1">
+            <div class="g-field">
+              <label class="g-label" for="dealer-address">Full address</label>
+              <div class="g-input-wrap" [class.is-invalid]="applyForm.get('address')?.touched && applyForm.get('address')?.invalid">
+                <textarea id="dealer-address" formControlName="address" placeholder="Shop / building, street, area" class="g-input" rows="2"></textarea>
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('address')?.touched && applyForm.get('address')?.invalid">Address is required.</span>
+            </div>
+
+            <!-- State -->
+            <div class="g-field">
+              <label class="g-label">State</label>
+              <div class="reg-dd" (click)="stopClose($event)">
+                <button type="button" class="g-input-wrap dd-trigger" [class.is-placeholder]="!applyForm.get('state')?.value" [class.is-invalid]="applyForm.get('state')?.touched && applyForm.get('state')?.invalid" (click)="toggleDropdown('state', $event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-input-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <span class="dd-value">{{ applyForm.get('state')?.value || 'Select state' }}</span>
+                  <svg class="dd-chevron" [class.open]="openDropdown === 'state'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div class="dd-panel" *ngIf="openDropdown === 'state'">
+                  <input type="text" class="dd-search" placeholder="Search state..." [value]="stateSearch" (input)="onStateSearch($any($event.target).value)" (click)="stopClose($event)" />
+                  <ul class="dd-list">
+                    <li *ngFor="let s of filteredStates" class="dd-item" [class.active]="s === applyForm.get('state')?.value" (click)="selectState(s)">{{ s }}</li>
+                    <li *ngIf="!filteredStates.length" class="dd-empty">No state found</li>
+                  </ul>
+                </div>
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('state')?.touched && applyForm.get('state')?.invalid">State is required.</span>
+            </div>
+
+            <!-- City -->
+            <div class="g-field">
+              <label class="g-label">City</label>
+              <div class="reg-dd" (click)="stopClose($event)">
+                <button type="button" class="g-input-wrap dd-trigger" [class.is-placeholder]="!applyForm.get('city')?.value" [disabled]="!applyForm.get('state')?.value" [class.is-invalid]="applyForm.get('city')?.touched && applyForm.get('city')?.invalid" (click)="toggleDropdown('city', $event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-input-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-14h.01M11 7h.01M7 11h.01M11 11h.01M7 15h.01M11 15h.01"/></svg>
+                  <span class="dd-value">{{ applyForm.get('city')?.value || (applyForm.get('state')?.value ? 'Select city' : 'Select state first') }}</span>
+                  <svg class="dd-chevron" [class.open]="openDropdown === 'city'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div class="dd-panel" *ngIf="openDropdown === 'city'">
+                  <input type="text" class="dd-search" placeholder="Search city..." [value]="citySearch" (input)="onCitySearch($any($event.target).value)" (click)="stopClose($event)" />
+                  <ul class="dd-list">
+                    <li *ngFor="let c of filteredCities" class="dd-item" [class.active]="c === applyForm.get('city')?.value" (click)="selectCity(c)">{{ c }}</li>
+                    <li *ngIf="!filteredCities.length" class="dd-empty">No city found</li>
+                  </ul>
+                </div>
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('city')?.touched && applyForm.get('city')?.invalid">City is required.</span>
+            </div>
+
+            <!-- Pincode -->
+            <div class="g-field">
+              <label class="g-label" for="dealer-pincode">Pincode</label>
+              <div class="reg-dd" (click)="stopClose($event)">
+                <div class="g-input-wrap" [class.is-invalid]="applyForm.get('pincode')?.touched && applyForm.get('pincode')?.invalid">
+                  <input id="dealer-pincode" type="tel" inputmode="numeric" maxlength="6" formControlName="pincode" placeholder="6-digit pincode" class="g-input" (focus)="openPincodeDropdown($event)" />
+                  <button *ngIf="pincodeSuggestions.length" type="button" class="g-input-toggle" (click)="openPincodeDropdown($event)">
+                    <svg class="dd-chevron" [class.open]="openDropdown === 'pincode'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                </div>
+                <div class="dd-panel" *ngIf="openDropdown === 'pincode' && pincodeSuggestions.length">
+                  <ul class="dd-list">
+                    <li *ngFor="let p of pincodeSuggestions" class="dd-item" [class.active]="p === applyForm.get('pincode')?.value" (click)="selectPincode(p)">{{ p }}</li>
+                  </ul>
+                </div>
+              </div>
+              <span class="g-field-hint" *ngIf="isLoadingPincodes">Loading pincodes for this city…</span>
+              <span class="g-field-err" *ngIf="applyForm.get('pincode')?.touched && applyForm.get('pincode')?.invalid">Enter a valid 6-digit pincode.</span>
+            </div>
+          </div>
+
+          <!-- STEP 3 : Security -->
+          <div class="reg-fields" *ngIf="currentStep === 2">
+            <div class="g-field">
+              <label class="g-label" for="dealer-password">Password</label>
+              <div class="g-input-wrap" [class.is-invalid]="applyForm.get('password')?.touched && applyForm.get('password')?.invalid">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-input-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <input id="dealer-password" [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Min. 6 characters" class="g-input" autocomplete="new-password" />
+                <button type="button" class="g-input-toggle" (click)="togglePasswordVisibility()" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a9.957 9.957 0 013.682-.763c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m-6.165-3.666a3 3 0 104.243-4.243M3 3l18 18"/></svg>
+                </button>
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.get('password')?.touched && applyForm.get('password')?.invalid">Password must be at least 6 characters.</span>
+            </div>
+
+            <div class="g-field">
+              <label class="g-label" for="dealer-confirm-password">Confirm password</label>
+              <div class="g-input-wrap" [class.is-invalid]="(applyForm.get('confirmPassword')?.touched || applyForm.get('password')?.touched) && applyForm.hasError('mismatch')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="g-input-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <input id="dealer-confirm-password" [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Re-enter password" class="g-input" autocomplete="new-password" />
+                <button type="button" class="g-input-toggle" (click)="toggleConfirmPasswordVisibility()" [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+                  <svg *ngIf="!showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg *ngIf="showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a9.957 9.957 0 013.682-.763c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m-6.165-3.666a3 3 0 104.243-4.243M3 3l18 18"/></svg>
+                </button>
+              </div>
+              <span class="g-field-err" *ngIf="applyForm.hasError('mismatch') && (applyForm.get('confirmPassword')?.touched || applyForm.get('password')?.touched)">Passwords do not match.</span>
+              <span class="g-field-hint" *ngIf="!applyForm.hasError('mismatch')">You'll use this to sign in once your account is approved.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky footer nav -->
+        <footer class="reg-footer">
+          <button type="button" class="g-btn g-btn--outline reg-prev" *ngIf="currentStep > 0" (click)="prevStep()">Back</button>
+          <button type="button" class="g-btn g-btn--dark" *ngIf="!isLastStep" (click)="nextStep()">
+            <span>Continue</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button type="submit" class="g-btn g-btn--primary" *ngIf="isLastStep" [disabled]="isLoading" [class.is-loading]="isLoading">
+            <span class="g-btn-spinner" *ngIf="isLoading"></span>
+            <span>{{ isLoading ? 'Creating account…' : 'Create account' }}</span>
+          </button>
+        </footer>
+      </form>
+
+      <div class="reg-login-hint" *ngIf="currentStep === 0">
+        <span>Already registered?</span>
+        <a (click)="goToLogin()">Sign in</a>
+      </div>
+    </ng-container>
+  </div>
+</ion-content>

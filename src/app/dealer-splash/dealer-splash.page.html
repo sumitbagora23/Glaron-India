@@ -1,0 +1,28 @@
+<ion-content [fullscreen]="true">
+  <div class="splash-stage" [class.leaving]="leaving" (click)="skip()">
+
+    <!-- Ambient light field -->
+    <div class="ambient orb-a"></div>
+    <div class="ambient orb-b"></div>
+    <div class="grain"></div>
+
+    <!-- Branded full-logo splash with loader (shown on every open) -->
+    <div class="splash-core">
+      <div class="logo-halo">
+        <div class="halo-ring"></div>
+        <img src="assets/glaron-logo-white.png" alt="Glaron India" class="splash-brand-logo" />
+      </div>
+
+      <p class="splash-tagline">Premium Lighting · Brightening Your Space</p>
+
+      <div class="loader-dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="splash-footer">
+      <span class="made-in">Made in India</span>
+      <span class="v-tag">v{{ appVersion }}</span>
+    </div>
+  </div>
+</ion-content>

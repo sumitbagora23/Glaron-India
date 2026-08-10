@@ -1,0 +1,93 @@
+<ion-content [fullscreen]="true" class="install-content">
+  <div class="wrap">
+
+    <header class="head">
+      <img src="assets/glaron-logo-white.png" alt="Glaron India" class="logo" />
+      <div class="tag">Admin Console</div>
+    </header>
+
+    <!-- Step 1 — install -->
+    <section class="card">
+      <div class="step-row">
+        <span class="step" [class.done]="isStandalone">1</span>
+        <h2>Install the console</h2>
+      </div>
+
+      <p class="lead" *ngIf="!isStandalone">
+        Add Glaron Admin to your device so it opens like a normal app — and so
+        new-order alerts can reach you when it is closed.
+      </p>
+      <p class="ok" *ngIf="isStandalone">Installed. You are running the app version.</p>
+
+      <button class="btn primary" *ngIf="!isStandalone && canPrompt" (click)="install()" [disabled]="installing">
+        {{ installing ? 'Opening installer…' : 'Install app' }}
+      </button>
+
+      <p class="ok" *ngIf="justInstalled">
+        Installed — open “Glaron Admin” from your home screen to continue.
+      </p>
+
+      <div class="steps" *ngIf="!isStandalone && isIos">
+        <div class="steps-title">On iPhone / iPad (Safari)</div>
+        <ol>
+          <li>Tap the <strong>Share</strong> button at the bottom of Safari.</li>
+          <li>Scroll down and choose <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong>, then open <strong>Glaron Admin</strong> from your home screen.</li>
+        </ol>
+        <p class="warn" *ngIf="isIosNonSafari">
+          On iPhone and iPad the app can only be added from <strong>Safari</strong>.
+          Open this page in Safari, then follow the steps above.
+        </p>
+      </div>
+
+      <div class="steps" *ngIf="!isStandalone && !isIos && !canPrompt">
+        <div class="steps-title">On Android / desktop</div>
+        <ol>
+          <li>Open the browser menu (⋮).</li>
+          <li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+          <li>Open <strong>Glaron Admin</strong> from your home screen.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Step 2 — alerts -->
+    <section class="card">
+      <div class="step-row">
+        <span class="step" [class.done]="alertsOn">2</span>
+        <h2>Turn on order alerts</h2>
+      </div>
+
+      <p class="lead">
+        When a dealer places an order, it appears in your phone’s notification
+        bar — even if this app is closed.
+      </p>
+
+      <p class="warn" *ngIf="needsInstallForAlerts">
+        Finish step 1 first. iPhone and iPad only allow notifications once the
+        app has been added to the Home Screen and opened from there.
+      </p>
+
+      <button
+        class="btn primary"
+        *ngIf="!alertsOn && !alertsBlocked && !needsInstallForAlerts"
+        (click)="enableAlerts()"
+        [disabled]="enabling">
+        {{ enabling ? 'Requesting…' : 'Turn on order alerts' }}
+      </button>
+
+      <p class="ok" *ngIf="alertsOn">
+        Order alerts are on for this device.
+      </p>
+
+      <p class="warn" *ngIf="alertsBlocked">
+        Notifications are blocked for this app. Allow them in your browser or
+        device settings, then reopen this screen.
+      </p>
+
+      <p class="err" *ngIf="push.lastError()">{{ push.lastError() }}</p>
+    </section>
+
+    <button class="btn ghost" (click)="back()">Go to console</button>
+    <div class="ver">v{{ appVersion }}</div>
+  </div>
+</ion-content>

@@ -1,0 +1,172 @@
+<ion-content [scrollY]="true">
+  <div class="orders-page-canvas">
+
+    <!-- Header - TopAppBar (same shell as the checkout page) -->
+    <header class="top-app-bar">
+      <div class="top-bar-inner">
+        <div class="left-brand-group">
+          <button class="back-btn" (click)="goToCatalog()" aria-label="Back to catalog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="back-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span class="orders-topbar-title">My Orders</span>
+        </div>
+
+        <div class="right-actions-group">
+          <button class="header-call-btn" (click)="makeCall()" [disabled]="!callNumber" aria-label="Call us">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="header-call-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+            <span>Call</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="orders-main-container">
+
+      <div class="orders-sections-wrapper">
+
+        <div class="page-header-row">
+          <h2 class="orders-heading">My Purchase Orders</h2>
+          <span class="dealer-badge">{{ currentDealer?.name || 'Dealer Portal' }}</span>
+        </div>
+
+        <!-- Empty state -->
+        <section *ngIf="myOrders.length === 0" class="orders-card empty-orders-card">
+          <div class="empty-icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="box-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <h3 class="empty-title">No Orders Found</h3>
+          <p class="empty-desc">You haven't placed any purchase orders yet.</p>
+          <button class="browse-catalog-btn" (click)="goToCatalog()">Browse Product Catalog</button>
+        </section>
+
+        <!-- Order cards -->
+        <section *ngFor="let order of myOrders" class="orders-card order-card-box">
+
+          <div class="order-card-header order-clickable" (click)="toggleOrder(order.id)">
+            <div class="order-id-group">
+              <span class="order-id-text">
+                #{{ order.id }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="expand-chevron" [class.rotated]="isExpanded(order.id)">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                </svg>
+              </span>
+              <span class="order-date-text" *ngIf="order.date">{{ order.date | date:'mediumDate' }}</span>
+            </div>
+            <div class="stage-badge-pill" [ngClass]="'stage-' + (order.stage | lowercase)">
+              {{ order.stage }}
+            </div>
+          </div>
+
+          <!-- Expandable Item List -->
+          <div class="order-items-panel" *ngIf="isExpanded(order.id)">
+            <div class="items-panel-title">Order Items</div>
+            <div class="order-item-row" *ngFor="let item of order.items">
+              <div class="oi-left">
+                <span class="oi-name">{{ item.name }}</span>
+                <span class="oi-variant" *ngIf="item.variant">{{ item.variant }}</span>
+              </div>
+              <span class="oi-qty">Qty: {{ item.quantity }}</span>
+            </div>
+            <div class="order-item-empty" *ngIf="!order.items?.length">
+              No item details available for this order.
+            </div>
+          </div>
+
+          <div class="order-card-body">
+            <div class="order-info-line">
+              <span class="info-lbl">Location / Hub</span>
+              <span class="info-val">{{ order.location }}</span>
+            </div>
+          </div>
+
+          <!-- Total value, styled like the checkout grand total -->
+          <div class="grand-total-header-row">
+            <span class="grand-lbl">Total Value</span>
+            <span class="grand-val">₹{{ order.value | number:'1.0-0' }}</span>
+          </div>
+
+          <!-- Step Progress Tracker -->
+          <div class="fulfillment-tracker">
+            <div class="tracker-steps-line">
+              <div class="tracker-step" [class.completed]="getStageStep(order.stage) >= 1">
+                <div class="step-circle">1</div>
+                <span class="step-lbl">Order Received</span>
+              </div>
+              <div class="tracker-line" [class.active-line]="getStageStep(order.stage) >= 2"></div>
+
+              <div class="tracker-step" [class.completed]="getStageStep(order.stage) >= 2">
+                <div class="step-circle">2</div>
+                <span class="step-lbl">Confirmed</span>
+              </div>
+              <div class="tracker-line" [class.active-line]="getStageStep(order.stage) >= 3"></div>
+
+              <div class="tracker-step" [class.completed]="getStageStep(order.stage) >= 3">
+                <div class="step-circle">3</div>
+                <span class="step-lbl">Dispatched</span>
+              </div>
+              <div class="tracker-line" [class.active-line]="getStageStep(order.stage) >= 4"></div>
+
+              <div class="tracker-step" [class.completed]="getStageStep(order.stage) >= 4">
+                <div class="step-circle">4</div>
+                <span class="step-lbl">Delivered</span>
+              </div>
+              <div class="tracker-line" [class.active-line]="getStageStep(order.stage) >= 5"></div>
+
+              <div class="tracker-step" [class.completed]="getStageStep(order.stage) >= 5">
+                <div class="step-circle">5</div>
+                <span class="step-lbl">Paid</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (Mobile TabBar) -->
+    <!-- Same floating dock as the catalog page. Orders is always the active
+         slot here, so the gold capsule is parked at index 2. -->
+    <nav class="bottom-nav-bar">
+      <div class="nav-tab-group" data-active="2">
+        <span class="nav-indicator" aria-hidden="true"></span>
+
+        <button class="nav-tab-item" (click)="goToCatalog()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="tab-label">Home</span>
+        </button>
+
+        <button class="nav-tab-item" (click)="goToProducts()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span class="tab-label">Products</span>
+        </button>
+
+        <button class="nav-tab-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="tab-label">Orders</span>
+        </button>
+      </div>
+
+      <button class="nav-cart-btn" (click)="goToCheckout()" aria-label="Cart" title="Cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+      </button>
+    </nav>
+
+  </div>
+</ion-content>

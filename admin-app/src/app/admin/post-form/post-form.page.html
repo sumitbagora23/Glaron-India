@@ -1,0 +1,58 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Add Post</h2>
+        <p class="page-subtitle">Shows up on the dealer home tab as "a new post is ready to share".</p>
+      </div>
+    </div>
+
+    <section class="form-card">
+
+      <!-- Image -->
+      <div class="form-field">
+        <label class="field-label">Post Image <span class="req">*</span></label>
+
+        <div class="image-preview" *ngIf="image">
+          <img [src]="image" alt="Post preview" class="image-preview-img" />
+          <button type="button" class="image-remove-btn" (click)="removeImage()" aria-label="Remove image">&times;</button>
+        </div>
+
+        <label class="upload-drop" [class.compact]="image">
+          <input type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>{{ image ? 'Replace image' : 'Click to upload the post image' }}</span>
+        </label>
+        <span class="error-text" *ngIf="errorMsg">{{ errorMsg }}</span>
+        <span class="hint-text" *ngIf="!errorMsg">Dealers and agents forward it with their own logo and shop details stamped on. A square or portrait picture works best — 1080×1080 or 1080×1350 is sharpest, and leaving the top-right and bottom-right corners clear gives that branding room to sit.</span>
+      </div>
+
+      <!-- Caption -->
+      <div class="form-field">
+        <label class="field-label" for="postCaption">Message <span class="field-count">(optional)</span></label>
+        <textarea
+          id="postCaption"
+          class="text-input textarea"
+          [(ngModel)]="caption"
+          maxlength="300"
+          rows="3"
+          placeholder="Text that goes along with the picture when a dealer shares it…"></textarea>
+        <span class="hint-text">Sent as the message next to the picture. Leave it blank to share the picture on its own.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="discard-btn" (click)="cancel()">Cancel</button>
+        <button type="button" class="save-btn" (click)="publish()" [disabled]="publishing">
+          {{ publishing ? 'Publishing…' : 'Publish Post' }}
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+</ion-content>

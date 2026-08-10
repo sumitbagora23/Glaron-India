@@ -1,0 +1,469 @@
+<ion-content [scrollY]="true">
+  <div class="agent-canvas">
+
+    <!-- Top app bar. Home wears the brand mark + contact buttons; every other
+         view gets the same plain bar: back button + title. -->
+    <header class="top-app-bar">
+      <div class="top-bar-inner">
+        <div class="left-brand-group" *ngIf="isHomeBar">
+          <button class="menu-btn" (click)="openSidebar()" aria-label="Menu" aria-haspopup="true" [attr.aria-expanded]="showSidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="menu-svg">
+              <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
+            </svg>
+          </button>
+          <img src="assets/glaron-wordmark-dark.png" alt="Glaron India" class="topbar-logo" />
+        </div>
+
+        <div class="left-brand-group" *ngIf="!isHomeBar">
+          <button class="back-btn" (click)="topBarBack()" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="back-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span class="bar-title">{{ topBarTitle }}</span>
+        </div>
+
+        <div class="right-actions-group" *ngIf="isHomeBar">
+          <button class="header-icon-btn call" (click)="makeCall()" [disabled]="!callNumber" aria-label="Call" title="Call">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="header-call-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+          </button>
+          <button class="header-icon-btn whatsapp" (click)="openWhatsAppChat()" [disabled]="!callNumber" aria-label="WhatsApp" title="WhatsApp">
+            <svg viewBox="0 0 32 32" fill="currentColor" class="header-wa-svg" aria-hidden="true">
+              <path d="M16.003 3C9.373 3 3.999 8.373 3.999 15c0 2.65.86 5.104 2.32 7.104L4.5 28.5l6.57-1.72A11.94 11.94 0 0016.003 27C22.63 27 28 21.627 28 15S22.63 3 16.003 3zm0 21.75a9.7 9.7 0 01-4.94-1.353l-.354-.21-3.9 1.022 1.04-3.802-.23-.39A9.7 9.7 0 016.25 15c0-5.385 4.37-9.75 9.753-9.75 5.383 0 9.747 4.365 9.747 9.75s-4.364 9.75-9.747 9.75zm5.36-7.303c-.293-.147-1.735-.857-2.004-.955-.269-.098-.464-.147-.66.147-.195.293-.756.955-.927 1.15-.171.196-.342.22-.635.073-.293-.147-1.238-.456-2.36-1.456-.872-.778-1.46-1.738-1.632-2.03-.171-.294-.018-.452.128-.598.132-.132.293-.343.44-.514.146-.171.195-.293.293-.489.098-.196.049-.367-.025-.513-.073-.147-.66-1.59-.904-2.177-.238-.572-.48-.494-.66-.503l-.562-.01c-.196 0-.513.073-.782.367-.269.293-1.025 1.002-1.025 2.445s1.05 2.836 1.196 3.032c.146.196 2.066 3.156 5.006 4.425.7.302 1.246.482 1.672.617.703.224 1.342.192 1.848.117.564-.084 1.735-.709 1.98-1.394.244-.685.244-1.272.171-1.394-.073-.122-.269-.196-.562-.343z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Side menu -->
+    <div class="sidebar-scrim" *ngIf="showSidebar" (click)="closeSidebar()"></div>
+    <aside class="sidebar-panel" [class.open]="showSidebar" role="dialog" [attr.aria-hidden]="!showSidebar">
+      <div class="sidebar-head">
+        <img src="assets/glaron-wordmark-dark.png" alt="Glaron India" class="sidebar-logo" />
+        <button class="sidebar-close" (click)="closeSidebar()" aria-label="Close menu">&times;</button>
+      </div>
+
+      <button class="sidebar-profile" (click)="openProfileFromMenu()">
+        <span class="sidebar-avatar">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="avatar-svg">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </span>
+        <span class="sidebar-profile-text">
+          <span class="sidebar-profile-name">{{ currentAgent?.name || 'Agent' }}</span>
+          <span class="sidebar-profile-sub">Profile</span>
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="sidebar-chevron">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+
+      <div class="sidebar-footer">
+        <button class="check-update-link" (click)="checkForAppUpdate()" [disabled]="updateChecking">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="check-update-svg" [class.spin]="updateChecking">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{{ updateChecking ? 'Checking…' : 'Check for update' }}</span>
+        </button>
+
+        <div class="check-update-msg" *ngIf="updateMessage">{{ updateMessage }}</div>
+
+        <div class="app-version-footer">Version {{ appVersion }}</div>
+      </div>
+    </aside>
+
+    <!-- Profile full page -->
+    <div class="profile-fullpage" *ngIf="showProfile">
+      <header class="profile-topbar">
+        <button class="profile-back-btn" (click)="closeProfile()" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="back-svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 class="profile-topbar-title">Profile</h1>
+      </header>
+
+      <div class="profile-page-body">
+        <div class="profile-hero">
+          <div class="profile-avatar-circle">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="avatar-svg">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <span class="profile-name">{{ currentAgent?.name || 'Agent' }}</span>
+          <span class="profile-role">Sales Agent</span>
+        </div>
+
+        <div class="profile-details-list">
+          <div class="profile-detail-row" *ngIf="currentAgent?.phone">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            </span>
+            <span class="detail-label">Mobile</span>
+            <span class="detail-value">{{ currentAgent?.phone }}</span>
+          </div>
+          <div class="profile-detail-row">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </span>
+            <span class="detail-label">Total sales</span>
+            <span class="detail-value">₹{{ totalSales | number:'1.0-0' }}</span>
+          </div>
+          <div class="profile-detail-row">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-9 0h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </span>
+            <span class="detail-label">Total commission</span>
+            <span class="detail-value">₹{{ totalCommission | number:'1.0-2' }}</span>
+          </div>
+          <div class="profile-detail-row">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+            <span class="detail-label">Paid</span>
+            <span class="detail-value">₹{{ totalPaid | number:'1.0-2' }}</span>
+          </div>
+          <div class="profile-detail-row">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h4M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+            </span>
+            <span class="detail-label">Remaining</span>
+            <span class="detail-value" [class.due]="remaining > 0">₹{{ remaining | number:'1.0-2' }}</span>
+          </div>
+
+          <!-- Straight through to the full statement, now that the home tab no
+               longer carries a commission card. -->
+          <button class="profile-detail-row as-link" (click)="closeProfile(); showCommission()">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </span>
+            <span class="detail-label">View full statement</span>
+          </button>
+        </div>
+
+        <div class="profile-action-row">
+          <button class="signout-btn" (click)="signOut()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="signout-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <main class="panel-main">
+
+      <!-- HOME TAB: category browser -->
+      <ng-container *ngIf="activeTab === 'home' && !homeCategory">
+        <div class="home-greeting">
+          <span class="greet-hi">Welcome back,</span>
+          <span class="greet-name">{{ agentFirstName }}</span>
+        </div>
+
+        <!-- Posts the admin publishes. Tapping Share stamps this agent's own
+             logo and details onto the picture and opens the device's share
+             sheet — the same flow the dealer app uses. -->
+        <section class="post-share-block" *ngIf="sharePosts.length">
+          <div class="post-share-head">
+            <span class="post-share-spark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5L13 3z"/>
+              </svg>
+            </span>
+            <span class="post-share-head-text">
+              <span class="post-share-title">Ready to share</span>
+              <span class="post-share-sub">Forward these with your own branding stamped on</span>
+            </span>
+          </div>
+
+          <!-- Your branding — the logo and details stamped onto every post this
+               agent shares. Saved on this device as soon as it's changed. -->
+          <div class="branding-card">
+            <div class="branding-head">
+              <span class="branding-title">Your branding</span>
+              <span class="branding-sub">Stamped onto every post you share. Set it once.</span>
+            </div>
+
+            <div class="branding-field">
+              <span class="branding-label">Your logo</span>
+
+              <div class="branding-logo-row">
+                <div class="branding-logo-box" *ngIf="brandingLogo">
+                  <img [src]="brandingLogo" class="branding-logo-img" alt="" />
+                </div>
+                <div class="branding-logo-actions">
+                  <label class="branding-upload-btn">
+                    <input type="file" accept="image/*" (change)="onBrandingLogoSelected($event)" hidden />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="branding-upload-svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>{{ brandingLogo ? 'Replace logo' : 'Add logo' }}</span>
+                  </label>
+                  <button type="button" class="branding-remove-btn" *ngIf="brandingLogo" (click)="removeBrandingLogo()">
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <span class="branding-error" *ngIf="brandingError">{{ brandingError }}</span>
+              <span class="branding-hint" *ngIf="!brandingError">Goes in the top-right corner. A PNG with a transparent background works best.</span>
+            </div>
+
+            <div class="branding-field">
+              <span class="branding-label">Your details</span>
+              <textarea
+                class="branding-textarea"
+                [(ngModel)]="brandingDetails"
+                maxlength="160"
+                rows="3"
+                placeholder="Your name&#10;+91 98765 43210&#10;Main Road, Indore"></textarea>
+              <span class="branding-hint">Goes in the bottom-right corner, one line each, up to four lines.</span>
+            </div>
+          </div>
+
+          <div class="post-strip">
+            <article class="post-card" *ngFor="let post of sharePosts; trackBy: trackByPostId">
+              <div class="post-card-media">
+                <img [src]="post.image" class="post-card-img" alt="Post" (error)="onImgError($event)" decoding="async" />
+                <span class="post-new-pill" *ngIf="isNewPost(post)">New</span>
+              </div>
+              <p class="post-card-caption" *ngIf="post.caption">{{ post.caption }}</p>
+              <button class="post-share-btn" (click)="sharePost(post)" [disabled]="!!sharingPostId">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="post-share-svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342a3 3 0 000-2.684m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                <span>{{ sharingPostId === post.id ? 'Preparing…' : 'Share' }}</span>
+              </button>
+            </article>
+          </div>
+        </section>
+
+        <!-- Tapping search opens the full product list with live filtering -->
+        <button class="catalog-search as-button" (click)="showProducts()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+          <span class="search-placeholder">Search products</span>
+        </button>
+
+        <section class="section-head">
+          <h2 class="section-title">Shop by category</h2>
+          <p class="section-sub">Pick a category to see the range</p>
+        </section>
+
+        <section class="category-grid">
+          <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId" (click)="openCategory(cat.name)">
+            <div class="cat-grid-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+            </div>
+            <span class="cat-grid-name">{{ cat.name }}</span>
+          </button>
+
+          <div class="category-empty-state" *ngIf="categoryCards.length === 0">
+            <span>No categories yet.</span>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- PRODUCTS TAB head -->
+      <section class="section-head" *ngIf="activeTab === 'products'">
+        <p class="section-sub">The full Glaron range — image, specification and every variant.</p>
+
+        <div class="catalog-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+          <input type="text" class="search-field" [(ngModel)]="searchQuery" placeholder="Search products" />
+          <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
+        </div>
+
+        <div class="category-select-wrapper">
+          <select [(ngModel)]="selectedCategory" class="cat-select-dropdown">
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- PRODUCT CARDS — image, name, description, variants. Nothing else. -->
+      <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
+
+        <article class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">
+
+          <div class="card-head-row">
+            <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
+              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product" decoding="async" />
+            </div>
+
+            <div class="card-head-info">
+              <span class="category-uppercase-tag" *ngIf="product.category">{{ product.category }}</span>
+              <h3 class="product-title" (click)="openDescModal(product)">{{ product.name }}</h3>
+              <p class="product-description">{{ product.description || 'High-performance lighting solution designed for modern spaces.' }}</p>
+            </div>
+          </div>
+
+          <div class="product-variants-body" *ngIf="product.variants?.length">
+            <span class="variants-header">Variants</span>
+            <div class="variants-inline-list">
+              <span class="variant-chip" *ngFor="let variant of product.variants; trackBy: trackByVariantIndex">
+                {{ getVariantLabel(variant) }}
+              </span>
+            </div>
+          </div>
+
+        </article>
+
+        <div class="g-empty" *ngIf="displayedProducts.length === 0">
+          <div class="g-empty-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <p class="g-empty-title">No products found</p>
+          <p class="g-empty-desc">Try a different search term or category.</p>
+        </div>
+
+      </section>
+
+      <!-- COMMISSION TAB -->
+      <ng-container *ngIf="activeTab === 'commission'">
+        <section class="commission-summary">
+          <div class="cs-card primary">
+            <span class="cs-label">Total commission earned</span>
+            <span class="cs-value">₹{{ totalCommission | number:'1.0-2' }}</span>
+          </div>
+          <div class="cs-row">
+            <div class="cs-card">
+              <span class="cs-label">Total sales</span>
+              <span class="cs-value small">₹{{ totalSales | number:'1.0-0' }}</span>
+            </div>
+            <div class="cs-card">
+              <span class="cs-label">Average rate</span>
+              <span class="cs-value small">{{ blendedRate | number:'1.0-2' }}%</span>
+            </div>
+          </div>
+          <div class="cs-row">
+            <div class="cs-card">
+              <span class="cs-label">Paid</span>
+              <span class="cs-value small">₹{{ totalPaid | number:'1.0-2' }}</span>
+            </div>
+            <div class="cs-card">
+              <span class="cs-label">Remaining</span>
+              <span class="cs-value small" [class.due]="remaining > 0">₹{{ remaining | number:'1.0-2' }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-head tight">
+          <h2 class="section-title">Statement</h2>
+          <p class="section-sub">Every entry recorded by the Glaron team, newest first.</p>
+        </section>
+
+        <section class="commission-list">
+          <article class="commission-entry" *ngFor="let entry of commissionEntries; trackBy: trackByEntryId">
+            <div class="ce-top">
+              <span class="ce-date">{{ entry.date | date:'mediumDate' }}</span>
+              <span class="ce-pct">{{ entry.percentage | number:'1.0-2' }}%</span>
+            </div>
+            <div class="ce-mid">
+              <span class="ce-sales-label">Sales amount</span>
+              <span class="ce-sales">₹{{ entry.salesAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="ce-bottom">
+              <span class="ce-comm-label">Commission</span>
+              <span class="ce-comm">₹{{ entry.commissionAmount | number:'1.0-2' }}</span>
+            </div>
+            <p class="ce-note" *ngIf="entry.note">{{ entry.note }}</p>
+          </article>
+
+          <div class="g-empty" *ngIf="commissionEntries.length === 0">
+            <div class="g-empty-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-9 0h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <p class="g-empty-title">No commission yet</p>
+            <p class="g-empty-desc">As soon as the Glaron team records your business, it appears here.</p>
+          </div>
+        </section>
+
+        <!-- Payouts received. Only shown once there is one — an empty section
+             would just read as "you have never been paid". -->
+        <ng-container *ngIf="commissionPayments.length">
+          <section class="section-head tight">
+            <h2 class="section-title">Payments received</h2>
+            <p class="section-sub">Amounts already paid out against the commission above.</p>
+          </section>
+
+          <section class="commission-list">
+            <article class="commission-entry paid" *ngFor="let payment of commissionPayments; trackBy: trackByPaymentId">
+              <div class="ce-top">
+                <span class="ce-date">{{ payment.date | date:'mediumDate' }}</span>
+                <span class="ce-paid">₹{{ payment.amount | number:'1.0-2' }}</span>
+              </div>
+              <p class="ce-note" *ngIf="payment.note">{{ payment.note }}</p>
+            </article>
+          </section>
+        </ng-container>
+      </ng-container>
+
+    </main>
+
+    <!-- Bottom navigation — a floating dock with three destinations. -->
+    <nav class="bottom-nav-bar">
+      <div class="nav-tab-group" [attr.data-active]="tabIndex">
+        <span class="nav-indicator" aria-hidden="true"></span>
+
+        <button class="nav-tab-item" [class.active]="activeTab === 'home'" (click)="showHome()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="tab-label">Home</span>
+        </button>
+
+        <button class="nav-tab-item" [class.active]="activeTab === 'products'" (click)="showProducts()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span class="tab-label">Products</span>
+        </button>
+
+        <button class="nav-tab-item" [class.active]="activeTab === 'commission'" (click)="showCommission()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-9 0h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+          <span class="tab-label">Commission</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Share feedback -->
+    <div class="g-toast" *ngIf="toastMessage">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+
+    <!-- Description modal -->
+    <div class="sheet-overlay" *ngIf="selectedDescProduct" (click)="closeDescModal()">
+      <div class="sheet-card" (click)="$event.stopPropagation()">
+        <div class="sheet-header">
+          <h3>{{ selectedDescProduct.name }}</h3>
+          <button class="close-sheet-btn" (click)="closeDescModal()">&times;</button>
+        </div>
+        <div class="sheet-body">
+          <span class="desc-category-tag" *ngIf="selectedDescProduct.category">{{ selectedDescProduct.category }}</span>
+          <p class="desc-full-text">{{ selectedDescProduct.description || 'High-performance lighting solution designed for modern spaces.' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image lightbox -->
+    <div class="lightbox-overlay" *ngIf="selectedModalImage" (click)="closeImageModal()">
+      <div class="lightbox-card" (click)="$event.stopPropagation()">
+        <button class="close-lightbox" (click)="closeImageModal()">&times;</button>
+        <img [src]="selectedModalImage" class="lightbox-img" [alt]="selectedModalImageTitle" />
+        <span class="lightbox-title">{{ selectedModalImageTitle }}</span>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

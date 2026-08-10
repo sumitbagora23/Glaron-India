@@ -1,0 +1,199 @@
+<ion-content [scrollY]="true">
+<div class="settings-page" [class.is-detail]="activeSection !== 'menu'">
+
+  <!-- ============ MENU: list of settings, each opens its own full page ============ -->
+  <ng-container *ngIf="activeSection === 'menu'">
+    <div class="settings-header">
+      <h1 class="settings-title">Settings</h1>
+      <p class="settings-subtitle">Configure app-wide options for the dealer panel.</p>
+    </div>
+
+    <div class="settings-menu">
+      <button class="settings-menu-item" (click)="openSection('call')">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+        </span>
+        <span class="menu-text">
+          <span class="menu-title">Dealer Call Button Number</span>
+          <span class="menu-desc">The number the dealer panel "Call" button dials.</span>
+        </span>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <button class="settings-menu-item" (click)="openSection('alerts')">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        </span>
+        <span class="menu-text">
+          <span class="menu-title">New Order Alerts</span>
+          <span class="menu-desc">Get notified on this device when a dealer places an order.</span>
+        </span>
+        <span class="menu-pill" [class.on]="alertsOn">{{ alertsOn ? 'On' : 'Off' }}</span>
+        <svg class="menu-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <!-- Version + manual update. The console updates itself on launch; this
+           is here so you can confirm which build you are on. -->
+      <div class="settings-menu-item version-row">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </span>
+        <span class="menu-text">
+          <span class="menu-title">App version</span>
+          <span class="menu-desc">v{{ appVersion }}</span>
+        </span>
+        <button class="version-update-btn" (click)="checkUpdate()"
+                [disabled]="updateState === 'checking' || updateState === 'updating'">
+          <ng-container [ngSwitch]="updateState">
+            <span *ngSwitchCase="'checking'">Checking…</span>
+            <span *ngSwitchCase="'updating'">Updating…</span>
+            <span *ngSwitchCase="'latest'">Up to date</span>
+            <span *ngSwitchCase="'unavailable'">Not installed</span>
+            <span *ngSwitchDefault>Check for update</span>
+          </ng-container>
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ============ DETAIL: New Order Alerts ============ -->
+  <ng-container *ngIf="activeSection === 'alerts'">
+    <header class="detail-topbar">
+      <button class="detail-back-btn" (click)="backToMenu()" aria-label="Back to settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h1 class="detail-title">New Order Alerts</h1>
+    </header>
+
+    <div class="settings-card">
+      <div class="card-head">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        </div>
+        <div class="card-head-text">
+          <h2 class="card-title">Alerts on this device</h2>
+          <p class="card-desc">
+            When a dealer places an order it appears in this device's notification
+            bar — even when the admin app is closed. Notifications are granted per
+            device, so turn them on wherever you want to be alerted.
+          </p>
+        </div>
+      </div>
+
+      <div class="alert-status" [class.on]="alertsOn">
+        <span class="alert-dot"></span>
+        <span *ngIf="alertsOn && pushActive">Order alerts are on. Background push is active on this device.</span>
+        <span *ngIf="alertsOn && !pushActive">
+          Notifications are allowed, but background push isn’t registered yet.
+          Alerts will still appear while the console is open.
+        </span>
+        <span *ngIf="!alertsOn && !alertsBlocked">Order alerts are off on this device.</span>
+        <span *ngIf="alertsBlocked">
+          Notifications are blocked for this app. Allow them in your browser or
+          device settings, then reload.
+        </span>
+      </div>
+
+      <p class="form-hint" *ngIf="needsInstallFirst">
+        On iPhone and iPad, notifications only work once the console has been
+        added to the Home Screen and opened from there.
+      </p>
+
+      <p class="form-error" *ngIf="push.lastError()">{{ push.lastError() }}</p>
+
+      <div class="form-actions">
+        <button class="save-btn" *ngIf="!alertsOn && !alertsBlocked && !needsInstallFirst" (click)="enableAlerts()" [disabled]="enablingAlerts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="save-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{{ enablingAlerts ? 'Requesting…' : 'Turn on order alerts' }}</span>
+        </button>
+
+        <button class="save-btn" *ngIf="needsInstallFirst" (click)="openInstallGuide()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="save-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+          </svg>
+          <span>How to install on iPhone</span>
+        </button>
+
+        <button class="save-btn secondary" *ngIf="alertsOn" (click)="sendTestAlert()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="save-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+          <span>{{ testSent ? 'Sent — check your notifications' : 'Send a test alert' }}</span>
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ============ DETAIL: Dealer Call Button Number ============ -->
+  <ng-container *ngIf="activeSection === 'call'">
+    <header class="detail-topbar">
+      <button class="detail-back-btn" (click)="backToMenu()" aria-label="Back to settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h1 class="detail-title">Dealer Call Button Number</h1>
+    </header>
+
+    <div class="settings-card">
+      <div class="card-head">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+        </div>
+        <div class="card-head-text">
+          <h2 class="card-title">Dealer Call Button Number</h2>
+          <p class="card-desc">This number powers the "Call" button in the dealer panel. When a dealer taps it, their device dials this number directly. It is also used for the WhatsApp enquiry button on each product.</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="callNumber">Phone Number</label>
+        <input
+          id="callNumber"
+          type="tel"
+          class="form-input"
+          [(ngModel)]="callNumber"
+          placeholder="e.g. +91 98765 43210"
+          autocomplete="off" />
+        <span class="form-error" *ngIf="errorMsg">{{ errorMsg }}</span>
+        <span class="form-hint" *ngIf="!errorMsg">Include the country code so it works on every device.</span>
+      </div>
+
+      <div class="form-actions">
+        <button class="save-btn" (click)="save()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="save-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          Save Number
+        </button>
+        <span class="saved-badge" *ngIf="saved">Saved!</span>
+      </div>
+    </div>
+  </ng-container>
+
+</div>
+</ion-content>

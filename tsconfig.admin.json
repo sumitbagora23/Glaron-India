@@ -1,0 +1,17 @@
+/* TypeScript config for the standalone Glaron Admin PWA (admin-app/).
+ * Mirrors tsconfig.app.json, but compiles only the admin project's sources so
+ * the two apps stay independent builds. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/admin",
+    "types": []
+  },
+  "files": [
+    "admin-app/src/main.ts",
+    "admin-app/src/polyfills.ts"
+  ],
+  "include": [
+    "admin-app/src/**/*.d.ts"
+  ]
+}

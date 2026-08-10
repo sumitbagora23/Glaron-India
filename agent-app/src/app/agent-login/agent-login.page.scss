@@ -1,0 +1,12 @@
+/* ============================================================================
+   Agent sign-in.
+
+   The hero, sheet, form and footer styling all come from the shared `.auth-*`
+   rules in global.scss — including the agent teal palette and the AGENT badge.
+   This file previously carried a byte-for-byte copy of the dealer portal's
+   purple hero, which is how the two apps ended up with identical login screens;
+   only genuinely page-specific rules belong here now.
+   ============================================================================ */
+ion-content { --background: var(--g-bg); }
+
+.app-version { color: var(--g-text-faint); }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Glaron India</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+
+  <!--
+    The agent app is retired.
+
+    Dealers and sales agents now share ONE app behind ONE link: the sign-in form
+    on the dealer host recognises both kinds of account and opens the matching
+    panel. This site exists only so the old agent URL — bookmarks, the shortcut
+    on an already-installed agent PWA, links in old WhatsApp messages — still
+    lands somewhere useful instead of 404ing.
+
+    firebase.json sends every path here to the surviving link with a 301 before
+    this file is ever served; it is the belt-and-braces fallback for the case
+    where a client ignores the redirect.
+  -->
+  <meta http-equiv="refresh" content="0; url=https://glaron-dealer.web.app/" />
+  <link rel="canonical" href="https://glaron-dealer.web.app/" />
+  <script>window.location.replace('https://glaron-dealer.web.app/');</script>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #170338;
+      color: #fff;
+      font: 500 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      text-align: center;
+      padding: 24px;
+    }
+    a { color: #FEB300; font-weight: 700; }
+  </style>
+</head>
+
+<body>
+  <p>
+    The Glaron India app has moved.<br />
+    <a href="https://glaron-dealer.web.app/">Open the app</a>
+  </p>
+</body>
+
+</html>

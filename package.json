@@ -1,5 +1,5 @@
 {
-  "name": "temp-ionic-app",
+  "name": "glaron-india",
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
@@ -9,7 +9,22 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "version:bump": "node scripts/gen-version.mjs",
+    "deploy": "npm run deploy:dealer && npm run deploy:admin && npm run deploy:agent",
+    "deploy:dealer": "node scripts/gen-version.mjs && ng build && firebase deploy --only hosting:dealer",
+
+    "start:admin": "ng serve admin",
+    "build:admin": "ng build admin",
+    "version:bump:admin": "node scripts/gen-version-admin.mjs",
+    "deploy:admin": "node scripts/gen-version-admin.mjs && ng build admin && firebase deploy --only hosting:admin",
+
+    "start:agent": "ng serve agent",
+    "build:agent": "ng build agent",
+    "version:bump:agent": "node scripts/gen-version-agent.mjs",
+
+    "deploy:agent": "firebase deploy --only hosting:agent",
+    "deploy:functions": "firebase deploy --only functions"
   },
   "private": true,
   "dependencies": {
@@ -17,16 +32,19 @@
     "@angular/common": "20.3.25",
     "@angular/compiler": "20.3.25",
     "@angular/core": "20.3.25",
+    "@angular/fire": "^20.0.1",
     "@angular/forms": "20.3.25",
     "@angular/platform-browser": "20.3.25",
     "@angular/platform-browser-dynamic": "20.3.25",
     "@angular/router": "20.3.25",
+    "@angular/service-worker": "^20.3.25",
     "@capacitor/app": "8.1.1",
     "@capacitor/core": "8.5.0",
     "@capacitor/haptics": "8.0.2",
     "@capacitor/keyboard": "8.0.5",
     "@capacitor/status-bar": "8.0.3",
     "@ionic/angular": "^8.0.0",
+    "firebase": "^12.17.0",
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

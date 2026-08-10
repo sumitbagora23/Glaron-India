@@ -30,7 +30,7 @@ log.txt
 /bazel-out
 
 # Node
-/node_modules
+node_modules/
 npm-debug.log
 yarn-error.log
 
@@ -68,3 +68,19 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Admin PWA build output (separate app from the dealer PWA)
+/www-admin
+/www-agent
+
+# Firebase deploy cache / local tooling
+.firebase/
+firebase-debug.log
+.claude/
+
+# One-off PDF/image extraction scratch output (regenerate with the root *.mjs scripts)
+/crop_review
+/scratch_render
+/scratch_*.png
+# duplicate of src/assets/catalog.pdf.pdf, which is the copy the app actually serves
+/catalog.pdf.pdf

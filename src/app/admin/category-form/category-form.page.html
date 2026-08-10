@@ -1,0 +1,68 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">{{ isEditMode ? 'Edit Category' : 'Add Category' }}</h2>
+      </div>
+    </div>
+
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form-card">
+
+      <!-- Image upload -->
+      <div class="form-field">
+        <label class="field-label">Category Image</label>
+
+        <div class="image-upload-area">
+          <div class="image-preview-box" [class.has-image]="imagePreview">
+            <img *ngIf="imagePreview" [src]="imagePreview" class="preview-img" alt="Category image preview" />
+            <div *ngIf="!imagePreview" class="upload-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V18a2 2 0 002 2h14a2 2 0 002-2v-1.5M12 3v13.5M12 3l-4 4m4-4l4 4" />
+              </svg>
+              <span class="upload-hint">No image selected</span>
+            </div>
+          </div>
+
+          <div class="image-actions">
+            <label class="upload-btn">
+              <input type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+              {{ imagePreview ? 'Change Image' : 'Upload Image' }}
+            </label>
+            <button type="button" class="remove-img-btn" *ngIf="imagePreview" (click)="removeImage()">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div class="form-field">
+        <label class="field-label" for="cat-name">Category Name <span class="req">*</span></label>
+        <input
+          id="cat-name"
+          type="text"
+          formControlName="name"
+          class="text-input"
+          placeholder="e.g. Panel Lights"
+          [class.input-error]="submitted && categoryForm.get('name')?.invalid"
+        />
+        <span class="error-text" *ngIf="submitted && categoryForm.get('name')?.invalid">
+          Please enter a category name (at least 2 characters).
+        </span>
+      </div>
+
+      <!-- Save error (e.g. image too large for Firestore) -->
+      <div class="save-error-banner" *ngIf="saveError">{{ saveError }}</div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="discard-btn" (click)="discard()">Cancel</button>
+        <button type="submit" class="save-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Saving…' : (isEditMode ? 'Save Changes' : 'Add Category') }}
+        </button>
+      </div>
+
+    </form>
+
+  </main>
+</ion-content>

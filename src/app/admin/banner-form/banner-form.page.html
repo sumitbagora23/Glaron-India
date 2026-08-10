@@ -1,0 +1,55 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Add Banner</h2>
+      </div>
+    </div>
+
+    <section class="form-card">
+
+      <!-- Picked banners -->
+      <div class="form-field" *ngIf="pending.length">
+        <label class="field-label">Selected Banners <span class="field-count">({{ pending.length }})</span></label>
+
+        <div class="banner-list">
+          <div class="banner-preview" *ngFor="let banner of pending; let i = index">
+            <span class="banner-order-badge">{{ i + 1 }}</span>
+            <img [src]="banner" alt="Banner preview" class="banner-preview-img" />
+            <div class="banner-reorder">
+              <button type="button" class="banner-move-btn" (click)="moveUp(i)" [disabled]="i === 0" aria-label="Move up">&#9650;</button>
+              <button type="button" class="banner-move-btn" (click)="moveDown(i)" [disabled]="i === pending.length - 1" aria-label="Move down">&#9660;</button>
+            </div>
+            <button type="button" class="banner-remove-btn" (click)="removePending(i)" aria-label="Remove banner">&times;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload -->
+      <div class="form-field">
+        <label class="field-label">Banner Image</label>
+        <label class="banner-upload-drop" [class.compact]="pending.length">
+          <input type="file" accept="image/*" multiple (change)="onBannerSelected($event)" hidden />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>{{ pending.length ? 'Add more banner images' : 'Click to upload banner image(s)' }}</span>
+        </label>
+        <span class="error-text" *ngIf="errorMsg">{{ errorMsg }}</span>
+        <span class="hint-text" *ngIf="!errorMsg">A wide rectangle works best (e.g. 1200×400). You can select several images at once; use ▲▼ to set their order.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="discard-btn" (click)="cancel()">Cancel</button>
+        <button type="button" class="save-btn" (click)="save()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Add Banner' }}
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+</ion-content>

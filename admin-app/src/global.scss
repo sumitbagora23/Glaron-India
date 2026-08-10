@@ -1,0 +1,995 @@
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Put style rules here that you want to apply globally. These styles are for
+ * the entire app and not just one component. Additionally, this file can be
+ * used as an entry point to import other CSS/Sass files to be included in the
+ * output CSS.
+ * For more information on global stylesheets, visit the documentation:
+ * https://ionicframework.com/docs/layout/global-stylesheets
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Core CSS required for Ionic components to work properly */
+@import "@ionic/angular/css/core.css";
+
+html, body, p, h1, h2, h3, h4, h5, h6, input, button, select, textarea, ion-content, ion-label, span, a, div {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Basic CSS for apps built with Ionic */
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Optional CSS utils that can be commented out */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+/**
+ * Ionic Dark Mode — deliberately NOT enabled.
+ * -----------------------------------------------------
+ * The console is a fixed light design: every surface, border and text colour
+ * below is a hard-coded light-theme value. Ionic's system dark palette only
+ * repaints its own primitives (it flips --ion-background-color to #121212 and
+ * --ion-text-color to #ffffff), so on a phone set to dark mode the page went
+ * black behind cards that were still white, and inherited white text landed on
+ * those white cards — invisible. Until the whole palette has a dark counterpart
+ * there is nothing to gain by half-applying one.
+ *
+ * `color-scheme: light` below is the other half of the lock: it stops the
+ * browser itself darkening the things CSS does not reach — native selects,
+ * date pickers, scrollbars and autofill backgrounds.
+ *
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
+
+/* @import "@ionic/angular/css/palettes/dark.always.css"; */
+/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+/* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #FCF9F8;
+  color: #170338;
+}
+
+ion-app,
+ion-content {
+  --background: #FCF9F8;
+  --color: #170338;
+}
+
+/* ==========================================================================
+   Admin Panel Shared Layout Styles
+   ========================================================================== */
+
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  padding-left: 280px;
+  box-sizing: border-box;
+  background: linear-gradient(0deg, #FCF9F8, #FCF9F8), #FFFFFF;
+  overflow: hidden;
+}
+
+.sidebar-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px 0px;
+  position: absolute;
+  width: 280px;
+  height: 100%;
+  left: 0px;
+  top: 0px;
+  background: #FCF9F8;
+  border-right: 1px solid #CBC4D0;
+  z-index: 10;
+}
+
+.brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 24px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 32px;
+}
+
+.brand-title {
+  margin: 0px;
+  width: 100%;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.32px;
+  color: #170338;
+}
+
+.brand-subtitle {
+  margin: 0px;
+  width: 100%;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.14px;
+  color: #49454E;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+  list-style: none;
+}
+
+.nav-item {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px 16px 12px 24px;
+  width: 100%;
+  height: 44px;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+  color: #49454E;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(234, 231, 231, 0.5);
+  }
+
+  &.active {
+    background: #EAE7E7;
+    border-left: 4px solid #7E5700;
+    color: #7E5700;
+    font-weight: 600;
+
+    .nav-svg-icon {
+      color: #7E5700;
+    }
+  }
+}
+
+.nav-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}
+
+.nav-svg-icon {
+  width: 20px;
+  height: 20px;
+  color: #49454E;
+  transition: color 0.2s ease;
+}
+
+.nav-text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.14px;
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.new-order-btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0px;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  background: #FEB300;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #E09E00;
+  }
+}
+
+.btn-plus-icon {
+  width: 16px;
+  height: 16px;
+  color: #6A4800;
+}
+
+.btn-text-gold {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.14px;
+  color: #6A4800;
+}
+
+.topbar-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 24px;
+  position: absolute;
+  width: calc(100% - 280px);
+  height: 64px;
+  right: 0px;
+  top: 0px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #CBC4D0;
+  z-index: 9;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
+}
+
+.topbar-breadcrumb {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+
+  .crumb-root {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: #79747E;
+  }
+
+  .crumb-sep {
+    width: 16px;
+    height: 16px;
+    color: #CBC4D0;
+    flex-shrink: 0;
+  }
+
+  .crumb-current {
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: -0.18px;
+    color: #170338;
+  }
+}
+
+.topbar-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 256px;
+  height: 34px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  color: #49454E;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 34px;
+  box-sizing: border-box;
+  background: #F6F3F2;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 7px 16px 7px 40px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 18px;
+  color: #170338;
+  outline: none;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: #6B7280;
+  }
+
+  &:focus {
+    background: #FFFFFF;
+    border-color: #170338;
+    box-shadow: 0 0 0 2px rgba(23, 3, 56, 0.05);
+  }
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #49454E;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #F3F4F6;
+    color: #170338;
+  }
+}
+
+.topbar-svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-avatar-container {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #CBC4D0;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FCF9F8;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.avatar-fallback-box {
+  width: 30px;
+  height: 30px;
+  background-color: #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #49454E;
+}
+
+.avatar-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.content-canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 24px;
+  gap: 24px;
+  width: 100%;
+  height: 100%;
+  margin-top: 0px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.breadcrumbs-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  height: 16px;
+}
+
+.breadcrumb-item {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #49454E;
+
+  &.active {
+    font-weight: 700;
+    color: #7E5700;
+  }
+}
+
+.breadcrumb-separator {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #49454E;
+}
+
+.page-header-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-title {
+  margin: 0px;
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.32px;
+  color: #170338;
+}
+
+/* Global required-field marker (red asterisk) */
+.req-star {
+  color: #EF4444;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Glaron India brand logo — the real lockup artwork used across the app.
+ *   .brand-logo-full : full dark logo on light auth/login screens
+ *   .sidebar-logo    : admin sidebar header
+ *   .topbar-logo     : admin top bar / dealer top app bar
+ * ------------------------------------------------------------------ */
+.logo-box, .logo-container { height: auto !important; }
+
+.brand-logo-full {
+  width: min(232px, 74%);
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.sidebar-logo {
+  width: 148px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.topbar-logo {
+  height: 42px;
+  width: auto;
+  display: block;
+  cursor: pointer;
+}
+
+/* Small app version label (login screens / footers) */
+.app-version {
+  margin: 8px 0 0;
+  width: 100%;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  color: #9CA3AF;
+}
+
+/* ==========================================================================
+   Dealer App — Design Tokens (premium mobile UI)
+   --------------------------------------------------------------------------
+   Centralises the EXISTING Glaron palette (deep purple #170338 + gold #FEB300)
+   as CSS variables so every redesigned dealer screen stays consistent. This
+   only names colours already used across the app — the theme is unchanged.
+   ========================================================================== */
+:root {
+  /* Brand */
+  --g-primary:        #170338;   /* deep purple — headings, primary surfaces */
+  --g-primary-90:     #241150;   /* slightly lifted purple for gradients */
+  --g-primary-80:     #37215f;
+  --g-gold:           #FEB300;   /* primary gold — CTAs */
+  --g-gold-hover:     #E09E00;
+  --g-gold-strong:    #7E5700;   /* gold text / active accents */
+  --g-gold-deep:      #6A4800;
+  --g-accent:         #F5941D;   /* warm amber accent (boot splash spinner) */
+
+  /* Surfaces */
+  --g-bg:             #FCF9F8;   /* warm off-white app background */
+  --g-surface:        #FFFFFF;
+  --g-surface-2:      #F6F3F2;   /* subtle raised / input fill */
+  --g-surface-3:      #EFEAF0;
+
+  /* Lines */
+  --g-border:         #E7E1E9;   /* soft hairline */
+  --g-border-strong:  #CBC4D0;
+
+  /* Text */
+  --g-text:           #170338;
+  --g-text-muted:     #49454E;
+  --g-text-soft:      #79747E;
+  --g-text-faint:     #9CA3AF;
+
+  /* States */
+  --g-danger:         #DC2626;
+  --g-danger-bg:      #FEF2F2;
+  --g-success:        #16A34A;
+  --g-success-bg:     #F0FDF4;
+  --g-warn:           #B45309;
+  --g-warn-bg:        #FFF7ED;
+
+  /* Radii */
+  --g-r-sm: 10px;
+  --g-r-md: 14px;
+  --g-r-lg: 20px;
+  --g-r-xl: 28px;
+
+  /* Elevation (soft, premium) */
+  --g-shadow-sm: 0 1px 2px rgba(23, 3, 56, 0.05), 0 1px 3px rgba(23, 3, 56, 0.04);
+  --g-shadow-md: 0 4px 12px rgba(23, 3, 56, 0.07), 0 2px 6px rgba(23, 3, 56, 0.04);
+  --g-shadow-lg: 0 12px 32px rgba(23, 3, 56, 0.12), 0 4px 12px rgba(23, 3, 56, 0.06);
+  --g-shadow-gold: 0 8px 20px rgba(254, 179, 0, 0.28);
+
+  /* PWA safe areas (fall back to 0 on non-notch devices) */
+  --g-safe-top: env(safe-area-inset-top, 0px);
+  --g-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --g-safe-left: env(safe-area-inset-left, 0px);
+  --g-safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Reusable premium motion + state primitives shared by dealer screens */
+@keyframes g-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes g-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes g-pop {
+  0% { transform: scale(.85); opacity: 0; }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes g-spin { to { transform: rotate(360deg); } }
+@keyframes g-shimmer {
+  0% { background-position: -420px 0; }
+  100% { background-position: 420px 0; }
+}
+@keyframes g-toast-in {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Skeleton shimmer block — reused across empty/loading states */
+.g-skeleton {
+  background: linear-gradient(90deg, #efeaf0 25%, #f7f3f8 37%, #efeaf0 63%);
+  background-size: 840px 100%;
+  animation: g-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--g-r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-skeleton { animation: none; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ==========================================================================
+   Dealer App — Shared UI Primitives (global, unscoped so every dealer page
+   renders identical fields, buttons, alerts, chips and states).
+   ========================================================================== */
+
+/* ---- Form field ---- */
+.g-field { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+
+.g-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .1px;
+  color: var(--g-text-muted);
+  padding-left: 2px;
+}
+
+/* "(optional)" tag inside a field label — e.g. the email fields, which are no
+   longer required now that dealers sign in with a mobile number. */
+.g-label-optional {
+  font-weight: 500;
+  color: var(--g-text-faint);
+}
+
+.g-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--g-surface-2);
+  border: 1.5px solid transparent;
+  border-radius: var(--g-r-md);
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+
+  &:focus-within {
+    background: var(--g-surface);
+    border-color: var(--g-primary);
+    box-shadow: 0 0 0 4px rgba(23, 3, 56, .06);
+  }
+  &.is-invalid {
+    border-color: var(--g-danger);
+    background: var(--g-danger-bg);
+  }
+  &.is-invalid:focus-within {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, .08);
+  }
+}
+
+.g-input-ic {
+  width: 20px; height: 20px;
+  margin-left: 14px;
+  color: var(--g-text-soft);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Fixed leading text inside an input (the +91 on every mobile-number field). */
+.g-input-prefix {
+  margin-left: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--g-text-muted);
+  border-right: 1.5px solid var(--g-border-strong);
+  padding-right: 11px;
+  flex-shrink: 0;
+}
+
+.g-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 15px 14px;
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--g-text);
+
+  &::placeholder { color: var(--g-text-faint); font-weight: 500; }
+}
+/* textarea variant */
+textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
+
+.g-input-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  align-self: stretch;
+  border: none;
+  background: transparent;
+  color: var(--g-text-soft);
+  cursor: pointer;
+  border-radius: 0 var(--g-r-md) var(--g-r-md) 0;
+
+  svg { width: 20px; height: 20px; }
+  &:active { color: var(--g-primary); }
+}
+
+.g-field-err {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--g-danger);
+  padding-left: 2px;
+  animation: g-fade-in .2s ease;
+}
+.g-field-hint {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--g-text-soft);
+  padding-left: 2px;
+}
+
+/* ---- Buttons ---- */
+.g-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: var(--g-r-md);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .22s ease, background .2s ease, opacity .2s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { transform: translateY(1px) scale(.99); }
+  &:disabled { cursor: default; }
+}
+.g-btn--primary {
+  background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
+  color: var(--g-primary);
+  box-shadow: var(--g-shadow-gold);
+
+  &:hover { background: linear-gradient(135deg, #FFC01F 0%, #F79A22 100%); }
+  &:disabled { opacity: .7; box-shadow: none; }
+}
+.g-btn--dark {
+  background: var(--g-primary);
+  color: #fff;
+  box-shadow: var(--g-shadow-md);
+  &:hover { background: var(--g-primary-90); }
+  &:disabled { opacity: .6; }
+}
+.g-btn--ghost {
+  background: var(--g-surface-2);
+  color: var(--g-text);
+  &:hover { background: var(--g-surface-3); }
+}
+.g-btn--outline {
+  background: transparent;
+  border: 1.5px solid var(--g-border-strong);
+  color: var(--g-text);
+  &:hover { background: var(--g-surface-2); }
+}
+.g-btn.is-loading { pointer-events: none; }
+
+.g-btn-spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(23,3,56,.25);
+  border-top-color: var(--g-primary);
+  border-radius: 50%;
+  animation: g-spin .7s linear infinite;
+  flex-shrink: 0;
+}
+.g-btn--dark .g-btn-spinner { border-color: rgba(255,255,255,.3); border-top-color: #fff; }
+
+/* ---- Alerts ---- */
+.g-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 15px;
+  border-radius: var(--g-r-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  animation: g-fade-up .25s ease;
+
+  .g-alert-ic { width: 19px; height: 19px; flex-shrink: 0; margin-top: 1px; }
+}
+.g-alert--error { background: var(--g-danger-bg); color: var(--g-danger); }
+.g-alert--success { background: var(--g-success-bg); color: var(--g-success); }
+.g-alert--info { background: var(--g-warn-bg); color: var(--g-warn); }
+
+/* ---- Checkbox ---- */
+.g-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+
+  input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+  .g-checkbox-box {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--g-border-strong);
+    background: var(--g-surface);
+    display: grid;
+    place-items: center;
+    transition: all .16s ease;
+    flex-shrink: 0;
+    svg { width: 14px; height: 14px; color: #fff; opacity: 0; transform: scale(.6); transition: all .16s ease; }
+  }
+  input:checked + .g-checkbox-box {
+    background: var(--g-primary);
+    border-color: var(--g-primary);
+    svg { opacity: 1; transform: scale(1); }
+  }
+  .g-checkbox-text { font-size: 14px; font-weight: 600; color: var(--g-text-muted); }
+}
+
+/* ---- Toast ---- */
+.g-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--g-safe-bottom) + 92px);
+  transform: translateX(-50%);
+  z-index: 4000;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(92vw, 420px);
+  padding: 13px 18px;
+  border-radius: 999px;
+  background: var(--g-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--g-shadow-lg);
+  animation: g-toast-in .28s cubic-bezier(.2,.8,.3,1);
+
+  svg { width: 18px; height: 18px; color: var(--g-gold); flex-shrink: 0; }
+}
+
+/* ---- Shared auth layout (login / forgot / reset) ---- */
+.auth-screen { min-height: 100dvh; display: flex; flex-direction: column; background: var(--g-bg); }
+.auth-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 130% at 80% -10%, #37215f 0%, #241150 42%, #170338 100%);
+  padding: calc(var(--g-safe-top) + 46px) 26px 66px;
+  text-align: center;
+  &.compact { padding-top: calc(var(--g-safe-top) + 20px); padding-bottom: 60px; }
+}
+.auth-hero .hero-orb { position: absolute; border-radius: 50%; filter: blur(48px); pointer-events: none; }
+.auth-hero .orb-1 { width: 220px; height: 220px; top: -70px; right: -60px; background: radial-gradient(circle, rgba(254,179,0,.5), transparent 70%); animation: g-fade-in 1s ease both; }
+.auth-hero .orb-2 { width: 200px; height: 200px; bottom: -40px; left: -70px; background: radial-gradient(circle, rgba(123,60,180,.5), transparent 70%); animation: g-fade-in 1.2s ease both; }
+.auth-hero .hero-inner { position: relative; z-index: 2; animation: g-fade-up .6s ease both; }
+.auth-hero .hero-back {
+  display: inline-grid; place-items: center;
+  width: 40px; height: 40px;
+  margin: 0 auto 14px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+  svg { width: 20px; height: 20px; }
+  &:active { background: rgba(255,255,255,.18); }
+}
+.auth-hero .hero-logo { width: min(190px, 54%); height: auto; display: block; margin: 0 auto 22px; filter: drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
+.auth-hero .hero-welcome { margin: 0 0 6px; color: #fff; font-size: clamp(24px, 6.6vw, 29px); font-weight: 800; letter-spacing: -0.4px; }
+.auth-hero .hero-sub { margin: 0; color: rgba(255,255,255,.72); font-size: 14.5px; font-weight: 500; }
+.auth-hero .hero-curve { position: absolute; left: 0; right: 0; bottom: -1px; height: 34px; background: var(--g-bg); border-radius: 34px 34px 0 0; }
+
+.auth-sheet {
+  position: relative; z-index: 3; flex: 1;
+  margin-top: -22px;
+  padding: 16px 24px calc(var(--g-safe-bottom) + 30px);
+  background: var(--g-bg);
+}
+.auth-form { display: flex; flex-direction: column; gap: 17px; animation: g-fade-up .55s ease .08s both; }
+.auth-lead { margin: 0 0 2px; font-size: 14.5px; line-height: 1.55; font-weight: 500; color: var(--g-text-muted); }
+.auth-options { display: flex; align-items: center; justify-content: space-between; margin-top: -2px; }
+.auth-link { font-size: 14px; font-weight: 700; color: var(--g-gold-strong); cursor: pointer; &:active { opacity: .7; } }
+.auth-submit { margin-top: 6px; }
+.auth-foot {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 22px; font-size: 14.5px; font-weight: 500; color: var(--g-text-soft);
+  .auth-link.strong { color: var(--g-primary); font-weight: 800; }
+}
+
+/* ---- Empty state ---- */
+.g-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 26px;
+  gap: 8px;
+
+  .g-empty-ic {
+    width: 76px; height: 76px;
+    border-radius: 24px;
+    display: grid; place-items: center;
+    background: var(--g-surface-2);
+    color: var(--g-gold-strong);
+    margin-bottom: 8px;
+    svg { width: 36px; height: 36px; }
+  }
+  .g-empty-title { font-size: 17px; font-weight: 800; color: var(--g-text); margin: 0; }
+  .g-empty-desc { font-size: 14px; font-weight: 500; color: var(--g-text-soft); margin: 0; max-width: 280px; line-height: 1.5; }
+}
+
+/* ==========================================================================
+   Mobile page chrome (≤700px)
+
+   Shared across every routed admin page. Page-specific work (turning the data
+   tables into cards) lives in each page's own SCSS — routed pages are outside
+   the layout component's style scope, so anything shared has to be here.
+   ========================================================================== */
+@media (max-width: 700px) {
+  .content-canvas {
+    padding: 16px 14px 28px;
+    gap: 16px;
+  }
+
+  /* Title and its action buttons stop fitting on one line well before this. */
+  .page-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .header-actions-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+
+    > button,
+    > .category-filter {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  /* Cards lose their desktop insets so content keeps its width. */
+  .table-section-card {
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .table-scroll-container {
+    overflow-x: visible;
+  }
+
+  /* Anything still laid out for a desktop width scrolls rather than clips. */
+  .stats-row,
+  .metrics-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* iOS zooms the page when a focused input's font-size is under 16px. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

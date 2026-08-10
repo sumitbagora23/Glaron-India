@@ -1,0 +1,134 @@
+<ion-content [fullscreen]="true">
+  <div class="ob-stage" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+
+    <!-- Top bar: brand + skip -->
+    <header class="ob-top">
+      <img src="assets/glaron-logo-dark.png" alt="Glaron India" class="ob-logo" />
+      <button class="ob-skip" (click)="skip()" *ngIf="!isLast">Skip</button>
+    </header>
+
+    <!-- Sliding track -->
+    <div class="ob-viewport">
+      <div class="ob-track" [style.transform]="'translateX(' + (-index * 100) + '%)'">
+
+        <!-- Slide 1: Manage -->
+        <section class="ob-slide">
+          <div class="ob-art">
+            <svg viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Manage your business">
+              <defs>
+                <linearGradient id="obGold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#FEB300"/><stop offset="1" stop-color="#E09E00"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="160" cy="228" rx="118" ry="16" fill="#170338" opacity=".06"/>
+              <rect x="54" y="40" width="212" height="150" rx="18" fill="#170338"/>
+              <rect x="54" y="40" width="212" height="40" rx="18" fill="#241150"/>
+              <circle cx="74" cy="60" r="4.5" fill="#FEB300"/>
+              <rect x="86" y="56" width="72" height="8" rx="4" fill="#ffffff" opacity=".55"/>
+              <rect x="72" y="98" width="80" height="74" rx="12" fill="#ffffff" opacity=".08"/>
+              <rect x="84" y="112" width="40" height="8" rx="4" fill="#FEB300"/>
+              <rect x="84" y="130" width="56" height="7" rx="3.5" fill="#ffffff" opacity=".4"/>
+              <path d="M84 158h56" stroke="#ffffff" stroke-opacity=".25" stroke-width="6" stroke-linecap="round"/>
+              <rect x="168" y="98" width="80" height="34" rx="10" fill="#ffffff" opacity=".08"/>
+              <rect x="168" y="138" width="80" height="34" rx="10" fill="#ffffff" opacity=".08"/>
+              <rect x="180" y="110" width="34" height="8" rx="4" fill="#ffffff" opacity=".5"/>
+              <rect x="180" y="150" width="46" height="8" rx="4" fill="#ffffff" opacity=".5"/>
+              <circle cx="238" cy="150" r="9" fill="url(#obGold)"/>
+              <g>
+                <rect x="212" y="18" width="86" height="58" rx="14" fill="url(#obGold)"/>
+                <path d="M232 47l9 9 18-19" stroke="#170338" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="252" y="60" width="30" height="6" rx="3" fill="#170338" opacity=".35"/>
+              </g>
+            </svg>
+          </div>
+          <h2 class="ob-title">{{ slides[0].title }}</h2>
+          <p class="ob-desc">{{ slides[0].desc }}</p>
+        </section>
+
+        <!-- Slide 2: Grow -->
+        <section class="ob-slide">
+          <div class="ob-art">
+            <svg viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grow your business">
+              <ellipse cx="160" cy="228" rx="118" ry="16" fill="#170338" opacity=".06"/>
+              <rect x="46" y="52" width="228" height="146" rx="18" fill="#170338"/>
+              <path d="M70 172h180" stroke="#ffffff" stroke-opacity=".16" stroke-width="3" stroke-linecap="round"/>
+              <path d="M70 138h180" stroke="#ffffff" stroke-opacity=".1" stroke-width="2" stroke-dasharray="4 6"/>
+              <path d="M70 104h180" stroke="#ffffff" stroke-opacity=".1" stroke-width="2" stroke-dasharray="4 6"/>
+              <rect x="84" y="140" width="22" height="32" rx="6" fill="#ffffff" opacity=".18"/>
+              <rect x="120" y="120" width="22" height="52" rx="6" fill="#ffffff" opacity=".26"/>
+              <rect x="156" y="128" width="22" height="44" rx="6" fill="#ffffff" opacity=".22"/>
+              <rect x="192" y="98" width="22" height="74" rx="6" fill="#FEB300" opacity=".9"/>
+              <path d="M80 150c34-6 58-18 76-40s28-30 58-40" stroke="#FEB300" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <circle cx="214" cy="70" r="9" fill="#FEB300"/>
+              <path d="M214 66v8M210 70h8" stroke="#170338" stroke-width="2.4" stroke-linecap="round"/>
+              <g>
+                <circle cx="256" cy="44" r="18" fill="#E09E00"/>
+                <path d="M256 36v16M248 44h16" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+          <h2 class="ob-title">{{ slides[1].title }}</h2>
+          <p class="ob-desc">{{ slides[1].desc }}</p>
+        </section>
+
+        <!-- Slide 3: Everything -->
+        <section class="ob-slide">
+          <div class="ob-art">
+            <svg viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Everything in one place">
+              <ellipse cx="160" cy="230" rx="96" ry="15" fill="#170338" opacity=".06"/>
+              <rect x="112" y="26" width="96" height="200" rx="22" fill="#170338"/>
+              <rect x="120" y="34" width="80" height="184" rx="16" fill="#241150"/>
+              <rect x="150" y="42" width="20" height="5" rx="2.5" fill="#ffffff" opacity=".4"/>
+              <rect x="132" y="60" width="56" height="8" rx="4" fill="#FEB300"/>
+              <rect x="132" y="78" width="36" height="6" rx="3" fill="#ffffff" opacity=".35"/>
+              <g>
+                <rect x="132" y="98" width="26" height="26" rx="8" fill="#ffffff" opacity=".12"/>
+                <rect x="162" y="98" width="26" height="26" rx="8" fill="#FEB300" opacity=".9"/>
+                <rect x="132" y="130" width="26" height="26" rx="8" fill="#ffffff" opacity=".12"/>
+                <rect x="162" y="130" width="26" height="26" rx="8" fill="#ffffff" opacity=".12"/>
+              </g>
+              <rect x="132" y="168" width="56" height="34" rx="10" fill="#ffffff" opacity=".08"/>
+              <rect x="142" y="180" width="26" height="6" rx="3" fill="#FEB300"/>
+              <rect x="142" y="190" width="36" height="5" rx="2.5" fill="#ffffff" opacity=".3"/>
+              <!-- Floating chips -->
+              <g>
+                <rect x="40" y="70" width="60" height="44" rx="12" fill="#FEB300"/>
+                <path d="M56 92l7 7 14-15" stroke="#170338" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+              <g>
+                <rect x="222" y="140" width="60" height="44" rx="12" fill="#fff"/>
+                <rect x="222" y="140" width="60" height="44" rx="12" fill="#170338" opacity=".04"/>
+                <circle cx="238" cy="162" r="7" fill="#FEB300"/>
+                <rect x="250" y="158" width="22" height="5" rx="2.5" fill="#170338" opacity=".5"/>
+                <rect x="250" y="166" width="16" height="5" rx="2.5" fill="#170338" opacity=".25"/>
+              </g>
+            </svg>
+          </div>
+          <h2 class="ob-title">{{ slides[2].title }}</h2>
+          <p class="ob-desc">{{ slides[2].desc }}</p>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <footer class="ob-bottom">
+      <div class="ob-dots">
+        <button
+          *ngFor="let s of slides; let i = index"
+          class="ob-dot"
+          [class.active]="i === index"
+          (click)="goTo(i)"
+          [attr.aria-label]="'Go to slide ' + (i + 1)"
+        ></button>
+      </div>
+
+      <button class="ob-next-btn" (click)="next()">
+        <span>{{ isLast ? 'Get Started' : 'Next' }}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="ob-next-ic">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </button>
+    </footer>
+  </div>
+</ion-content>

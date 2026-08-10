@@ -1,0 +1,73 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Share Posts</h2>
+        <p class="page-subtitle">Images dealers can forward to their own customers from the home tab.</p>
+      </div>
+
+      <button class="add-product-btn" (click)="addPost()">
+        <svg class="btn-plus-white-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="btn-text-white">Add Post</span>
+      </button>
+    </div>
+
+    <!-- Live posts table -->
+    <section class="table-section-card">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-preview">Image</th>
+            <th class="th-name">Message</th>
+            <th class="th-time">Published</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let post of posts; let last = last; trackBy: trackById" [class.last-row-border]="last">
+
+            <!-- Image Cell -->
+            <td class="td-preview">
+              <div class="post-thumb-box">
+                <img [src]="post.image" class="post-thumb-img" alt="" loading="lazy" decoding="async" />
+              </div>
+            </td>
+
+            <!-- Caption Cell -->
+            <td class="td-name">
+              <span class="post-caption" *ngIf="post.caption">{{ post.caption }}</span>
+              <span class="post-caption muted" *ngIf="!post.caption">Picture only — no message</span>
+            </td>
+
+            <!-- Time Cell -->
+            <td class="td-time">
+              <span class="time-text">{{ timeAgo(post.createdAt) }}</span>
+            </td>
+
+            <!-- Actions Cell -->
+            <td class="td-actions">
+              <button class="delete-btn" (click)="removePost(post, $event)" title="Delete post">
+                <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="delete-btn-text">Delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="posts.length === 0">
+            <td colspan="4" class="td-empty">
+              No posts yet. Click "Add Post" to publish your first one.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</ion-content>

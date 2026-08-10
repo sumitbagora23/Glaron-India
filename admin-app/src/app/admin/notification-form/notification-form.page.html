@@ -1,0 +1,124 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">New Notification</h2>
+        <p class="page-subtitle">Sent to everyone in the chosen audience who has installed the app. It appears in their notification bar.</p>
+      </div>
+    </div>
+
+    <section class="form-card">
+
+      <!-- Who receives it. Dealers and agents run separate apps, so this picks
+           which set of devices the broadcast reaches. -->
+      <div class="form-field">
+        <label class="field-label">Send to <span class="req">*</span></label>
+
+        <div class="target-chip-group audience-chip-group">
+          <button
+            type="button"
+            *ngFor="let a of audiences"
+            class="target-chip"
+            [class.active]="isAudienceActive(a)"
+            (click)="pickAudience(a)">
+            {{ a.label }}
+          </button>
+        </div>
+
+        <span class="hint-text">{{ audienceMessage }}</span>
+      </div>
+
+      <!-- Title -->
+      <div class="form-field">
+        <label class="field-label" for="notifTitle">Title <span class="req">*</span></label>
+        <input
+          id="notifTitle"
+          type="text"
+          class="text-input"
+          [(ngModel)]="title"
+          maxlength="65"
+          placeholder="e.g. New offers just dropped!"
+          autocomplete="off" />
+        <span class="error-text" *ngIf="errorMsg">{{ errorMsg }}</span>
+      </div>
+
+      <!-- Message -->
+      <div class="form-field">
+        <label class="field-label" for="notifBody">Message</label>
+        <textarea
+          id="notifBody"
+          class="text-input textarea"
+          [(ngModel)]="body"
+          maxlength="180"
+          rows="3"
+          placeholder="Write the message they will see…"></textarea>
+        <span class="hint-text">Keep it short — device notifications truncate long text.</span>
+      </div>
+
+      <!-- Optional picture. It appears inside the notification itself, under
+           the title and message, on the dealer's device. -->
+      <div class="form-field">
+        <label class="field-label">Image <span class="field-count">(optional)</span></label>
+
+        <div class="image-preview" *ngIf="image">
+          <img [src]="image" alt="Notification image preview" class="image-preview-img" />
+          <button type="button" class="image-remove-btn" (click)="removeImage()" aria-label="Remove image">&times;</button>
+        </div>
+
+        <label class="upload-drop" [class.compact]="image">
+          <input type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>{{ image ? 'Replace image' : 'Click to add an image' }}</span>
+        </label>
+        <span class="error-text" *ngIf="imageErrorMsg">{{ imageErrorMsg }}</span>
+        <span class="hint-text" *ngIf="!imageErrorMsg">Shown inside the notification on the recipient's device. A wide 2:1 picture works best (e.g. 1024×512).</span>
+      </div>
+
+      <!-- Where a tap lands. Recipients never see this — only the title and
+           message appear in their notification bar. The tabs offered follow the
+           audience above: the agent app has no Orders, the dealer app no
+           Commission. -->
+      <div class="form-field">
+        <label class="field-label" for="notifTarget">Open on tap</label>
+        <input
+          id="notifTarget"
+          type="text"
+          class="text-input"
+          [(ngModel)]="target"
+          maxlength="60"
+          placeholder="Type a tab name — e.g. Orders"
+          autocomplete="off" />
+
+        <!-- Shortcuts: tapping one just fills the box above. -->
+        <div class="target-chip-group">
+          <button
+            type="button"
+            *ngFor="let t of targets"
+            class="target-chip"
+            [class.active]="isTargetActive(t)"
+            (click)="pickTarget(t)">
+            {{ t.label }}
+          </button>
+        </div>
+
+        <span [class.hint-text]="!!resolvedTarget" [class.error-text]="!resolvedTarget">
+          {{ targetMessage }}
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="discard-btn" (click)="cancel()">Cancel</button>
+        <button type="button" class="save-btn" (click)="send()" [disabled]="sending">
+          {{ sending ? 'Sending…' : 'Send Notification' }}
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+</ion-content>

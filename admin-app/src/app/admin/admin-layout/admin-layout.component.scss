@@ -1,0 +1,306 @@
+.main-outlet-container {
+  position: absolute;
+  top: 64px;
+  left: 280px;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: linear-gradient(0deg, #FCF9F8, #FCF9F8), #FFFFFF;
+}
+
+/* Profile Dropdown Menu */
+.profile-dropdown-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(23, 3, 56, 0.12);
+  padding: 6px;
+  z-index: 1000;
+  min-width: 140px;
+}
+
+.signout-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #dc2626;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  .logout-icon-svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: #fef2f2;
+  }
+}
+
+/* Sidebar footer override to match gold/purple Direct button */
+.sidebar-footer {
+  border-top: 1px solid #CBC4D0;
+  padding: 24px 24px 0px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.sidebar-footer .new-order-btn {
+  background: #7E5700;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #614300;
+  }
+  
+  .btn-plus-icon {
+    color: #FFFFFF;
+  }
+  
+  .btn-text-gold {
+    color: #FFFFFF;
+  }
+}
+
+@media (max-width: 800px) {
+  .main-outlet-container {
+    left: 0px;
+  }
+}
+
+/* "Turn on order alerts" strip — shown above the page content until this
+   device has notification permission. */
+.alert-optin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 18px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(245, 148, 29, .14), rgba(245, 148, 29, .07));
+  border: 1px solid rgba(245, 148, 29, .35);
+  color: #4A3208;
+}
+
+.alert-optin-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  color: #E07B0A;
+}
+
+.alert-optin-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+
+  strong { font-size: 14px; font-weight: 700; }
+  span { font-size: 12.5px; line-height: 1.45; opacity: .85; }
+}
+
+.alert-optin-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  background: linear-gradient(135deg, #F5941D, #E07B0A);
+  color: #241700;
+
+  &[disabled] { opacity: .6; cursor: default; }
+}
+
+.alert-optin-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  color: rgba(74, 50, 8, .5);
+}
+
+@media (max-width: 640px) {
+  .alert-optin {
+    flex-wrap: wrap;
+    margin: 12px 12px 0;
+
+    .alert-optin-text { flex-basis: 100%; order: 2; }
+    .alert-optin-btn { order: 3; margin-left: auto; }
+    .alert-optin-close { order: 1; margin-left: auto; }
+  }
+}
+
+/* ==========================================================================
+   Mobile shell (≤900px)
+
+   The console is a three-part desktop layout: a fixed 280px sidebar, a topbar
+   offset by that width, and the content beside it. None of that survives a
+   phone, so below the breakpoint the sidebar becomes a drawer over the content
+   and the topbar goes full width with its search behind an icon.
+
+   Keep this breakpoint in sync with MOBILE_QUERY in the component.
+   ========================================================================== */
+
+/* Drawer toggle in the topbar. Mobile only — see the media query below.
+   Visibility is CSS, not *ngIf: a cached "am I mobile?" boolean in the
+   template went stale the moment the window was resized. */
+.menu-btn {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  margin-left: -6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #170338;
+  cursor: pointer;
+
+  svg { width: 22px; height: 22px; }
+  &:active { background: rgba(23, 3, 56, .07); }
+}
+
+.search-toggle {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  color: #170338;
+
+  svg { width: 20px; height: 20px; }
+}
+
+.sidebar-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(23, 3, 56, .45);
+  animation: scrimIn .2s ease both;
+}
+
+@keyframes scrimIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .dashboard-wrapper {
+    padding-left: 0;
+    /* 100vh lies on mobile browsers once the URL bar shows/hides; ion-content
+       already sizes this box correctly. */
+    height: 100%;
+  }
+
+  .sidebar-container {
+    width: min(280px, 84vw);
+    z-index: 60;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform .26s cubic-bezier(.4, 0, .2, 1);
+    /* Standalone iOS draws under the status bar (black-translucent). */
+    padding-top: calc(24px + env(safe-area-inset-top));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+
+    &.open {
+      transform: none;
+      box-shadow: 0 0 40px rgba(0, 0, 0, .28);
+    }
+  }
+
+  /* Bigger tap targets once this is a touch surface. */
+  .nav-item {
+    height: 50px;
+    padding-left: 20px;
+  }
+
+  .menu-btn,
+  .search-toggle { display: grid; }
+
+  .sidebar-scrim { display: block; }
+
+  /* The search field gives up its permanent slot; the icon summons it. */
+  .search-container { display: none; }
+
+  .topbar-container.search-open .search-container { display: flex; }
+
+  .topbar-container {
+    width: 100%;
+    left: 0;
+    right: 0;
+    gap: 8px;
+    padding: 0 12px;
+    height: calc(56px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .topbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .topbar-breadcrumb {
+    min-width: 0;
+
+    /* "Dashboard ›" is redundant when the page title is the only thing that
+       fits. */
+    .crumb-root,
+    .crumb-sep { display: none; }
+
+    .crumb-current {
+      font-size: 16px;
+      line-height: 22px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .topbar-right {
+    flex: 0 0 auto;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .search-container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Search takes over the bar rather than fighting the title for room. */
+  .topbar-container.search-open {
+    .topbar-breadcrumb { display: none; }
+    .topbar-right { flex: 1 1 auto; }
+    .action-buttons-group { display: none; }
+  }
+
+  .main-outlet-container {
+    top: calc(56px + env(safe-area-inset-top));
+    left: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-overflow-scrolling: touch;
+  }
+}

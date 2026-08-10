@@ -1,0 +1,158 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+    
+    <!-- Page Header -->
+    <div class="page-header-row margin-bottom-sm">
+      <div class="title-container">
+        <h2 class="page-title">Set Custom Pricing</h2>
+        <p class="page-subtitle">Configure billing rates and catalog-wide percentage discounts.</p>
+      </div>
+    </div>
+
+    <!-- Bento Layout Form Content -->
+    <div class="bento-layout-form">
+      
+      <!-- Left Column: Dealer details and bulk discount calculator -->
+      <div class="left-column">
+        
+        <!-- Section - Dealer Profile Summary -->
+        <section class="form-section-card info-section">
+          <div class="card-header-border">
+            <div class="header-icon-container">
+              <!-- People Profile Icon -->
+              <svg class="header-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <h3 class="card-section-title">Dealer Profile</h3>
+          </div>
+          
+          <div class="card-body-inputs">
+            <div class="profile-info-row">
+              <span class="info-label">Name:</span>
+              <span class="info-value"><strong>{{ dealerName }}</strong></span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Location:</span>
+              <span class="info-value">{{ dealerLocation }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Status:</span>
+              <span class="info-value status-pill">{{ dealerStatus }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Mobile:</span>
+              <span class="info-value">{{ dealerPhone }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section - Bulk Discount Calculator -->
+        <section class="form-section-card pricing-section">
+          <div class="card-header-border">
+            <div class="header-icon-container">
+              <!-- Percent Tag Icon -->
+              <svg class="header-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 00-2 2z" />
+              </svg>
+            </div>
+            <h3 class="card-section-title">Bulk Discount Calculator</h3>
+          </div>
+          
+          <div class="card-body-inputs">
+            <p class="section-instruction-text">Enter a discount percentage to bulk apply to all catalog prices. You can still manually adjust prices afterwards.</p>
+            <div class="calculator-row">
+              <div class="calc-input-wrapper">
+                <input 
+                  type="number" 
+                  [(ngModel)]="discountPercent" 
+                  placeholder="e.g. 5" 
+                  class="field-input-box percent-input"
+                  min="0" 
+                  max="100"
+                />
+                <span class="percent-label-symbol">%</span>
+              </div>
+              <button type="button" class="apply-discount-btn" (click)="applyDiscount()">
+                <span class="apply-btn-text">Apply Discount</span>
+              </button>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+      
+      <!-- Right Column: Products Pricing Sheet -->
+      <div class="right-column">
+        
+        <!-- Section - Product Custom Pricing Sheet -->
+        <section class="form-section-card sheet-section">
+          <div class="card-header-border">
+            <div class="header-icon-container">
+              <!-- Currency Ledger Icon -->
+              <svg class="header-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="card-section-title">Product Pricing Sheet</h3>
+          </div>
+          
+          <div class="card-body-sheet">
+            <div class="pricing-items-list">
+              <!-- Pricing row template loop -->
+              <div class="pricing-item-row" *ngFor="let item of pricingList">
+                <div class="product-info-wrap">
+                  <span class="product-name-txt">{{ item.name }}</span>
+                  <span class="product-catalog-price">Catalog Price: Rs. {{ item.catalogPrice | number:'1.0-0' }}</span>
+                </div>
+                
+                <div class="price-input-container">
+                  <span class="currency-symbol">Rs.</span>
+                  <input 
+                    type="number" 
+                    [(ngModel)]="item.customPrice" 
+                    class="field-price-input"
+                    placeholder="0.00" 
+                  />
+                </div>
+              </div>
+              
+              <div class="empty-state-card" *ngIf="pricingList.length === 0">
+                No catalog items found. Add products first to set custom prices.
+              </div>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+      
+    </div>
+    
+    <!-- STICKY BOTTOM ACTIONS BAR -->
+    <footer class="sticky-bottom-bar">
+      <div class="save-status-info">
+        <svg class="sync-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="status-timestamp-text">Editing custom pricing configurations</span>
+      </div>
+      
+      <div class="bottom-actions-group">
+        <button type="button" class="discard-btn" (click)="discard()">
+          <span class="btn-text-dark">Cancel</span>
+        </button>
+        <button type="button" class="confirm-btn" (click)="savePricing()" [disabled]="isLoading">
+          <div class="confirm-btn-content" *ngIf="!isLoading">
+            <!-- Check Circle Icon -->
+            <svg class="btn-confirm-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="btn-text-white">Save Custom Prices</span>
+          </div>
+          <span class="btn-text-white" *ngIf="isLoading">Saving...</span>
+        </button>
+      </div>
+    </footer>
+    
+  </main>
+</ion-content>

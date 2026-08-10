@@ -1,0 +1,111 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Breadcrumbs / header -->
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item" (click)="cancel()" style="cursor:pointer;">Orders</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">{{ mode === 'add' ? 'Add Products' : 'Create Order' }}</span>
+    </div>
+
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">{{ mode === 'add' ? 'Add Products to Order' : 'Create New Order' }}</h2>
+        <p class="page-subtitle" *ngIf="mode === 'add'">Order #{{ orderId }} · {{ dealerName || 'Dealer' }}</p>
+        <p class="page-subtitle" *ngIf="mode === 'create'">Select a dealer and add products with variants &amp; prices.</p>
+      </div>
+      <button class="oc-cancel-top" (click)="cancel()">Cancel</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="oc-controls">
+      <!-- Dealer (create mode only) -->
+      <div class="oc-field oc-dealer-field" *ngIf="mode === 'create'">
+        <label>Dealer <span class="req-star">*</span></label>
+        <input type="text" class="oc-input" [(ngModel)]="dealerSearch"
+               (ngModelChange)="onDealerSearchChange()" (focus)="dealerOpen = true"
+               placeholder="Type to search dealer…" autocomplete="off" />
+        <div class="oc-dealer-backdrop" *ngIf="dealerOpen" (click)="dealerOpen = false"></div>
+        <div class="oc-dealer-list" *ngIf="dealerOpen">
+          <button type="button" class="oc-dealer-opt" *ngFor="let d of dealerOptions" (click)="selectDealer(d.name)">
+            {{ d.name }}
+          </button>
+          <div class="oc-dealer-empty" *ngIf="dealerOptions.length === 0">No dealers found.</div>
+        </div>
+      </div>
+
+      <!-- Fixed dealer (add mode) -->
+      <div class="oc-field" *ngIf="mode === 'add'">
+        <label>Dealer</label>
+        <div class="oc-dealer-fixed">{{ dealerName }}</div>
+      </div>
+
+      <div class="oc-field">
+        <label>Search products</label>
+        <input type="text" class="oc-input" [(ngModel)]="productSearch" placeholder="Search by name or category" />
+      </div>
+    </div>
+
+    <!-- Product cards grid -->
+    <div class="oc-products-grid">
+      <div class="oc-card" *ngFor="let product of products; trackBy: trackByProductId">
+        <div class="oc-card-head">
+          <div class="oc-media" [class.no-image]="!product.image">
+            <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" alt="Product" loading="lazy" decoding="async" />
+            <span *ngIf="!product.image" class="oc-no-img">No Image</span>
+          </div>
+          <div class="oc-card-info">
+            <span class="oc-cat" *ngIf="product.category">{{ product.category }}</span>
+            <h4 class="oc-name">{{ product.name }}</h4>
+            <p class="oc-desc">{{ product.description || 'Lighting solution.' }}</p>
+          </div>
+        </div>
+
+        <div class="oc-pricing">
+          <ng-container *ngIf="product.variants?.length; else ocBase">
+            <div class="oc-variant-row" *ngFor="let v of product.variants; let vi = index; trackBy: trackByVariantIndex">
+              <span class="oc-variant-label">{{ variantLabel(v) }}</span>
+              <div class="oc-variant-right">
+                <div class="oc-stepper">
+                  <button (click)="dec(product, vi)">-</button>
+                  <span>{{ cartQtyFor(product, vi) }}</span>
+                  <button (click)="inc(product, vi)">+</button>
+                </div>
+                <span class="oc-price">₹{{ variantUnitPrice(product, vi) | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #ocBase>
+            <div class="oc-variant-row">
+              <span class="oc-variant-label">Base price</span>
+              <div class="oc-variant-right">
+                <div class="oc-stepper">
+                  <button (click)="dec(product, -1)">-</button>
+                  <span>{{ cartQtyFor(product, -1) }}</span>
+                  <button (click)="inc(product, -1)">+</button>
+                </div>
+                <span class="oc-price">₹{{ variantUnitPrice(product, -1) | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="oc-empty" *ngIf="products.length === 0">No products match your search.</div>
+    </div>
+  </main>
+
+  <!-- Sticky footer -->
+  <footer class="oc-footer">
+    <div class="oc-summary">
+      <span class="oc-summary-count">{{ cartCount }} item{{ cartCount === 1 ? '' : 's' }}</span>
+      <span class="oc-summary-total">Rs. {{ cartTotal | number:'1.0-0' }}</span>
+    </div>
+    <div class="oc-footer-actions">
+      <button class="oc-cancel" (click)="cancel()">Cancel</button>
+      <button class="oc-submit" [disabled]="!canSubmit" (click)="submit()">
+        {{ mode === 'add' ? 'Add to Order' : 'Create Order' }}
+      </button>
+    </div>
+  </footer>
+</ion-content>

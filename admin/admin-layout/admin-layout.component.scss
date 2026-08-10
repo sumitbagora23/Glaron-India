@@ -1,0 +1,41 @@
+.main-outlet-container {
+  position: absolute;
+  top: 64px;
+  left: 280px;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: linear-gradient(0deg, #FCF9F8, #FCF9F8), #FFFFFF;
+}
+
+/* Sidebar footer override to match gold/purple Direct button */
+.sidebar-footer {
+  border-top: 1px solid #CBC4D0;
+  padding: 24px 24px 0px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.sidebar-footer .new-order-btn {
+  background: #7E5700;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #614300;
+  }
+  
+  .btn-plus-icon {
+    color: #FFFFFF;
+  }
+  
+  .btn-text-gold {
+    color: #FFFFFF;
+  }
+}
+
+@media (max-width: 800px) {
+  .main-outlet-container {
+    left: 0px;
+  }
+}

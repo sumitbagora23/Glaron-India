@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "glaron-ade19"
+  },
+  "targets": {
+    "glaron-ade19": {
+      "hosting": {
+        "admin": [
+          "glaron-ade19"
+        ],
+        "dealer": [
+          "glaron-dealer"
+        ],
+        "agent": [
+          "glaron-agent"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Glaron India Admin</title>
+
+  <base href="/" />
+
+  <!-- Light only. The console has no dark palette, so advertising "dark" just
+       invited the browser to darken native controls on top of a light UI. -->
+  <meta name="color-scheme" content="light" />
+  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-tap-highlight" content="no" />
+
+  <!-- PWA Web App Meta. `apple-mobile-web-app-capable` is what lets iOS run
+       this from the Home Screen as a standalone app — and standalone is the
+       only mode in which iOS 16.4+ allows Web Push at all. -->
+  <!-- Matches the top bar so the installed app has no dark band above it. The
+       splash keeps its navy via the manifest's background_color. -->
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <!-- `default`, not `black-translucent`: translucent draws the iOS clock and
+       battery in white directly over the page, and this page is light — they
+       disappeared. `default` keeps the status bar out of the layout instead. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Glaron Admin" />
+
+  <!-- Manifest & Favicons -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/admin/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="assets/admin/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/admin/apple-touch-icon.png" />
+
+  <!-- PWA install prompt capture. Chrome fires `beforeinstallprompt` long before
+       Angular boots, so it is stashed here and replayed by the install screen. -->
+  <script>
+    window.__glaronAdminInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__glaronAdminInstallPrompt = e;
+      window.dispatchEvent(new Event('glaron-admin-install-ready'));
+    });
+    window.addEventListener('appinstalled', function () {
+      window.__glaronAdminInstallPrompt = null;
+      window.dispatchEvent(new Event('glaron-admin-installed'));
+    });
+  </script>
+
+  <!-- Branded splash (shown until Angular boots) -->
+  <style>
+    /* Dark only while the splash owns the screen. Angular adds `booted` once it
+       has rendered — without that the navy stayed on <html> for the life of the
+       session and showed through as a black band on overscroll and anywhere the
+       app's own background did not reach. */
+    html { background: #0B1220; }
+    html.booted { background: #FCF9F8; }
+    #app-splash {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: #0B1220; transition: opacity .4s ease;
+    }
+    #app-splash.hide { opacity: 0; pointer-events: none; }
+    #app-splash .splash-box { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+    #app-splash .splash-logo { width: min(320px, 70vw); height: auto; display: block; animation: splashPop .6s ease both; }
+    #app-splash .splash-tag { color: rgba(255,255,255,.55); font: 600 12px/1 system-ui, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
+    #app-splash .splash-spinner { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,.2); border-top-color: #F5941D; border-radius: 50%; animation: splashSpin .8s linear infinite; }
+    @keyframes splashSpin { to { transform: rotate(360deg); } }
+    @keyframes splashPop { from { transform: scale(.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  </style>
+
+  <!-- Google Fonts - Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+  <app-root></app-root>
+
+  <!-- Splash overlay: removed by main.ts once the app has bootstrapped -->
+  <div id="app-splash">
+    <div class="splash-box">
+      <img src="assets/glaron-logo-white.png" alt="Glaron India" class="splash-logo" />
+      <div class="splash-tag">Admin Console</div>
+      <div class="splash-spinner"></div>
+    </div>
+  </div>
+  <script>
+    // Safety fallback: never let the splash trap the user if bootstrap stalls.
+    setTimeout(function () {
+      var s = document.getElementById('app-splash');
+      if (s) { s.classList.add('hide'); setTimeout(function () { s.remove(); }, 450); }
+    }, 8000);
+  </script>
+</body>
+
+</html>

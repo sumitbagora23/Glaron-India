@@ -1,0 +1,110 @@
+ion-content { --background: var(--g-bg); }
+
+.auth-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--g-bg);
+}
+
+/* ---- Hero ---- */
+.auth-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 130% at 80% -10%, #37215f 0%, #241150 42%, #170338 100%);
+  padding: calc(var(--g-safe-top) + 46px) 26px 66px;
+  text-align: center;
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  pointer-events: none;
+}
+.orb-1 {
+  width: 220px; height: 220px;
+  top: -70px; right: -60px;
+  background: radial-gradient(circle, rgba(254,179,0,.5), transparent 70%);
+  animation: g-fade-in 1s ease both;
+}
+.orb-2 {
+  width: 200px; height: 200px;
+  bottom: -40px; left: -70px;
+  background: radial-gradient(circle, rgba(123,60,180,.5), transparent 70%);
+  animation: g-fade-in 1.2s ease both;
+}
+.hero-inner { position: relative; z-index: 2; animation: g-fade-up .6s ease both; }
+.hero-logo {
+  width: min(190px, 54%);
+  height: auto;
+  display: block;
+  margin: 0 auto 22px;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+}
+.hero-welcome {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: clamp(24px, 6.6vw, 29px);
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+.hero-sub {
+  margin: 0;
+  color: rgba(255,255,255,.72);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+.hero-curve {
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 34px;
+  background: var(--g-bg);
+  border-radius: 34px 34px 0 0;
+}
+
+/* ---- Sheet ---- */
+.auth-sheet {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  margin-top: -22px;
+  padding: 12px 24px calc(var(--g-safe-bottom) + 30px);
+  background: var(--g-bg);
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  animation: g-fade-up .55s ease .08s both;
+}
+
+.auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -2px;
+}
+.auth-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g-gold-strong);
+  cursor: pointer;
+  &:active { opacity: .7; }
+}
+
+.auth-submit { margin-top: 6px; }
+
+.auth-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 22px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--g-text-soft);
+
+  .auth-link.strong { color: var(--g-primary); font-weight: 800; }
+}
+
+.app-version { color: var(--g-text-faint); }

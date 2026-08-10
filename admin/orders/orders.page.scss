@@ -1,0 +1,699 @@
+/* Order Workflow Tracking SCSS */
+
+.page-subtitle {
+  margin: 4px 0px 0px;
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #49454E;
+}
+
+.header-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.filters-btn, .export-report-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 8px;
+  height: 38px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #F8F9FA;
+    border-color: #CBD5E1;
+  }
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  color: #1C1B1B;
+}
+
+.btn-text-dark {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.14px;
+  color: #1C1B1B;
+}
+
+/* -------------------------------------------------------------
+ * 1. Kanban Board Layout
+ * ------------------------------------------------------------- */
+.kanban-board-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.kanban-board-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 12px;
+  width: 100%;
+  height: 483px;
+  box-sizing: border-box;
+}
+
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.column-header {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 0px 8px;
+  width: 100%;
+  height: 37px;
+}
+
+.column-title-wrap {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 8px;
+  gap: 8px;
+  width: 100%;
+  height: 29px;
+  border-bottom: 1px solid rgba(23, 3, 56, 0.1);
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.dot-new { background: #7E5700; }
+  &.dot-confirmed { background: #3B82F6; }
+  &.dot-packed { background: #A855F7; }
+  &.dot-dispatched { background: #D97706; }
+  &.dot-delivered { background: #10B981; }
+}
+
+.column-title {
+  margin: 0px;
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #170338;
+}
+
+.count-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2px 8px;
+  height: 19px;
+  background: #EAE7E7;
+  border-radius: 2px;
+}
+
+.badge-num {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 15px;
+  color: #1C1B1B;
+}
+
+.cards-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2px;
+  gap: 16px;
+  width: 100%;
+  height: 430px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Kanban Cards styling */
+.order-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+  gap: 4px;
+  width: 100%;
+  height: 168.33px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.05), 0px 2px 4px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  &.translucent-opacity {
+    opacity: 0.75;
+  }
+
+  &.done-archived {
+    background: #F0FDF4;
+    border-color: #BBF7D0;
+  }
+}
+
+.card-top-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 16px;
+}
+
+.order-id {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #49454E;
+}
+
+.card-dots-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #49454E;
+}
+
+.dots-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.dealer-title {
+  margin: 6px 0px 0px;
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+  color: #170338;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.location-subtitle {
+  margin: 0px 0px 8px;
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #49454E;
+}
+
+.card-footer-border {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0px 0px;
+  width: 100%;
+  height: 42.33px;
+  border-top: 1px solid #E2E8F0;
+  margin-top: auto;
+}
+
+.order-value-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  color: #7E5700;
+}
+
+.stage-advance-btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  width: 29.33px;
+  height: 29.33px;
+  background: #170338;
+  border: none;
+  border-radius: 4px;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #2D145A;
+    transform: scale(1.05);
+  }
+
+  &.success-green {
+    background-color: #10B981;
+    &:hover { background-color: #059669; }
+  }
+}
+
+.advance-svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.archive-check-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #10B981;
+}
+
+.empty-stage-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  gap: 8px;
+  width: 100%;
+  height: 120px;
+  border: 1px dashed #CBC4D0;
+  border-radius: 8px;
+  color: #9CA3AF;
+  text-align: center;
+}
+
+.empty-check-icon {
+  width: 24px;
+  height: 24px;
+  color: #9CA3AF;
+}
+
+.empty-stage-text {
+  font-family: 'Outfit';
+  font-size: 12px;
+  color: #6B7280;
+}
+
+/* Dashed Dropzone card */
+.dashed-delivery-dropzone {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  width: 100%;
+  height: 133px;
+  background: rgba(246, 243, 242, 0.5);
+  opacity: 0.6;
+  border: 1px dashed #CBC4D0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.drop-icon-container {
+  display: flex;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  color: #1C1B1B;
+  margin-bottom: 8px;
+}
+
+.box-svg-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.dropzone-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #1C1B1B;
+}
+
+/* -------------------------------------------------------------
+ * 2. Stats Bento Grid
+ * ------------------------------------------------------------- */
+.stats-row.grid-four {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0px 0px;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.stat-bento-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 28px 24px;
+  gap: 16px;
+  flex: 1;
+  height: 104px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.bento-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+
+  &.bg-gold-tint { background: rgba(126, 87, 0, 0.1); color: #7E5700; }
+  &.bg-purple-tint { background: rgba(23, 3, 56, 0.1); color: #170338; }
+  &.bg-blue-tint { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+  &.bg-green-tint { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+}
+
+.bento-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.bento-content-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.bento-label {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: #49454E;
+}
+
+.bento-value {
+  margin: 0px;
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 30px;
+  color: #170338;
+}
+
+/* -------------------------------------------------------------
+ * 3. Live Activity Feed
+ * ------------------------------------------------------------- */
+.activity-feed-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 0px 0px;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.feed-header-control {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  width: 100%;
+  height: 61px;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.feed-title {
+  margin: 0px;
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 28px;
+  color: #170338;
+}
+
+.view-all-logs-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.view-logs-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.14px;
+  color: #170338;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.feed-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 800px;
+
+  thead tr {
+    height: 41px;
+    background: #F6F3F2;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  th {
+    padding: 12px 24px;
+    font-family: 'Outfit';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    color: #170338;
+  }
+
+  tbody tr {
+    height: 57px;
+    border-bottom: 1px solid #E2E8F0;
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: rgba(248, 249, 250, 0.5);
+    }
+
+    &.shaded-row {
+      background: #F8F9FA;
+    }
+  }
+
+  td {
+    padding: 16.5px 24px;
+    vertical-align: middle;
+  }
+}
+
+/* Table columns widths */
+.th-timestamp, .td-timestamp { width: 147px; }
+.th-event, .td-event { width: 420px; }
+.th-dealer, .td-dealer { width: 209px; }
+.th-status, .td-status { width: 172px; }
+
+.time-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #49454E;
+}
+
+.event-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #1C1B1B;
+}
+
+.dealer-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #1C1B1B;
+}
+
+/* Feed Badge styling */
+.feed-badge {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 2.5px 8px;
+  height: 22px;
+  border-radius: 2px;
+
+  &.badge-new {
+    background: #FEF3C7;
+    .feed-badge-text { color: #B45309; }
+  }
+
+  &.badge-confirmed {
+    background: rgba(126, 87, 0, 0.2);
+    .feed-badge-text { color: #7E5700; }
+  }
+
+  &.badge-packed {
+    background: #F3E8FF;
+    .feed-badge-text { color: #7E22CE; }
+  }
+
+  &.badge-dispatched {
+    background: rgba(217, 119, 6, 0.2);
+    .feed-badge-text { color: #D97706; }
+  }
+
+  &.badge-delivered {
+    background: rgba(16, 185, 129, 0.2);
+    .feed-badge-text { color: #10B981; }
+  }
+}
+
+.feed-badge-text {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+/* Sidebar footer override to match screenshot gold/purple Direct button */
+.sidebar-footer {
+  border-top: 1px solid #CBC4D0;
+  padding: 24px 24px 0px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.sidebar-footer .new-order-btn {
+  background: #7E5700;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #614300;
+  }
+  
+  .btn-plus-icon {
+    color: #FFFFFF;
+  }
+  
+  .btn-text-gold {
+    color: #FFFFFF;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+  .stats-row.grid-four {
+    flex-wrap: wrap;
+  }
+  .stat-bento-card {
+    flex: none;
+    width: calc(50% - 12px);
+  }
+  .activity-feed-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 800px) {
+  .stat-bento-card {
+    width: 100%;
+  }
+}

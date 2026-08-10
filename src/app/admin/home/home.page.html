@@ -1,0 +1,62 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item">Home</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Overview</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Dashboard Overview</h2>
+      </div>
+    </div>
+
+    <!-- Stats Row (Bento Grid) -->
+    <div class="stats-row">
+      <!-- Products Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">TOTAL PRODUCTS</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.totalSKU }}</h3>
+        </div>
+      </div>
+
+      <!-- Dealers Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">ACTIVE DEALERS</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.activeDealers }}</h3>
+        </div>
+      </div>
+
+      <!-- Pending Orders Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">PENDING ORDERS</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.pendingOrders }}</h3>
+        </div>
+      </div>
+
+      <!-- Revenue Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">MONTHLY REVENUE</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.monthlyRevenue }}</h3>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</ion-content>

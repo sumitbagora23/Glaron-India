@@ -1,0 +1,126 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+    
+    <!-- Page Header -->
+    <div class="page-header-row margin-bottom-sm">
+      <div class="title-container">
+        <h2 class="page-title">Dealer Management</h2>
+        <p class="page-subtitle">Real-time dealer registrations from Firestore & custom pricing multipliers.</p>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="header-buttons">
+        <div class="status-filter-box">
+          <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <select class="status-filter-select" [(ngModel)]="statusFilter">
+            <option value="All">All Dealers</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Dealers Table Grid Card -->
+    <section class="table-section-card">
+      
+      <div class="table-scroll-container">
+        <table class="dealers-table">
+          <thead>
+            <tr>
+              <th class="th-name">Dealer Name</th>
+              <th class="th-phone">Mobile Number (login)</th>
+              <th class="th-email">Email Address</th>
+              <th class="th-location">Address</th>
+              <th class="th-status">Status</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loop over filtered dealers list -->
+            <tr *ngFor="let dealer of filteredDealers; let last = last; trackBy: trackByDealerId" [class.last-row-border]="last">
+              
+              <!-- Dealer Name Cell with Initial Circle -->
+              <td class="td-name">
+                <div class="dealer-profile-wrap">
+                  <div class="initial-circle-badge">
+                    <span class="circle-text">{{ dealer.initial }}</span>
+                  </div>
+                  <div class="dealer-name-block">
+                    <span class="dealer-fullname">{{ dealer.name }}</span>
+                    <span class="dealer-multiplier-tag" *ngIf="dealer.multiplier && dealer.multiplier !== 1.0">{{ dealer.multiplier }}x Tier</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Mobile Number Cell — this is what the dealer signs in with -->
+              <td class="td-phone">
+                <span class="phone-text">{{ dealer.phone || '-' }}</span>
+              </td>
+
+              <!-- Email Address Cell -->
+              <td class="td-email">
+                <span style="font-weight: 500; color: #6366f1; font-size: 0.85rem;">{{ dealer.email || '-' }}</span>
+              </td>
+
+              <!-- Address Cell -->
+              <td class="td-location">
+                <span class="location-text">{{ dealer.address || dealer.location }}</span>
+              </td>
+              
+              <!-- Status Cell (dropdown) -->
+              <td class="td-status">
+                <div class="status-select-wrap"
+                     [class.status-active]="statusOf(dealer) === 'Active'"
+                     [class.status-inactive]="statusOf(dealer) === 'Inactive'">
+                  <span class="status-dot"></span>
+                  <select class="dealer-status-select"
+                          [ngModel]="statusOf(dealer)"
+                          (ngModelChange)="changeStatus(dealer, $event)">
+                    <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+                  </select>
+                </div>
+              </td>
+
+              <!-- Actions Cell -->
+              <td class="td-actions">
+                <div class="dealer-actions-group">
+                  <button class="pricing-action-btn" (click)="setCustomPricing(dealer)">
+                    <svg class="slider-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span class="pricing-btn-text">Custom Rate</span>
+                  </button>
+                  <button class="dealer-delete-btn" (click)="deleteDealer(dealer, $event)" title="Delete dealer">
+                    <svg class="delete-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="delete-btn-text">Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            
+            <!-- Empty state search feedback -->
+            <tr *ngIf="filteredDealers.length === 0">
+              <td colspan="6" class="td-empty" style="text-align: center; padding: 40px; color: #94a3b8;">
+                No dealer registrations found. Dealers registering from /dealer/apply will automatically appear here in real-time from Firestore.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Table Pagination Footer -->
+      <footer class="table-pagination-footer">
+        <div class="pagination-summary">
+          <span class="summary-text">Showing {{ filteredDealers.length }} Registered Dealers</span>
+        </div>
+      </footer>
+      
+    </section>
+    
+  </main>
+</ion-content>

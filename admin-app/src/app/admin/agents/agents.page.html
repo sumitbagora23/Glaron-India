@@ -1,0 +1,189 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item">Dashboard</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Agents</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header-row margin-bottom-sm">
+      <div class="title-container">
+        <h2 class="page-title">Agent Management</h2>
+        <p class="page-subtitle">Sales agents carry the catalogue and earn commission. Accounts are created here — agents cannot register themselves.</p>
+      </div>
+
+      <div class="header-buttons">
+        <div class="status-filter-box">
+          <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <select class="status-filter-select" [(ngModel)]="statusFilter">
+            <option value="All">All Agents</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <button class="add-agent-btn" (click)="openAddModal()">
+          <svg class="add-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14M5 12h14" />
+          </svg>
+          <span class="btn-text-white">Add Agent</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Agents Table -->
+    <section class="table-section-card">
+
+      <div class="table-scroll-container">
+        <table class="agents-table">
+          <thead>
+            <tr>
+              <th class="th-name">Agent Name</th>
+              <th class="th-phone">Mobile Number (login)</th>
+              <th class="th-sales">Total Sales</th>
+              <th class="th-commission">Total Commission</th>
+              <th class="th-status">Status</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let agent of filteredAgents; let last = last; trackBy: trackByAgentId" [class.last-row-border]="last">
+
+              <td class="td-name">
+                <div class="agent-profile-wrap">
+                  <div class="initial-circle-badge">
+                    <span class="circle-text">{{ agent.initial }}</span>
+                  </div>
+                  <div class="agent-name-block">
+                    <span class="agent-fullname">{{ agent.name }}</span>
+                    <span class="agent-entries-tag" *ngIf="entryCount(agent)">{{ entryCount(agent) }} entries</span>
+                  </div>
+                </div>
+              </td>
+
+              <td class="td-phone">
+                <span class="phone-text">{{ agent.phone || '-' }}</span>
+                <span class="no-password-tag" *ngIf="!hasPassword(agent)" title="This agent has no sign-in password yet — use Password to set one.">No password</span>
+              </td>
+
+              <td class="td-sales">
+                <span class="money-text">₹{{ totalSales(agent) | number:'1.0-0' }}</span>
+              </td>
+
+              <td class="td-commission">
+                <span class="money-text strong">₹{{ totalCommission(agent) | number:'1.0-2' }}</span>
+                <span class="due-tag" *ngIf="remaining(agent) > 0">₹{{ remaining(agent) | number:'1.0-2' }} due</span>
+                <span class="settled-tag" *ngIf="remaining(agent) <= 0 && totalCommission(agent) > 0">Settled</span>
+              </td>
+
+              <td class="td-status">
+                <div class="status-select-wrap"
+                     [class.status-active]="statusOf(agent) === 'Active'"
+                     [class.status-inactive]="statusOf(agent) === 'Inactive'">
+                  <span class="status-dot"></span>
+                  <select class="agent-status-select"
+                          [ngModel]="statusOf(agent)"
+                          (ngModelChange)="changeStatus(agent, $event)">
+                    <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+                  </select>
+                </div>
+              </td>
+
+              <td class="td-actions">
+                <div class="agent-actions-group">
+                  <button class="commission-action-btn" (click)="setCommission(agent)">
+                    <svg class="commission-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-9 0h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span class="commission-btn-text">Set Commission</span>
+                  </button>
+                  <button class="agent-pay-btn" (click)="payCommission(agent, $event)" title="Record a commission payout for this agent">
+                    <svg class="pay-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h4M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                    </svg>
+                    <span class="pay-btn-text">Pay</span>
+                  </button>
+                  <button class="agent-delete-btn" (click)="deleteAgent(agent, $event)" title="Delete agent">
+                    <svg class="delete-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="delete-btn-text">Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="filteredAgents.length === 0">
+              <td colspan="6" class="td-empty">
+                No agents yet. Tap "Add Agent" to create one — you set the mobile number and password, then hand them to the agent.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="table-pagination-footer">
+        <div class="pagination-summary">
+          <span class="summary-text">Showing {{ filteredAgents.length }} Agents</span>
+        </div>
+      </footer>
+
+    </section>
+
+    <!-- Add Agent modal -->
+    <div class="agent-modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+      <div class="agent-modal-card" (click)="$event.stopPropagation()">
+        <header class="agent-modal-head">
+          <div class="agent-modal-title-block">
+            <h3 class="agent-modal-title">Add Agent</h3>
+            <p class="agent-modal-sub">You choose the number and password. Give both to the agent — the password can't be read back later.</p>
+          </div>
+          <button class="agent-modal-close" (click)="closeAddModal()" aria-label="Close">&times;</button>
+        </header>
+
+        <div class="agent-modal-body">
+          <div class="admin-field">
+            <label class="admin-label" for="agentName">Agent Name</label>
+            <input id="agentName" class="admin-input" type="text" [(ngModel)]="addForm.name" placeholder="e.g. Ramesh Kumar" autocomplete="off" />
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="agentMobile">Mobile Number<span class="req-star">*</span></label>
+            <div class="admin-input-wrap">
+              <span class="admin-input-prefix">+91</span>
+              <input id="agentMobile" class="admin-input bare" type="tel" inputmode="numeric" maxlength="10"
+                     [ngModel]="addForm.mobile" (ngModelChange)="onMobileInput($event)"
+                     placeholder="10-digit mobile number" autocomplete="off" />
+            </div>
+            <span class="admin-hint">This is the agent's login identity.</span>
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="agentPassword">Password<span class="req-star">*</span></label>
+            <input id="agentPassword" class="admin-input" type="text" [(ngModel)]="addForm.password" placeholder="Minimum 6 characters" autocomplete="off" />
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="agentPassword2">Confirm Password<span class="req-star">*</span></label>
+            <input id="agentPassword2" class="admin-input" type="text" [(ngModel)]="addForm.confirmPassword" placeholder="Re-type the password" autocomplete="off" />
+          </div>
+
+          <span class="admin-error" *ngIf="addError">{{ addError }}</span>
+        </div>
+
+        <footer class="agent-modal-foot">
+          <button class="modal-cancel-btn" (click)="closeAddModal()">Cancel</button>
+          <button class="modal-save-btn" (click)="saveAgent()" [disabled]="addSaving">
+            {{ addSaving ? 'Creating…' : 'Create Agent' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+
+  </main>
+</ion-content>

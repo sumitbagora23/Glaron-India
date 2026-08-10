@@ -1,0 +1,250 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+    
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item">Products</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Catalog</span>
+    </div>
+    
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Product Management</h2>
+      </div>
+      <button class="add-product-btn" (click)="addProduct()">
+        <svg class="btn-plus-white-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="btn-text-white">Add New Product</span>
+      </button>
+    </div>
+    
+    <!-- Stats Row (Bento Grid) -->
+    <div class="stats-row">
+      <!-- SKU Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">TOTAL SKU</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.totalSKU }}</h3>
+          <div class="stat-trend trend-up">
+            <!-- Up Arrow -->
+            <svg class="trend-icon" viewBox="0 0 12 12" fill="none">
+              <path d="M6 9.5V2.5M6 2.5L2.5 6M6 2.5L9.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="trend-text">{{ stats.totalSKUChange }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dealers Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">ACTIVE DEALERS</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.activeDealers }}</h3>
+          <div class="stat-trend trend-up">
+            <svg class="trend-icon" viewBox="0 0 12 12" fill="none">
+              <path d="M6 9.5V2.5M6 2.5L2.5 6M6 2.5L9.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="trend-text">{{ stats.activeDealersChange }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pending Orders Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">PENDING ORDERS</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.pendingOrders }}</h3>
+          <div class="stat-badge-info">
+            <span class="badge-text-gold">Urgent</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Revenue Stat -->
+      <div class="stat-card">
+        <div class="stat-label-container">
+          <span class="stat-label">MONTHLY REVENUE</span>
+        </div>
+        <div class="stat-value-container">
+          <h3 class="stat-value">{{ stats.monthlyRevenue }}</h3>
+          <div class="stat-badge-neutral">
+            <span class="badge-text-neutral">In-line</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Inventory Overview Card & Data Table -->
+    <section class="table-section-card">
+      
+      <!-- Table Header Control Header -->
+      <div class="table-control-header">
+        <h4 class="table-section-title">Inventory Overview</h4>
+        <div class="table-actions-group">
+          <!-- Filter Button -->
+          <button class="table-action-btn">
+            <svg class="table-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+          </button>
+          <!-- Export Button -->
+          <button class="table-action-btn" (click)="exportCSV()">
+            <svg class="table-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Scrollable Data Table Container -->
+      <div class="table-scroll-container">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th class="th-preview">Product Preview</th>
+              <th class="th-name">Product Name</th>
+              <th class="th-category">Category</th>
+              <th class="th-status">Stock Status</th>
+              <th class="th-price">Price (Base)</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row items loop -->
+            <tr *ngFor="let product of filteredProducts" [class.row-shaded]="product.previewType === 'street' || product.previewType === 'curve'">
+              
+              <!-- Product Preview Cell -->
+              <td class="td-preview">
+                <div class="product-preview-box">
+                  <!-- Dynamic crisp vector icons for products -->
+                  <!-- Panel Light -->
+                  <svg *ngIf="product.previewType === 'panel'" viewBox="0 0 64 64" class="product-preview-svg">
+                    <rect width="64" height="64" fill="#FFFFFF"/>
+                    <circle cx="32" cy="32" r="22" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="2"/>
+                    <circle cx="32" cy="32" r="16" fill="#FFFBEB" stroke="#FBBF24" stroke-width="1.5" filter="drop-shadow(0px 0px 4px rgba(251, 191, 36, 0.4))"/>
+                    <circle cx="32" cy="32" r="4" fill="#FBBF24"/>
+                  </svg>
+                  <!-- Freedom Street Light -->
+                  <svg *ngIf="product.previewType === 'street'" viewBox="0 0 64 64" class="product-preview-svg">
+                    <rect width="64" height="64" fill="#FFFFFF"/>
+                    <path d="M32 50 L32 14 Q32 10 40 10 L44 10" fill="none" stroke="#9CA3AF" stroke-width="2.5"/>
+                    <rect x="36" y="8" width="12" height="4" rx="1" fill="#4B5563"/>
+                    <circle cx="42" cy="14" r="2.5" fill="#FBBF24"/>
+                  </svg>
+                  <!-- Ball PC Bulb -->
+                  <svg *ngIf="product.previewType === 'bulb'" viewBox="0 0 64 64" class="product-preview-svg">
+                    <rect width="64" height="64" fill="#FFFFFF"/>
+                    <!-- Socket -->
+                    <path d="M26 40 L38 40 L35 48 L29 48 Z" fill="#9CA3AF"/>
+                    <!-- Bulb glass -->
+                    <path d="M32 16 A 14 14 0 0 0 20 34 C 20 38 25 38 26 40 L 38 40 C 39 38 44 38 44 34 A 14 14 0 0 0 32 16 Z" fill="#FFFBEB" stroke="#FBBF24" stroke-width="2"/>
+                  </svg>
+                  <!-- CB Curve Strip Light -->
+                  <svg *ngIf="product.previewType === 'curve'" viewBox="0 0 64 64" class="product-preview-svg">
+                    <rect width="64" height="64" fill="#FFFFFF"/>
+                    <path d="M 12,45 C 16,30 24,20 32,32 C 40,44 48,34 52,20" fill="none" stroke="#E5E7EB" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M 12,45 C 16,30 24,20 32,32 C 40,44 48,34 52,20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 4"/>
+                  </svg>
+                </div>
+              </td>
+              
+              <!-- Product Name Cell -->
+              <td class="td-name">
+                <div class="product-title-wrap">
+                  <span class="product-name">{{ product.name }}</span>
+                  <span class="product-code">{{ product.id }}</span>
+                </div>
+              </td>
+              
+              <!-- Category Cell -->
+              <td class="td-category">
+                <div class="category-badge" [class.badge-outdoor]="product.category === 'Outdoor'">
+                  <span class="badge-text">{{ product.category }}</span>
+                </div>
+              </td>
+              
+              <!-- Stock Status Cell -->
+              <td class="td-status">
+                <div class="status-indicator-container">
+                  <span class="status-dot" 
+                        [class.dot-green]="product.status === 'In Stock'"
+                        [class.dot-gold]="product.status === 'Low Stock'"
+                        [class.dot-red]="product.status === 'Out of Stock'"></span>
+                  <span class="status-text"
+                        [class.text-green]="product.status === 'In Stock'"
+                        [class.text-gold]="product.status === 'Low Stock'"
+                        [class.text-red]="product.status === 'Out of Stock'">
+                    {{ product.status }} ({{ product.stock }})
+                  </span>
+                </div>
+              </td>
+              
+              <!-- Price Cell -->
+              <td class="td-price">
+                <span class="price-text">Rs. {{ product.price | number:'1.2-2' }}</span>
+              </td>
+              
+              <!-- Actions Cell -->
+              <td class="td-actions">
+                <button class="edit-btn" (click)="editProduct(product)">
+                  <svg class="edit-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <span class="edit-btn-text">Edit</span>
+                </button>
+              </td>
+            </tr>
+            <!-- Empty state -->
+            <tr *ngIf="filteredProducts.length === 0">
+              <td colspan="6" class="td-empty">
+                UX Microcopy: "No products match your search keywords. Try adjusting your query."
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination Controls Footer -->
+      <div class="pagination-footer">
+        <div class="pagination-summary">
+          <span class="summary-text">Showing 1-{{ filteredProducts.length }} of {{ stats.totalSKU }} products</span>
+        </div>
+        
+        <div class="pagination-buttons">
+          <!-- Prev -->
+          <button class="page-arrow-btn" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+            <svg class="arrow-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <!-- Page numbers -->
+          <button *ngFor="let page of [1, 2, 3]" 
+                  class="page-num-btn" 
+                  [class.active]="currentPage === page"
+                  (click)="setPage(page)">
+            {{ page }}
+          </button>
+          
+          <!-- Next -->
+          <button class="page-arrow-btn" [disabled]="currentPage === totalPages" (click)="setPage(currentPage + 1)">
+            <svg class="arrow-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+    </section>
+    
+  </main>
+</ion-content>

@@ -1,0 +1,17 @@
+/* TypeScript config for the standalone Glaron Agent PWA (agent-app/).
+ * Mirrors tsconfig.app.json, but compiles only the agent project's sources so
+ * the three apps stay independent builds. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/agent",
+    "types": []
+  },
+  "files": [
+    "agent-app/src/main.ts",
+    "agent-app/src/polyfills.ts"
+  ],
+  "include": [
+    "agent-app/src/**/*.d.ts"
+  ]
+}

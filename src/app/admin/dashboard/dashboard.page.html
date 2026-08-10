@@ -1,0 +1,178 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Product Management</h2>
+      </div>
+
+      <div class="header-actions-group">
+        <button class="add-product-btn" (click)="addProduct()">
+          <svg class="btn-plus-white-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="btn-text-white">Add New Product</span>
+        </button>
+
+        <!-- Category multi-select filter (next to Add Product) -->
+        <div class="category-filter">
+          <button class="cat-filter-btn" (click)="toggleCategoryFilter()" [class.active]="selectedCategories.length">
+            <svg class="cat-filter-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <span>Categories</span>
+            <span class="cat-count" *ngIf="selectedCategories.length">{{ selectedCategories.length }}</span>
+          </button>
+
+          <div class="cat-filter-backdrop" *ngIf="categoryFilterOpen" (click)="closeCategoryFilter()"></div>
+
+          <div class="cat-filter-panel" *ngIf="categoryFilterOpen">
+            <div class="cat-filter-panel-head">
+              <span>Filter by category</span>
+              <button class="cat-clear-btn" *ngIf="selectedCategories.length" (click)="clearCategoryFilter()">Clear</button>
+            </div>
+            <label class="cat-option" *ngFor="let cat of categories">
+              <input type="checkbox" [checked]="isCategorySelected(cat)" (change)="toggleCategory(cat)" />
+              <span class="cat-option-text">{{ cat }}</span>
+            </label>
+            <div class="cat-empty" *ngIf="categories.length === 0">No categories yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direct Data Table (compact) -->
+    <section class="table-section-card">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-preview">Product</th>
+            <th class="th-name">Product Name</th>
+            <th class="th-category">Category</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+           <!-- Row items loop -->
+           <tr *ngFor="let product of filteredProducts; let last = last; trackBy: trackByProductId" [class.last-row-border]="last">
+
+            <!-- Product Preview Cell -->
+            <td class="td-preview">
+              <div class="product-preview-box" [class.no-image]="!product.image"
+                   (click)="openImageModal(product.image, product.name)"
+                   [style.cursor]="product.image ? 'pointer' : 'default'"
+                   [title]="product.image ? 'Click to view larger image' : 'No image added'">
+                <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-preview-img-file" [alt]="product.name" loading="lazy" decoding="async" />
+                <span *ngIf="!product.image" class="no-image-label">No Image</span>
+              </div>
+            </td>
+
+            <!-- Product Name Cell -->
+            <td class="td-name">
+              <div class="product-title-wrap" (click)="openVariantsModal(product)" [class.clickable-name]="product.variants?.length">
+                <span class="product-name" [class.has-variants]="product.variants?.length">{{ product.name }}</span>
+              </div>
+            </td>
+
+            <!-- Category Cell -->
+            <td class="td-category">
+              <div class="category-badge" [class.badge-empty]="!product.category">
+                <span class="badge-text">{{ product.category || '-' }}</span>
+              </div>
+            </td>
+
+            <!-- Actions Cell -->
+            <td class="td-actions">
+              <div class="actions-group">
+                <button class="edit-btn" (click)="editProduct(product)">
+                  <svg class="edit-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <span class="edit-btn-text">Edit</span>
+                </button>
+                <button class="delete-btn" (click)="deleteProduct(product, $event)" title="Delete product">
+                  <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span class="delete-btn-text">Delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <!-- Empty state -->
+          <tr *ngIf="filteredProducts.length === 0">
+            <td colspan="4" class="td-empty">
+              No products match your search. Try adjusting your query.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- Image Lightbox Modal Overlay -->
+  <div class="image-lightbox-modal" *ngIf="selectedModalImage" (click)="closeImageModal()">
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <button class="lightbox-close-btn" (click)="closeImageModal()" aria-label="Close image modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="close-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <img [src]="selectedModalImage" class="lightbox-img" alt="Enlarged Product Image" />
+      <div class="lightbox-title">{{ selectedModalImageTitle }}</div>
+    </div>
+  </div>
+
+  <!-- Variants Modal Overlay -->
+  <div class="variants-modal-overlay" *ngIf="selectedVariantProduct" (click)="closeVariantsModal()">
+    <div class="variants-modal-content" (click)="$event.stopPropagation()">
+      <div class="variants-modal-header">
+        <h3 class="variants-title">{{ selectedVariantProduct.name }} Variants</h3>
+        <button class="variants-close-btn" (click)="closeVariantsModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="close-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="variants-cards-container">
+        <ng-container *ngIf="selectedVariantProduct.variants as variants">
+          <div class="variant-horizontal-card" *ngFor="let variant of variants">
+            <div class="variant-card-left">
+              <div class="variant-card-header">
+                <span class="variant-model-name">{{ variant.model || selectedVariantProduct.name }}</span>
+                <span class="variant-badge wattage-badge" *ngIf="variant.wattage">{{ variant.wattage }}</span>
+                <span class="variant-badge type-badge" *ngIf="variant.type">{{ variant.type }}</span>
+              </div>
+              <div class="variant-card-details">
+                <span class="detail-chip" *ngIf="variant.dimension">
+                  <strong>Dim:</strong> {{ variant.dimension }}
+                </span>
+                <span class="detail-chip" *ngIf="variant.cutout">
+                  <strong>Cutout:</strong> {{ variant.cutout }}
+                </span>
+                <span class="detail-chip" *ngIf="variant.bodyColour">
+                  <strong>Color:</strong> {{ variant.bodyColour }}
+                </span>
+                <span class="detail-chip" *ngIf="variant.colorSize">
+                  <strong>Specs:</strong> {{ variant.colorSize }}
+                </span>
+                <span class="detail-chip" *ngIf="variant.packing">
+                  <strong>Pack:</strong> {{ variant.packing }}
+                </span>
+              </div>
+            </div>
+            <div class="variant-card-right">
+              <div class="variant-price-tag">
+                <span *ngIf="variant.price">₹{{ variant.price }}</span>
+                <span *ngIf="variant.pricePerMtr">₹{{ variant.pricePerMtr }}/Mtr</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</ion-content>

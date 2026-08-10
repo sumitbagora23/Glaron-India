@@ -1,0 +1,96 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Offer Banners</h2>
+        <p class="page-subtitle">Promotional banners shown as an auto-rotating carousel on the dealer home tab.</p>
+      </div>
+
+      <button class="add-product-btn" (click)="addBanner()">
+        <svg class="btn-plus-white-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="btn-text-white">Add Banner</span>
+      </button>
+    </div>
+
+    <!-- Who sees the banners -->
+    <section class="visibility-card">
+      <div class="visibility-text">
+        <span class="visibility-title">Visible To</span>
+        <span class="visibility-desc">Only the dealers you select see these banners. If none are selected, nobody does.</span>
+      </div>
+      <button type="button" class="select-dealers-btn" (click)="openDealerSelection()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="dealers-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a3 3 0 10-3-3" />
+        </svg>
+        <span>Select Dealers</span>
+        <span class="select-count-pill">{{ selectedDealerCount }} / {{ totalDealerCount }} selected</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="chevron-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </section>
+
+    <!-- Banner listing table -->
+    <section class="table-section-card">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-order">Order</th>
+            <th class="th-preview">Banner</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let banner of banners; let i = index; let last = last; trackBy: trackByIndex" [class.last-row-border]="last">
+
+            <!-- Position Cell -->
+            <td class="td-order">
+              <span class="order-badge">{{ i + 1 }}</span>
+            </td>
+
+            <!-- Preview Cell -->
+            <td class="td-preview">
+              <div class="banner-preview-box">
+                <img [src]="banner" class="banner-preview-img" alt="Offer banner" loading="lazy" decoding="async" />
+              </div>
+            </td>
+
+            <!-- Actions Cell -->
+            <td class="td-actions">
+              <div class="actions-group">
+                <button class="move-btn" (click)="moveUp(i)" [disabled]="i === 0" title="Move up" aria-label="Move up">
+                  <svg class="move-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+                <button class="move-btn" (click)="moveDown(i)" [disabled]="last" title="Move down" aria-label="Move down">
+                  <svg class="move-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <button class="delete-btn" (click)="removeBanner(i, $event)" title="Delete banner">
+                  <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span class="delete-btn-text">Delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="banners.length === 0">
+            <td colspan="3" class="td-empty">
+              No banners yet. Click "Add Banner" to upload your first one.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</ion-content>

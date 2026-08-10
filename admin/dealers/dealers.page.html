@@ -1,0 +1,116 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+    
+    <!-- Page Header -->
+    <div class="page-header-row margin-bottom-sm">
+      <div class="title-container">
+        <h2 class="page-title">Dealers</h2>
+        <p class="page-subtitle">Manage partner relationships and customize global price multipliers.</p>
+      </div>
+      
+      <div class="header-buttons">
+        <button class="export-csv-btn" (click)="exportCSV()">
+          <span class="btn-text-dark">Export CSV</span>
+        </button>
+        <button class="add-dealer-btn" (click)="addDealer()">
+          <span class="btn-text-white">Add Dealer</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Dealers Table Grid Card -->
+    <section class="table-section-card">
+      
+      <div class="table-scroll-container">
+        <table class="dealers-table">
+          <thead>
+            <tr>
+              <th class="th-name">Dealer Name</th>
+              <th class="th-location">Location</th>
+              <th class="th-status">Status</th>
+              <th class="th-phone">Mobile Number</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loop over filtered dealers list -->
+            <tr *ngFor="let dealer of filteredDealers; let last = last" [class.last-row-border]="last">
+              
+              <!-- Dealer Name Cell with Initial Circle -->
+              <td class="td-name">
+                <div class="dealer-profile-wrap">
+                  <div class="initial-circle-badge">
+                    <span class="circle-text">{{ dealer.initial }}</span>
+                  </div>
+                  <span class="dealer-fullname">{{ dealer.name }}</span>
+                </div>
+              </td>
+              
+              <!-- Location Cell -->
+              <td class="td-location">
+                <span class="location-text">{{ dealer.location }}</span>
+              </td>
+              
+              <!-- Status Cell -->
+              <td class="td-status">
+                <div class="status-badge" 
+                     [class.badge-active]="dealer.status === 'Active'"
+                     [class.badge-pending]="dealer.status === 'Pending Approval'">
+                  <span class="status-badge-text">{{ dealer.status }}</span>
+                </div>
+              </td>
+              
+              <!-- Mobile Number Cell -->
+              <td class="td-phone">
+                <span class="phone-text">{{ dealer.phone }}</span>
+              </td>
+              
+              <!-- Set Pricing Action Cell -->
+              <td class="td-actions">
+                <button class="pricing-action-btn" (click)="setCustomPricing(dealer)">
+                  <!-- Sliders controls icon -->
+                  <svg class="slider-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  <span class="pricing-btn-text">Set Custom Pricing</span>
+                </button>
+              </td>
+            </tr>
+            
+            <!-- Empty state search feedback -->
+            <tr *ngIf="filteredDealers.length === 0">
+              <td colspan="5" class="td-empty">
+                UX Microcopy: "No dealers match your search queries. Check spellings or register a new dealer profile."
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Table Pagination Footer -->
+      <footer class="table-pagination-footer">
+        <div class="pagination-summary">
+          <span class="summary-text">Showing {{ filteredDealers.length }} of 124 Dealers</span>
+        </div>
+        
+        <div class="pagination-arrows">
+          <!-- Prev arrow button -->
+          <button class="arrow-nav-btn" disabled>
+            <svg class="arrow-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <!-- Next arrow button -->
+          <button class="arrow-nav-btn">
+            <svg class="arrow-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </footer>
+      
+    </section>
+    
+  </main>
+</ion-content>

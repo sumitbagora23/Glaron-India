@@ -1,0 +1,125 @@
+<ion-content [scrollY]="true">
+  <div class="checkout-page-canvas">
+    
+    <!-- Header - TopAppBar -->
+    <header class="top-app-bar">
+      <div class="top-bar-inner">
+        <div class="left-brand-group">
+          <button class="back-btn" (click)="goToCatalog()" aria-label="Back to catalog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="back-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span class="checkout-topbar-title">{{ t('checkout') }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="checkout-main-container">
+      
+      <!-- Success Screen -->
+      <div *ngIf="orderSuccessId" class="success-card-box">
+        <div class="success-badge-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="check-svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 class="success-title">{{ t('orderConfirmed') }}</h3>
+        <p class="success-sub">{{ t('orderRefId') }} <strong>#{{ orderSuccessId }}</strong></p>
+        <button class="confirm-order-btn" (click)="goToCatalog()">
+          {{ t('backToHome') }}
+        </button>
+      </div>
+
+      <div *ngIf="!orderSuccessId" class="checkout-sections-wrapper">
+        
+        <!-- CARD 1: Order Summary -->
+        <section class="checkout-card order-summary-card">
+          <div class="card-header-line">
+            <h3 class="card-title">{{ t('orderSummary') }}</h3>
+          </div>
+
+          <div class="cart-items-list">
+            
+            <div class="cart-item-block" *ngFor="let item of cartItems; let i = index">
+              <!-- Item Image -->
+              <div class="item-img-box">
+                <img *ngIf="item.image" [src]="item.image" alt="Product Image" class="item-img-thumb" />
+              </div>
+
+              <!-- Item Info -->
+              <div class="item-details-flex">
+                <div class="item-title-row">
+                  <h4 class="item-name">{{ tn(item.name) }}</h4>
+                  <button class="remove-btn" (click)="removeItem(i)" [title]="t('removeItem')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="trash-svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <span class="item-variant-info" *ngIf="item.variantInfo">{{ item.variantInfo }}</span>
+                <span class="item-sku-code">{{ item.sku }}</span>
+
+                <!-- Stepper + Price Line -->
+                <div class="item-bottom-action-line">
+                  <div class="mini-stepper">
+                    <button class="stepper-btn" (click)="decrementQty(i)">-</button>
+                    <span class="stepper-val">{{ item.quantity }}</span>
+                    <button class="stepper-btn" (click)="incrementQty(i)">+</button>
+                  </div>
+
+                  <div class="item-price-calc">
+                    <span class="item-unit-price">₹{{ item.unitPrice | number:'1.0-0' }} × {{ item.quantity }}</span>
+                    <span class="item-total-price">₹{{ item.totalPrice | number:'1.0-0' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="cartItems.length === 0" class="empty-cart-text">
+              {{ t('emptyCart') }} <a (click)="goToCatalog()" style="color: #6366f1; cursor: pointer;">{{ t('browseCatalog') }}</a>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- CARD 2: Payment Summary & Totals -->
+        <!-- (Delivery address section removed — orders use the dealer's
+             registered profile address automatically.) -->
+        <section class="checkout-card payment-summary-card" *ngIf="cartItems.length > 0">
+          <h3 class="card-title">{{ t('paymentSummary') }}</h3>
+
+          <div class="totals-breakdown-lines">
+            <div class="total-row">
+              <span class="lbl">{{ t('subtotal') }} ({{ totalQuantity }} {{ t('items') }})</span>
+              <span class="val">₹{{ subtotal | number:'1.0-0' }}</span>
+            </div>
+          </div>
+
+          <!-- Total Amount Big Header -->
+          <div class="grand-total-header-row">
+            <span class="grand-lbl">{{ t('totalAmount') }}</span>
+            <span class="grand-val">₹{{ grandTotal | number:'1.0-0' }}</span>
+          </div>
+
+          <!-- Create Order Button -->
+          <button class="confirm-order-btn" (click)="confirmOrder()" [disabled]="isSubmitting || cartItems.length === 0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lock-svg" *ngIf="!isSubmitting">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span *ngIf="!isSubmitting">{{ t('createOrder') }}</span>
+            <span *ngIf="isSubmitting">{{ t('placingOrder') }}</span>
+          </button>
+
+          <p class="terms-disclaimer">{{ t('terms') }}</p>
+
+        </section>
+
+      </div>
+
+    </main>
+
+  </div>
+</ion-content>

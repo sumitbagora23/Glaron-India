@@ -1,0 +1,289 @@
+/* Offer Banner — Select Dealers (full-width admin-themed detail page) */
+
+.page-subtitle {
+  margin: 4px 0 0;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #49454E;
+}
+
+/* Header: back button + title block */
+.title-with-back {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  .back-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #170338;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg { width: 20px; height: 20px; }
+
+    &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+  }
+
+  .title-container {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Header action buttons */
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancel-btn {
+  height: 42px;
+  padding: 0 22px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #170338;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+}
+
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 24px;
+  background: #170338;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  .save-icon { width: 18px; height: 18px; }
+
+  &:hover { background: #2D145A; }
+}
+
+/* Full-width white card (matches dealers table card) */
+.table-section-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Toolbar row inside the card */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E2E8F0;
+  flex-wrap: wrap;
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 220px;
+    max-width: 420px;
+    height: 42px;
+    padding: 0 14px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+
+    .search-icon { width: 18px; height: 18px; color: #94A3B8; flex-shrink: 0; }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      color: #1C1B1B;
+    }
+  }
+
+  .select-all-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+
+    .select-all-label {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: #170338;
+    }
+
+    .selected-count-pill {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #170338;
+      background: #EBDDFF;
+      padding: 4px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+  }
+}
+
+/* Shared checkbox */
+.row-checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: #170338;
+  cursor: pointer;
+}
+
+/* Dealer rows */
+.dealer-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.dealer-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background-color: rgba(248, 249, 250, 0.6); }
+  &.is-checked { background-color: rgba(235, 221, 255, 0.28); }
+
+  .dealer-avatar {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #EBDDFF;
+    color: #170338;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+
+  .dealer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+
+    .dealer-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 24px;
+      color: #1C1B1B;
+    }
+
+    .dealer-sub {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      color: #49454E;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .row-status {
+    flex-shrink: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0F9B72;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 4px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+}
+
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: #6B7280;
+}
+
+/* Footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #F8F9FA;
+  border-top: 1px solid #E2E8F0;
+  flex-wrap: wrap;
+
+  .summary-text {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: #49454E;
+  }
+
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+  }
+}
+
+.margin-bottom-sm { margin-bottom: 8px; }
+
+@media (max-width: 720px) {
+  .page-header-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+  }
+  .header-buttons { width: 100%; }
+  .list-toolbar .search-box { max-width: none; }
+}
