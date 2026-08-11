@@ -14,6 +14,7 @@ import { PostService, SharePost } from '../admin/post.service';
 import { PostShareService } from '../post-share.service';
 import { ShareBrandingService } from '../share-branding.service';
 import { NotificationService } from '../admin/notification.service';
+import { DealerPricePrefsService, DealerPriceMode } from '../dealer-price-prefs.service';
 import { APP_VERSION } from '../version';
 
 /**
@@ -23,9 +24,13 @@ import { APP_VERSION } from '../version';
  *   Products    the full catalogue with search
  *   Commission  the ledger the admin records against this agent
  *
- * Deliberately absent: prices, quantity steppers, a cart, checkout and orders.
- * An agent shows the range and earns commission; they never transact here, so
- * every control that would imply they can is left out rather than disabled.
+ * Prices are shown, and follow the same three-way choice the dealer panel
+ * offers in Profile: the catalog MRP, the rate the admin set for this agent, or
+ * nothing at all (for when the catalogue is being shown to a customer).
+ *
+ * Deliberately absent: quantity steppers, a cart, checkout and orders. An agent
+ * shows the range and earns commission; they never transact here, so every
+ * control that would imply they can is left out rather than disabled.
  */
 @Component({
   selector: 'app-agent-panel',
@@ -84,11 +89,15 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     private postShare: PostShareService,
     public shareBranding: ShareBrandingService,
     private notificationService: NotificationService,
+    private pricePrefs: DealerPricePrefsService,
     private swUpdate: SwUpdate
   ) {}
 
   ngOnInit() {
     this.agentAuth.ensureFirebaseSession();
+    // Which of the three prices the cards show is this person's own choice,
+    // kept on this device against their mobile number.
+    this.pricePrefs.use(this.agentAuth.getSession());
     this.applyTabFromQuery();
     // Bind this device to the agent side of the broadcast machinery: it
     // registers in the agent token collection and shows only what the admin
@@ -143,8 +152,21 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   // ---------------- Identity ----------------
 
+  // Looked up once per sign-in and per agent-list refresh rather than on every
+  // change-detection tick: the price on every card and variant reads this.
+  private cachedAgent: Agent | undefined;
+  private cachedAgentMobile = '';
+  private cachedAgentList: Agent[] | null = null;
+
   get currentAgent(): Agent | undefined {
-    return this.agentService.findByMobile(this.agentAuth.getSession());
+    const mobile = this.agentAuth.getSession() || '';
+    const list = this.agentService.agents;
+    if (list !== this.cachedAgentList || mobile !== this.cachedAgentMobile) {
+      this.cachedAgentList = list;
+      this.cachedAgentMobile = mobile;
+      this.cachedAgent = mobile ? this.agentService.findByMobile(mobile) : undefined;
+    }
+    return this.cachedAgent;
   }
 
   get callNumber(): string {
@@ -243,6 +265,70 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
     if (parts.length === 0) parts.push(variant.model || 'Variant');
     return parts.join(' · ');
+  }
+
+  // ---------------- Prices ----------------
+  //
+  // One choice of three, made in Profile > Price Settings and kept on this
+  // device: the catalog MRP, the rate the Glaron admin set for this agent, or
+  // no prices at all. Identical to the dealer panel, including the wording.
+
+  get priceMode(): DealerPriceMode {
+    return this.pricePrefs.priceMode;
+  }
+
+  setPriceMode(mode: DealerPriceMode) {
+    this.pricePrefs.setPriceMode(mode);
+  }
+
+  get showPrices(): boolean {
+    return this.pricePrefs.showPrices;
+  }
+
+  // Heading above the prices, so which one is on show is never ambiguous.
+  get cardPriceLabel(): string {
+    return this.priceMode === 'mrp' ? 'MRP' : 'My Price';
+  }
+
+  get cardPriceVariantLabel(): string {
+    return this.priceMode === 'mrp' ? 'MRP per variant' : 'My price per variant';
+  }
+
+  // Effective catalog price for a variant, accounting for per-meter pricing.
+  getVariantBasePrice(product: Product, variant: ProductVariant): number {
+    return variant.price || variant.pricePerMtr || product.price;
+  }
+
+  // The rate the admin set for this agent (Admin > Agents > Custom Rate): a
+  // per-product price if one exists, otherwise the catalog price times their
+  // multiplier. Falls back to the catalog price for an agent with no rate set.
+  private getAgentPrice(basePrice: number, productId?: string): number {
+    const agent = this.currentAgent;
+    if (agent && productId && agent.customPrices && agent.customPrices[productId] !== undefined) {
+      return agent.customPrices[productId];
+    }
+    const mult = (agent && agent.multiplier !== undefined) ? agent.multiplier : 1.0;
+    return Math.round(basePrice * mult);
+  }
+
+  private getVariantAgentPrice(product: Product, variant: ProductVariant, index: number): number {
+    const agent = this.currentAgent;
+    const key = `${product.id}#${index}`;
+    if (agent && agent.customPrices && agent.customPrices[key] !== undefined) {
+      return agent.customPrices[key];
+    }
+    const mult = (agent && agent.multiplier !== undefined) ? agent.multiplier : 1.0;
+    return Math.round(this.getVariantBasePrice(product, variant) * mult);
+  }
+
+  getCardPrice(product: Product): number {
+    if (this.priceMode === 'mrp') return product.price;
+    return this.getAgentPrice(product.price, product.id);
+  }
+
+  getVariantCardPrice(product: Product, variant: ProductVariant, index: number): number {
+    if (this.priceMode === 'mrp') return this.getVariantBasePrice(product, variant);
+    return this.getVariantAgentPrice(product, variant, index);
   }
 
   onImgError(event: any) {

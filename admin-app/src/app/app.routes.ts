@@ -120,6 +120,10 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/agent-pay/agent-pay.page').then((m) => m.AgentPayPage),
       },
       {
+        path: 'agents/pricing/:id',
+        loadComponent: () => import('./admin/agent-pricing/agent-pricing.page').then((m) => m.AgentPricingPage),
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./admin/orders/orders.page').then((m) => m.OrdersPage),
       },

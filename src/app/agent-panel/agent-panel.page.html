@@ -188,6 +188,55 @@
           <span class="profile-name">My Account</span>
         </div>
 
+        <!-- Price settings: one choice of three. It only changes what the
+             product cards show — the rate Glaron has agreed is unaffected. -->
+        <span class="settings-group-label">Price Settings</span>
+        <div class="price-modules-list">
+
+          <!-- 1. MRP — the catalog price the admin set on the product itself -->
+          <button class="price-module-row" (click)="setPriceMode('mrp')"
+                  [class.selected]="priceMode === 'mrp'" [attr.aria-pressed]="priceMode === 'mrp'">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h6a3 3 0 010 6H7m0 0v4m0-4h4l3 4M4 4h16v16H4z"/>
+              </svg>
+            </span>
+            <span class="module-text">
+              <span class="module-title">MRP</span>
+            </span>
+            <span class="module-radio" [class.on]="priceMode === 'mrp'" aria-hidden="true"></span>
+          </button>
+
+          <!-- 2. My Price — the rate the admin set for this account -->
+          <button class="price-module-row" (click)="setPriceMode('my')"
+                  [class.selected]="priceMode === 'my'" [attr.aria-pressed]="priceMode === 'my'">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M8.5 7.5h5a2.5 2.5 0 010 5h-3a2.5 2.5 0 000 5h5"/>
+              </svg>
+            </span>
+            <span class="module-text">
+              <span class="module-title">My Price</span>
+            </span>
+            <span class="module-radio" [class.on]="priceMode === 'my'" aria-hidden="true"></span>
+          </button>
+
+          <!-- 3. Hide Price — nothing on the cards -->
+          <button class="price-module-row" (click)="setPriceMode('hide')"
+                  [class.selected]="priceMode === 'hide'" [attr.aria-pressed]="priceMode === 'hide'">
+            <span class="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.4 5.9A9.3 9.3 0 0112 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 01-3.2 4M6.2 8A16 16 0 002.5 12S6 18.5 12 18.5c1 0 2-.2 2.9-.5"/>
+              </svg>
+            </span>
+            <span class="module-text">
+              <span class="module-title">Hide Price</span>
+            </span>
+            <span class="module-radio" [class.on]="priceMode === 'hide'" aria-hidden="true"></span>
+          </button>
+
+        </div>
+
         <div class="profile-details-list">
           <div class="profile-detail-row" *ngIf="currentAgent?.phone">
             <span class="detail-icon">
@@ -302,12 +351,31 @@
           </div>
 
           <div class="product-variants-body" *ngIf="product.variants?.length">
-            <span class="variants-header">Variants</span>
-            <div class="variants-inline-list">
+            <span class="variants-header">{{ showPrices ? cardPriceVariantLabel : 'Variants' }}</span>
+
+            <!-- With prices on, each variant gets its own row so the price sits
+                 beside the variant it belongs to; with prices hidden they read
+                 as plain specification chips. -->
+            <div class="variant-price-list" *ngIf="showPrices">
+              <div class="variant-price-row" *ngFor="let variant of product.variants; let vi = index; trackBy: trackByVariantIndex">
+                <span class="variant-price-label">{{ getVariantLabel(variant) }}</span>
+                <span class="variant-price-value">
+                  ₹{{ getVariantCardPrice(product, variant, vi) | number:'1.0-0' }}<small *ngIf="variant.pricePerMtr">/mtr</small>
+                </span>
+              </div>
+            </div>
+
+            <div class="variants-inline-list" *ngIf="!showPrices">
               <span class="variant-chip" *ngFor="let variant of product.variants; trackBy: trackByVariantIndex">
                 {{ getVariantLabel(variant) }}
               </span>
             </div>
+          </div>
+
+          <!-- No variants: the product's own price. -->
+          <div class="product-variants-body" *ngIf="!product.variants?.length && showPrices">
+            <span class="variants-header">{{ cardPriceLabel }}</span>
+            <span class="product-single-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
           </div>
 
         </article>

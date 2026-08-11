@@ -29,6 +29,14 @@ export interface Agent {
   email?: string;
   location?: string;
   createdAt?: string;
+  /**
+   * The agent's contracted rate, exactly as a dealer's: the catalog price times
+   * this multiplier, unless a per-product/per-variant price below overrides it.
+   * 1.0 means "the catalog price as it stands".
+   */
+  multiplier?: number;
+  /** productId (or `productId#variantIndex`) -> the rate the admin set. */
+  customPrices?: Record<string, number>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -159,7 +167,11 @@ export class AgentService {
       email: data.email || existing?.email || '',
       location: data.location || existing?.location || '',
       status: data.status || 'Active',
-      createdAt: existing?.createdAt || new Date().toISOString()
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      // Re-saving an agent must never quietly reset the rate the admin set for
+      // them — this overwrites the whole document.
+      multiplier: existing?.multiplier !== undefined ? existing.multiplier : 1.0,
+      customPrices: existing?.customPrices || {}
     };
 
     this.agentsSignal.update(list => {
@@ -196,6 +208,18 @@ export class AgentService {
 
   updateAgentStatus(id: string, status: AgentStatus) {
     this.updateAgent(id, { status });
+  }
+
+  /**
+   * The agent's contracted rate: a blanket multiplier plus any per-product or
+   * per-variant prices. Set from Admin > Agents > Custom Rate, and read by the
+   * agent panel when it shows "My Price".
+   */
+  updateAgentPricing(id: string, multiplier: number, customPrices?: Record<string, number>) {
+    this.updateAgent(id, {
+      multiplier,
+      customPrices: customPrices || this.findById(id)?.customPrices || {}
+    });
   }
 
   deleteAgent(id: string) {

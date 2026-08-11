@@ -280,6 +280,7 @@
 .settled-tag { color: #94A3B8; }
 
 .commission-action-btn,
+.pricing-action-btn,
 .agent-pay-btn,
 .agent-delete-btn {
   display: inline-flex;
@@ -300,6 +301,7 @@
 }
 
 .commission-action-btn { color: #7E5700; &:hover { color: #614300; } }
+.pricing-action-btn { color: #2563EB; &:hover { color: #1D4ED8; } }
 .agent-pay-btn { color: #0F9B72; &:hover { color: #0A7355; } }
 .agent-delete-btn { color: #DC2626; &:hover { color: #991B1B; } }
 

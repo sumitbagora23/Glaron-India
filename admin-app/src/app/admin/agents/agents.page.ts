@@ -113,6 +113,14 @@ export class AgentsPage {
     this.router.navigate(['/admin/agents/pay', agent.id]);
   }
 
+  // Opens the pricing sheet: the rate this agent sees on the catalogue, as a
+  // catalog-wide discount plus any per-product prices typed over it.
+  setCustomPricing(agent: Agent, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!agent.id) return;
+    this.router.navigate(['/admin/agents/pricing', agent.id]);
+  }
+
   changeStatus(agent: Agent, newStatus: string) {
     if (!agent.id) return;
     const status = newStatus as AgentStatus;

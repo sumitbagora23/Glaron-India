@@ -717,6 +717,104 @@ ion-content { --background: var(--g-bg); }
   color: var(--g-text);
 }
 
+/* With prices showing, the variants become rows: label left, price right. */
+.variant-price-list { display: flex; flex-direction: column; gap: 7px; }
+.variant-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--g-surface-2);
+  border-radius: var(--g-r-sm);
+}
+.variant-price-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--g-text);
+}
+.variant-price-value {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--g-text);
+  white-space: nowrap;
+  small { font-size: 9.5px; font-weight: 600; color: var(--g-text-soft); }
+}
+.product-single-price {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--g-text);
+}
+
+/* ============ Price settings modules (profile) ============ */
+.settings-group-label {
+  display: block;
+  margin: 8px 2px -2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--g-text-faint);
+}
+.price-modules-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  overflow: hidden;
+  box-shadow: var(--g-shadow-sm);
+}
+.price-module-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  & + & { border-top: 1px solid var(--g-border); }
+  &:active { background: var(--g-surface-2); }
+  /* The chosen price view reads as picked at a glance. */
+  &.selected {
+    background: rgba(254, 179, 0, .10);
+    .module-title { color: var(--g-gold-strong); }
+    .detail-icon { color: var(--g-gold-strong); }
+  }
+}
+.module-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.module-title { font-size: 14px; font-weight: 700; color: var(--g-text); }
+
+/* Radio marker: the price modules are one choice of three. */
+.module-radio {
+  flex: 0 0 auto;
+  position: relative;
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  border: 2px solid var(--g-border-strong);
+  transition: border-color .18s ease;
+  &.on {
+    border-color: var(--g-gold-strong);
+    &::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: var(--g-gold-strong);
+    }
+  }
+}
+
 /* ============ Commission tab ============ */
 .commission-summary {
   display: flex;
