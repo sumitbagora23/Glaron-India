@@ -110,6 +110,122 @@
   }
 }
 
+/* Recipient picker — the tick list shown when a side is set to "Choose". */
+.recipient-picker {
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FCFBFD;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .picker-search {
+    flex: 1 1 220px;
+    height: 38px;
+    background: #FFFFFF;
+  }
+}
+
+.select-all-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit';
+  font-size: 13px;
+  font-weight: 600;
+  color: #170338;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.row-checkbox {
+  width: 17px;
+  height: 17px;
+  accent-color: #170338;
+  cursor: pointer;
+  flex: none;
+}
+
+/* Capped so a long dealer list can't push the Send button off the page. */
+.picker-rows {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #EDEAF2;
+  border-radius: 6px;
+  background: #FFFFFF;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #F2F0F6;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #FAF9FC; }
+  &.is-checked { background: #F4F1FA; }
+}
+
+.picker-avatar {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: #170338;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit';
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.picker-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .picker-name {
+    font-family: 'Outfit';
+    font-size: 14px;
+    font-weight: 600;
+    color: #1C1B1B;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .picker-sub {
+    font-family: 'Outfit';
+    font-size: 12px;
+    color: #6B7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.picker-empty {
+  padding: 18px 10px;
+  text-align: center;
+  font-family: 'Outfit';
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
 /* Image */
 .image-preview {
   position: relative;

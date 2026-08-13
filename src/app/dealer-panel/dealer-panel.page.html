@@ -55,15 +55,13 @@
         <button class="sidebar-close" (click)="closeSidebar()" aria-label="Close menu">&times;</button>
       </div>
 
-      <button class="sidebar-profile" (click)="openProfileFromMenu()">
-        <span class="sidebar-avatar">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="avatar-svg">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-        </span>
-        <span class="sidebar-profile-text">
-          <span class="sidebar-profile-name">{{ t('myAccount') }}</span>
-          <span class="sidebar-profile-sub">{{ t('profile') }}</span>
+      <button class="sidebar-link profile-link" (click)="openProfileFromMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM6 21v-1a6 6 0 016-6 6 6 0 016 6v1"/>
+        </svg>
+        <span class="sidebar-link-text">
+          <span class="sidebar-link-title">{{ t('myAccount') }}</span>
+          <span class="sidebar-link-sub">{{ t('profile') }}</span>
         </span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="sidebar-chevron">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
@@ -85,26 +83,43 @@
         </svg>
       </button>
 
+      <!-- Sends this account's own catalogue link. It opens in any browser and
+           shows the range only — no prices and nothing orderable. -->
+      <button class="sidebar-link share-catalog-link" (click)="shareCatalogue()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5m4.5-4.5l1.5-1.5a4 4 0 015.656 5.656l-3 3a4 4 0 01-5.656 0"/>
+        </svg>
+        <span class="sidebar-link-text">
+          <span class="sidebar-link-title">{{ t('shareCatalogue') }}</span>
+          <span class="sidebar-link-sub">{{ t('shareCatalogueSub') }}</span>
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="sidebar-chevron">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+
       <!-- Version + manual update check. They sit at the foot of the menu so
            they are one tap away from any tab, instead of being buried at the
            bottom of the profile page. -->
       <div class="sidebar-footer">
-        <button class="check-update-link" (click)="checkForAppUpdate()" [disabled]="updateChecking">
+        <button class="sidebar-link update-link" (click)="checkForAppUpdate()" [disabled]="updateChecking">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="check-update-svg" [class.spin]="updateChecking">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>{{ updateChecking ? t('checkingUpdate') : t('checkForUpdate') }}</span>
+          <span class="sidebar-link-text">
+            <span class="sidebar-link-title">{{ updateChecking ? t('checkingUpdate') : t('checkForUpdate') }}</span>
+            <span class="sidebar-link-sub">{{ t('version') }} {{ appVersion }}</span>
+          </span>
         </button>
 
         <div class="check-update-msg" *ngIf="updateMessage">{{ updateMessage }}</div>
-
-        <div class="app-version-footer">{{ t('version') }} {{ appVersion }}</div>
       </div>
     </aside>
 
     <!-- Posts Full Page — every post the admin has published, newest first.
-         Sharing one stamps the Glaron logo and footer onto the picture and
-         hands it to the device's share sheet. -->
+         Tapping one prints this shop's details in a black footer under the
+         picture and hands it to the device's share sheet. The details sit in
+         their own card at the top of the page, tap to fill in or edit. -->
     <div class="profile-fullpage posts-fullpage" *ngIf="showPosts">
       <header class="profile-topbar">
         <button class="profile-back-btn" (click)="closePosts()" aria-label="Back">
@@ -117,65 +132,82 @@
 
       <div class="profile-page-body">
 
-        <!-- Your branding — the logo and details stamped onto every post this
-             dealer shares. Saved on this device as soon as it's changed. -->
-        <section class="branding-card">
-          <div class="branding-head">
-            <span class="branding-title">{{ t('brandingTitle') }}</span>
-            <span class="branding-sub">{{ t('brandingHint') }}</span>
+        <!-- Your business details — always here at the top of the page. Tap to
+             fill them in, tap again any time to edit. Whatever is saved is what
+             gets printed in the footer of every post shared from this device. -->
+        <button type="button" class="biz-card" (click)="openBusinessEditor()">
+          <div class="biz-card-head">
+            <span class="biz-card-title">{{ t('businessTitle') }}</span>
+            <span class="biz-card-action">{{ shareBusiness.hasBusiness ? t('businessEdit') : t('businessAdd') }}</span>
           </div>
 
-          <div class="branding-field">
-            <span class="branding-label">{{ t('brandingLogo') }}</span>
-
-            <div class="branding-logo-row">
-              <div class="branding-logo-box" *ngIf="brandingLogo">
-                <img [src]="brandingLogo" class="branding-logo-img" alt="" />
-              </div>
-              <div class="branding-logo-actions">
-                <label class="branding-upload-btn">
-                  <input type="file" accept="image/*" (change)="onBrandingLogoSelected($event)" hidden />
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="branding-upload-svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  <span>{{ brandingLogo ? t('brandingReplaceLogo') : t('brandingAddLogo') }}</span>
-                </label>
-                <button type="button" class="branding-remove-btn" *ngIf="brandingLogo" (click)="removeBrandingLogo()">
-                  {{ t('brandingRemoveLogo') }}
-                </button>
-              </div>
-            </div>
-            <span class="branding-error" *ngIf="brandingError">{{ brandingError }}</span>
-            <span class="branding-hint" *ngIf="!brandingError">{{ t('brandingLogoHint') }}</span>
+          <div class="business-preview" *ngIf="shareBusiness.hasBusiness">
+            <span class="business-preview-side">{{ shareBusiness.printedMobile }}</span>
+            <span class="business-preview-shop">{{ shareBusiness.shop }}</span>
+            <span class="business-preview-side business-preview-right">{{ shareBusiness.email }}</span>
           </div>
 
-          <div class="branding-field">
-            <span class="branding-label">{{ t('brandingDetails') }}</span>
-            <textarea
-              class="branding-textarea"
-              [(ngModel)]="brandingDetails"
-              maxlength="160"
-              rows="3"
-              [placeholder]="t('brandingDetailsPlaceholder')"></textarea>
-            <span class="branding-hint">{{ t('brandingDetailsHint') }}</span>
-          </div>
-        </section>
+          <span class="biz-card-empty" *ngIf="!shareBusiness.hasBusiness">{{ t('businessNotSet') }}</span>
+        </button>
 
         <p class="posts-empty" *ngIf="!sharePosts.length">{{ t('noPosts') }}</p>
 
-        <article class="post-card" *ngFor="let post of sharePosts">
+        <article class="post-card" *ngFor="let post of sharePosts" (click)="sharePost(post)">
           <div class="post-card-media">
             <img [src]="post.image" class="post-card-img" alt="Post" (error)="onImgError($event)" decoding="async" />
             <span class="post-new-pill" *ngIf="isNewPost(post)">{{ t('newLabel') }}</span>
           </div>
           <p class="post-card-caption" *ngIf="post.caption">{{ post.caption }}</p>
-          <button class="post-share-btn" (click)="sharePost(post)" [disabled]="!!sharingPostId">
+          <span class="post-share-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="post-share-svg">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342a3 3 0 000-2.684m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
             <span>{{ sharingPostId === post.id ? t('preparing') : t('share') }}</span>
-          </button>
+          </span>
         </article>
+      </div>
+    </div>
+
+    <!-- The editor behind that card. Saved on this device, so it opens
+         pre-filled with whatever was entered last time. -->
+    <div class="confirm-overlay" *ngIf="showBusinessEditor" (click)="closeBusinessEditor()">
+      <div class="business-card" (click)="$event.stopPropagation()">
+        <div class="business-head">
+          <span class="business-title">{{ t('businessTitle') }}</span>
+          <span class="business-sub">{{ t('businessHint') }}</span>
+        </div>
+
+        <label class="business-field">
+          <span class="business-label">{{ t('businessShop') }}</span>
+          <input type="text" class="business-input" [(ngModel)]="businessForm.shop"
+                 maxlength="34" [placeholder]="t('businessShopPlaceholder')" />
+        </label>
+
+        <label class="business-field">
+          <span class="business-label">{{ t('businessMobile') }}</span>
+          <input type="tel" inputmode="tel" class="business-input" [(ngModel)]="businessForm.mobile"
+                 maxlength="16" [placeholder]="t('businessMobilePlaceholder')" />
+        </label>
+
+        <label class="business-field">
+          <span class="business-label">{{ t('email') }}</span>
+          <input type="email" inputmode="email" class="business-input" [(ngModel)]="businessForm.email"
+                 maxlength="42" [placeholder]="t('businessEmailPlaceholder')" />
+        </label>
+
+        <span class="business-error" *ngIf="businessError">{{ businessError }}</span>
+
+        <!-- What the footer will look like once it's on the picture. -->
+        <div class="business-preview">
+          <span class="business-preview-side">{{ printedMobile(businessForm.mobile) }}</span>
+          <span class="business-preview-shop">{{ businessForm.shop }}</span>
+          <span class="business-preview-side business-preview-right">{{ businessForm.email }}</span>
+        </div>
+
+        <div class="business-actions">
+          <button type="button" class="business-cancel" (click)="closeBusinessEditor()">{{ t('cancel') }}</button>
+          <button type="button" class="business-share" (click)="saveBusiness()">{{ t('save') }}</button>
+        </div>
       </div>
     </div>
 
@@ -610,7 +642,7 @@
 
         <div class="catalog-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-          <input type="text" class="search-field" [(ngModel)]="searchQuery" [placeholder]="t('searchProducts')" />
+          <input type="text" class="search-field" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" [placeholder]="t('searchProducts')" />
           <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
         </div>
         <div class="filter-controls-row">
@@ -744,17 +776,17 @@
                 </svg>
               </div>
               <div class="order-id-group">
-                <span class="order-id-text">
-                  #{{ order.id }}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="expand-chevron" [class.rotated]="isExpanded(order.id)">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
-                  </svg>
-                </span>
+                <span class="order-id-text">{{ orderRef(order.id) }}</span>
                 <span class="order-date-text" *ngIf="order.date">{{ order.date | date:'mediumDate' }}</span>
               </div>
               <div class="stage-badge-pill" [ngClass]="stageBadgeClass(order.stage)">
                 <span class="stage-dot"></span>{{ td(order.stage) }}
               </div>
+              <!-- The arrow closes the row instead of hugging the label, so the
+                   short ORD number and the stage pill both keep their space. -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="expand-chevron" [class.rotated]="isExpanded(order.id)">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+              </svg>
             </div>
 
             <!-- Expandable Item List -->

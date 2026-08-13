@@ -1,0 +1,399 @@
+<ion-content [scrollY]="true">
+  <div class="public-catalog-canvas">
+
+    <!-- Navbar. The category browser wears the brand mark; a drilled-in
+         category and the Products tab get the plain back + title bar. There are
+         no account actions here — this page belongs to nobody who is signed in. -->
+    <header class="top-app-bar">
+      <div class="top-bar-inner">
+        <div class="left-brand-group" *ngIf="isHomeBar">
+          <img src="assets/glaron-wordmark-dark.png" alt="Glaron India" class="topbar-logo" />
+        </div>
+
+        <div class="left-brand-group" *ngIf="!isHomeBar">
+          <button class="back-btn" (click)="topBarBack()" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="back-svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span class="bar-title">{{ topBarTitle }}</span>
+        </div>
+
+        <span class="catalog-pill" *ngIf="isHomeBar">Catalogue</span>
+      </div>
+    </header>
+
+    <main class="catalog-main-container">
+
+      <!-- HOME TAB: category browser -->
+      <ng-container *ngIf="activeTab === 'home' && !homeCategory">
+        <!-- Hero. Whoever opens this link arrived from a chat message, not from
+             a shop — the first screen has to say what this is before it asks
+             them to browse anything. -->
+        <section class="catalog-hero">
+          <span class="hero-eyebrow">The Lighting Catalogue</span>
+          <h1 class="hero-title">Light that makes<br />the room.</h1>
+          <p class="hero-sub">Designer lights, profiles and fixtures — the complete Glaron India range, always up to date.</p>
+        </section>
+
+        <button class="catalog-search as-button" (click)="showProducts()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+          <span class="search-placeholder">Search the full range</span>
+        </button>
+
+        <section class="catalog-title-banner">
+          <div class="title-text-group">
+            <h2 class="catalog-heading">Start with a space</h2>
+            <p class="catalog-subheading">Pick a category and see everything made to light it.</p>
+          </div>
+        </section>
+
+        <section class="category-grid">
+          <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId" (click)="openCategory(cat.name)">
+            <div class="cat-grid-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+            </div>
+            <span class="cat-grid-name">{{ cat.name }}</span>
+          </button>
+
+          <div class="category-empty-state" *ngIf="categoryCards.length === 0">
+            <span>New pieces are being added right now. Look in again shortly.</span>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- PRODUCTS TAB head: search + category filter (title is in the bar) -->
+      <section class="catalog-title-banner" *ngIf="activeTab === 'products'">
+        <div class="title-text-group">
+          <p class="catalog-subheading">Every piece in the Glaron India collection, in one place.</p>
+        </div>
+
+        <div class="catalog-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+          <input type="text" class="search-field" [(ngModel)]="searchQuery" placeholder="Search the full range" />
+          <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
+        </div>
+
+        <div class="filter-controls-row">
+          <div class="category-select-wrapper">
+            <select [(ngModel)]="selectedCategory" class="cat-select-dropdown">
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMPARE QUOTATION TAB: send in a quote you already hold -->
+      <section class="compare-panel" *ngIf="quotationsAllowed && activeTab === 'compare'">
+
+        <div class="catalog-hero compare-hero">
+          <span class="hero-eyebrow">Compare Quotation</span>
+          <h1 class="hero-title">Holding a quote?<br />Let us better it.</h1>
+          <p class="hero-sub">Send us the quotation you already have. We price the same list against the Glaron range and come back to you.</p>
+        </div>
+
+        <!-- Sent state -->
+        <div class="quote-done" *ngIf="quoteSent">
+          <span class="done-tick">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <h2 class="done-title">Got it — thank you.</h2>
+          <p class="done-text">Your quotation is with the Glaron India team. Someone will call you on the number you left.</p>
+          <button class="quote-ghost-btn" (click)="sendAnotherQuote()">Send another quotation</button>
+        </div>
+
+        <!-- Form -->
+        <form class="quote-form" *ngIf="!quoteSent" (ngSubmit)="submitQuote()">
+
+          <!-- Upload -->
+          <label class="quote-drop" [class.filled]="quoteImage">
+            <input type="file" accept="image/*" class="quote-file-input" (change)="onQuoteSelected($event)" />
+
+            <ng-container *ngIf="!quoteImage">
+              <span class="drop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.9A5 5 0 1115.9 6H16a5 5 0 011 9.9M9 15l3-3m0 0l3 3m-3-3v9" />
+                </svg>
+              </span>
+              <span class="drop-title">{{ quoteReading ? 'Reading your file…' : 'Upload your quotation' }}</span>
+              <span class="drop-sub">A photo or a screenshot — JPG or PNG</span>
+            </ng-container>
+
+            <ng-container *ngIf="quoteImage">
+              <img [src]="quoteImage" class="quote-preview-img" alt="Your quotation" />
+              <span class="drop-change">Tap to change</span>
+            </ng-container>
+          </label>
+
+          <button type="button" class="quote-remove-btn" *ngIf="quoteImage" (click)="removeQuoteImage()">
+            Remove file
+          </button>
+
+          <!-- Who to call back -->
+          <div class="quote-field">
+            <label class="quote-label" for="quote-name">Your name</label>
+            <input id="quote-name" type="text" class="quote-input" [(ngModel)]="quoteName" name="quoteName"
+                   placeholder="Full name" autocomplete="name" maxlength="60" />
+          </div>
+
+          <div class="quote-field">
+            <label class="quote-label" for="quote-mobile">Mobile number</label>
+            <input id="quote-mobile" type="tel" inputmode="numeric" class="quote-input" [(ngModel)]="quoteMobile"
+                   name="quoteMobile" placeholder="10-digit number" autocomplete="tel" maxlength="15" />
+          </div>
+
+          <p class="quote-error" *ngIf="quoteError">{{ quoteError }}</p>
+
+          <button type="submit" class="quote-submit-btn" [disabled]="quoteSending || quoteReading">
+            {{ quoteSending ? 'Sending…' : 'Submit for comparison' }}
+          </button>
+
+          <p class="quote-privacy">Your details are used only to reply to this quotation.</p>
+        </form>
+
+      </section>
+
+      <!-- Product cards. Anything here can go on a quotation list, but nothing
+           on this page carries a price — a visitor has no rate, so they pick
+           quantities and Glaron prices the list afterwards. -->
+      <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
+
+        <div class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">
+          <div class="card-head-row">
+            <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
+              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" />
+            </div>
+
+            <div class="card-head-info">
+              <span class="category-uppercase-tag" *ngIf="product.category">{{ product.category }}</span>
+              <h3 class="product-title">{{ product.name }}</h3>
+              <p class="product-description" [class.expanded]="expandedDescId === product.id" (click)="toggleDesc(product)">
+                {{ productDescription(product) }}
+              </p>
+
+              <!-- A product with no variants is added as itself. Only on an
+                   office link: a dealer's customer has nothing to send. -->
+              <div class="add-line" *ngIf="quotationsAllowed && !product.variants?.length">
+                <button class="add-pill" *ngIf="qtyInCart(product) === 0" (click)="addToCart(product)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                  <span>Add to list</span>
+                </button>
+                <div class="qty-stepper" *ngIf="qtyInCart(product) > 0">
+                  <button class="step-btn" (click)="removeOneFromCart(product)" aria-label="Remove one">&minus;</button>
+                  <span class="step-val">{{ qtyInCart(product) }}</span>
+                  <button class="step-btn" (click)="addToCart(product)" aria-label="Add one">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Variants are the specification rows. Each carries its own stepper
+               and no price — the quantity is the only number on the page. -->
+          <div class="product-details-body" *ngIf="product.variants?.length">
+            <span class="specs-header">Available options</span>
+            <div class="variants-inline-list">
+              <div class="variant-inline-row" *ngFor="let variant of product.variants; trackBy: trackByVariantIndex">
+                <span class="variant-inline-label">{{ getVariantLabel(variant) }}</span>
+
+                <button class="add-pill compact" *ngIf="quotationsAllowed && qtyInCart(product, variant) === 0" (click)="addToCart(product, variant)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                  <span>Add</span>
+                </button>
+                <div class="qty-stepper compact" *ngIf="quotationsAllowed && qtyInCart(product, variant) > 0">
+                  <button class="step-btn" (click)="removeOneFromCart(product, variant)" aria-label="Remove one">&minus;</button>
+                  <span class="step-val">{{ qtyInCart(product, variant) }}</span>
+                  <button class="step-btn" (click)="addToCart(product, variant)" aria-label="Add one">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-empty-state" *ngIf="displayedProducts.length === 0">
+          <span>Nothing matches that yet — try another word or category.</span>
+        </div>
+      </section>
+
+      <!-- ============ QUOTATION LIST (the cart) ============
+           Everything picked, in one place, with the request form at the foot of
+           it. No line total and no basket total: there is no price on this page
+           to total up. -->
+      <section class="cart-panel" *ngIf="quotationsAllowed && activeTab === 'cart'">
+
+        <!-- Sent state — the last word the visitor sees. -->
+        <div class="quote-done" *ngIf="reqSent">
+          <span class="done-tick">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <h2 class="done-title">Request sent — thank you.</h2>
+          <p class="done-text">
+            Your list is with the Glaron India team. We are pricing it now and someone
+            will call you on the number you left with your quotation.
+          </p>
+          <button class="quote-ghost-btn" (click)="startNewList()">Start a new list</button>
+        </div>
+
+        <ng-container *ngIf="!reqSent">
+
+          <!-- Empty list -->
+          <div class="cart-empty" *ngIf="cart.length === 0">
+            <span class="cart-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H19M16 22a1 1 0 100-2 1 1 0 000 2zM9 22a1 1 0 100-2 1 1 0 000 2z" />
+              </svg>
+            </span>
+            <h2 class="cart-empty-title">Your list is empty</h2>
+            <p class="cart-empty-text">
+              Add the pieces you want priced and send them across as one quotation
+              request.
+            </p>
+            <button class="quote-ghost-btn" (click)="showProducts()">Browse the range</button>
+          </div>
+
+          <ng-container *ngIf="cart.length > 0">
+            <div class="cart-head">
+              <h2 class="catalog-heading">Your quotation list</h2>
+              <p class="catalog-subheading">
+                {{ cart.length }} {{ cart.length === 1 ? 'product' : 'products' }} ·
+                {{ cartCount }} {{ cartCount === 1 ? 'piece' : 'pieces' }}
+              </p>
+            </div>
+
+            <div class="cart-list">
+              <div class="cart-row" *ngFor="let item of cart; let i = index; trackBy: trackByCartKey">
+                <div class="cart-thumb" [class.no-image]="!item.image">
+                  <img *ngIf="item.image" [src]="item.image" (error)="onImgError($event)" alt="" decoding="async" />
+                </div>
+
+                <div class="cart-info">
+                  <div class="cart-title-row">
+                    <h4 class="cart-name">{{ item.name }}</h4>
+                    <button class="cart-remove" (click)="removeLine(i)" aria-label="Remove from list">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <span class="cart-variant" *ngIf="item.variant">{{ item.variant }}</span>
+                  <span class="cart-sku">{{ item.productId }}</span>
+
+                  <div class="qty-stepper cart-stepper">
+                    <button class="step-btn" (click)="decrementLine(i)" aria-label="Remove one">&minus;</button>
+                    <span class="step-val">{{ item.quantity }}</span>
+                    <button class="step-btn" (click)="incrementLine(i)" aria-label="Add one">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- The one button at the foot of the list, and the two fields it
+                 opens. Nothing is sent until a name and a number are in. -->
+            <div class="request-block">
+              <button class="quote-submit-btn" *ngIf="!askDetails" (click)="openQuoteRequest()">
+                Request Quotation
+              </button>
+              <p class="quote-privacy" *ngIf="!askDetails">
+                Prices are not shown here — send the list and we will quote it for you.
+              </p>
+
+              <form class="quote-form" *ngIf="askDetails" (ngSubmit)="submitQuoteRequest()">
+                <div class="request-intro">
+                  <h3 class="request-title">Where should we send it?</h3>
+                  <p class="request-sub">Leave your name and mobile number and we will call you back with the price.</p>
+                </div>
+
+                <div class="quote-field">
+                  <label class="quote-label" for="req-name">Your name</label>
+                  <input id="req-name" type="text" class="quote-input" [(ngModel)]="reqName" name="reqName"
+                         placeholder="Full name" autocomplete="name" maxlength="60" />
+                </div>
+
+                <div class="quote-field">
+                  <label class="quote-label" for="req-mobile">Mobile number</label>
+                  <input id="req-mobile" type="tel" inputmode="numeric" class="quote-input" [(ngModel)]="reqMobile"
+                         name="reqMobile" placeholder="10-digit number" autocomplete="tel" maxlength="15" />
+                </div>
+
+                <p class="quote-error" *ngIf="reqError">{{ reqError }}</p>
+
+                <button type="submit" class="quote-submit-btn" [disabled]="reqSending">
+                  {{ reqSending ? 'Sending…' : 'Submit request' }}
+                </button>
+
+                <p class="quote-privacy">Your details are used only to reply to this quotation.</p>
+              </form>
+            </div>
+          </ng-container>
+
+        </ng-container>
+      </section>
+
+    </main>
+
+    <!-- Bottom navigation. Browse only on a dealer's link; the office's adds
+         the quotation list and the compare tab. -->
+    <nav class="bottom-nav-bar">
+      <div class="nav-tab-group" [attr.data-active]="tabIndex" [attr.data-count]="tabCount">
+        <span class="nav-indicator" aria-hidden="true"></span>
+
+        <button class="nav-tab-item" [class.active]="activeTab === 'home'" (click)="showHome()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/>
+          </svg>
+          <span class="tab-label">Home</span>
+        </button>
+
+        <button class="nav-tab-item" [class.active]="activeTab === 'products'" (click)="showProducts()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <span class="tab-label">Products</span>
+        </button>
+
+        <button class="nav-tab-item" *ngIf="quotationsAllowed" [class.active]="activeTab === 'cart'" (click)="showCart()">
+          <span class="tab-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H19M16 22a1 1 0 100-2 1 1 0 000 2zM9 22a1 1 0 100-2 1 1 0 000 2z"/>
+            </svg>
+            <span class="tab-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+          </span>
+          <span class="tab-label">List</span>
+        </button>
+
+        <button class="nav-tab-item" *ngIf="quotationsAllowed" [class.active]="activeTab === 'compare'" (click)="showCompare()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h4m4-11H7a2 2 0 00-2 2v13l3.5-2.5L12 20l3.5-2.5L19 20V7a2 2 0 00-2-2z"/>
+          </svg>
+          <span class="tab-label">Compare</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Confirmation of a tap on a long list, so adding is never silent. -->
+    <div class="added-toast" *ngIf="addedFlash">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="toast-tick">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+      <span>{{ addedFlash }}</span>
+    </div>
+
+    <!-- Image lightbox -->
+    <div class="lightbox-overlay" *ngIf="selectedModalImage" (click)="closeImageModal()">
+      <div class="lightbox-card" (click)="$event.stopPropagation()">
+        <button class="close-lightbox" (click)="closeImageModal()">&times;</button>
+        <img [src]="selectedModalImage" class="lightbox-img" [alt]="selectedModalImageTitle" />
+        <span class="lightbox-title">{{ selectedModalImageTitle }}</span>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -1,0 +1,194 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Activity Logs</h2>
+        <p class="page-subtitle">
+          What dealers and agents do inside the app — the tabs they open, the products they look at,
+          what goes into the cart, and the orders they check out with.
+        </p>
+      </div>
+
+      <button class="cleanup-btn" (click)="cleanUp()" [disabled]="cleaning">
+        <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span class="btn-text">{{ cleaning ? 'Cleaning…' : 'Clean up old logs' }}</span>
+      </button>
+    </div>
+
+    <p class="cleanup-note" *ngIf="cleanupMessage">{{ cleanupMessage }}</p>
+
+    <!-- Summary strip — always describes exactly what the table below shows -->
+    <section class="summary-row">
+      <div class="summary-card">
+        <span class="summary-label">Activity shown</span>
+        <span class="summary-value">{{ filteredLogs.length }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Dealers active</span>
+        <span class="summary-value">{{ activeDealers }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Agents active</span>
+        <span class="summary-value">{{ activeAgents }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Products viewed</span>
+        <span class="summary-value">{{ productViews }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Orders placed</span>
+        <span class="summary-value">{{ ordersPlaced }}</span>
+        <span class="summary-sub" *ngIf="ordersPlaced">{{ money(orderValue) }}</span>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters-card">
+      <!-- Search. Shares the top bar's field, so typing in either drives both. -->
+      <div class="logs-search">
+        <svg class="logs-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          class="logs-search-input"
+          [(ngModel)]="searchTerm"
+          placeholder="Search by name, mobile, product, SKU or order number…" />
+        <button class="logs-search-clear" *ngIf="searchTerm" (click)="clearSearch()" aria-label="Clear search">&times;</button>
+      </div>
+
+      <div class="filters-row">
+      <!-- Who: dealer / agent -->
+      <div class="filter-chips">
+        <button class="chip" [class.active]="roleFilter === 'all'" (click)="roleFilter = 'all'">Everyone</button>
+        <button class="chip" [class.active]="roleFilter === 'dealer'" (click)="roleFilter = 'dealer'">Dealers</button>
+        <button class="chip" [class.active]="roleFilter === 'agent'" (click)="roleFilter = 'agent'">Agents</button>
+      </div>
+
+      <div class="filter-selects">
+        <label class="filter-field">
+          <span class="filter-label">Activity</span>
+          <select class="filter-control" [(ngModel)]="sectionFilter">
+            <option value="all">All activity</option>
+            <option *ngFor="let s of sections" [value]="s.key">{{ s.label }}</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span class="filter-label">Person</span>
+          <select class="filter-control" [(ngModel)]="personFilter">
+            <option value="all">Everyone</option>
+            <option *ngFor="let p of people" [value]="p.phone">
+              {{ p.name }} · {{ p.phone }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span class="filter-label">When</span>
+          <select class="filter-control" [(ngModel)]="rangeFilter">
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+          </select>
+        </label>
+
+        <button class="filter-clear" *ngIf="hasFilters" (click)="clearFilters()">Clear filters</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- Activity table -->
+    <section class="table-section-card">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-who">Who</th>
+            <th class="th-what">Activity</th>
+            <th class="th-detail">Details</th>
+            <th class="th-section">Type</th>
+            <th class="th-time">When</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of filteredLogs; let last = last; trackBy: trackById" [class.last-row-border]="last">
+
+            <!-- Who -->
+            <td class="td-who">
+              <div class="who-box">
+                <span class="who-avatar" [class.agent]="log.role === 'agent'">{{ initials(log) }}</span>
+                <span class="who-text">
+                  <span class="who-name">{{ displayName(log) }}</span>
+                  <span class="who-meta">
+                    <span class="role-pill" [class.agent]="log.role === 'agent'">{{ roleLabel(log) }}</span>
+                    <span class="who-phone">{{ log.phone }}</span>
+                  </span>
+                </span>
+              </div>
+            </td>
+
+            <!-- What they did -->
+            <td class="td-what">
+              <span class="what-label">{{ log.label }}</span>
+              <span class="what-device" *ngIf="log.device">{{ log.device }}</span>
+            </td>
+
+            <!-- Structured details -->
+            <td class="td-detail">
+              <div class="detail-tags">
+                <span class="tag tag-sku" *ngIf="log.sku">{{ log.sku }}</span>
+                <span class="tag" *ngIf="log.variant">{{ log.variant }}</span>
+                <span class="tag" *ngIf="log.category && !log.sku">{{ log.category }}</span>
+                <span class="tag tag-order" *ngIf="log.orderId">{{ orderRef(log.orderId) }}</span>
+                <span class="tag tag-qty" *ngIf="log.qty">Qty {{ log.qty }}</span>
+                <span class="tag tag-amount" *ngIf="log.amount">{{ money(log.amount) }}</span>
+              </div>
+              <span class="detail-text" *ngIf="log.detail">{{ log.detail }}</span>
+              <span class="detail-empty" *ngIf="!log.detail && !log.sku && !log.orderId && !log.qty && !log.amount && !log.category">—</span>
+            </td>
+
+            <!-- Section -->
+            <td class="td-section">
+              <span class="section-pill" [ngClass]="sectionClass(log.section)">{{ sectionLabel(log.section) }}</span>
+            </td>
+
+            <!-- When -->
+            <td class="td-time">
+              <span class="time-text" [title]="exactTime(log.at)">{{ timeAgo(log.at) }}</span>
+              <span class="time-exact">{{ exactTime(log.at) }}</span>
+            </td>
+
+            <!-- Actions -->
+            <td class="td-actions">
+              <button class="delete-btn" (click)="removeLog(log, $event)" title="Remove this entry">
+                <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="delete-btn-text">Remove</span>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="filteredLogs.length === 0">
+            <td colspan="6" class="td-empty">
+              <span *ngIf="logs.length === 0">
+                No activity recorded yet. Entries appear here as soon as a dealer or agent uses the app.
+              </span>
+              <span *ngIf="logs.length > 0">
+                Nothing matches these filters.
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</ion-content>

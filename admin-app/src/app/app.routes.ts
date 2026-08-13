@@ -156,12 +156,24 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/notification-form/notification-form.page').then((m) => m.NotificationFormPage),
       },
       {
+        path: 'quotations',
+        loadComponent: () => import('./admin/quotations/quotations.page').then((m) => m.QuotationsPage),
+      },
+      {
         path: 'posts',
         loadComponent: () => import('./admin/posts/posts.page').then((m) => m.PostsPage),
       },
       {
         path: 'posts/new',
         loadComponent: () => import('./admin/post-form/post-form.page').then((m) => m.PostFormPage),
+      },
+      {
+        path: 'logs',
+        loadComponent: () => import('./admin/logs/logs.page').then((m) => m.LogsPage),
+      },
+      {
+        path: 'share-catalogue',
+        loadComponent: () => import('./admin/share-catalogue/share-catalogue.page').then((m) => m.ShareCataloguePage),
       },
       {
         path: 'settings',

@@ -12,11 +12,14 @@ import { OrderService, Order } from '../admin/order.service';
 import { CategoryService, Category } from '../admin/category.service';
 import { SettingsService } from '../admin/settings.service';
 import { NotificationService } from '../admin/notification.service';
+import { ActivityLogService } from '../admin/activity-log.service';
 import { PostService, SharePost } from '../admin/post.service';
 import { PostShareService } from '../post-share.service';
-import { ShareBrandingService } from '../share-branding.service';
+import { ShareBusinessService } from '../share-business.service';
+import { CatalogShareService } from '../catalog-share.service';
 import { DealerI18nService } from '../dealer-i18n.service';
 import { APP_VERSION } from '../version';
+import { orderRefLabel } from '../order-ref';
 import { SwUpdate } from '@angular/service-worker';
 import { DealerApprovalService } from '../dealer-approval.service';
 import { DealerAuthService } from '../dealer-auth.service';
@@ -207,24 +210,33 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     posts: { en: 'Posts', hi: 'पोस्ट' },
     postsMenuSub: { en: 'Share Glaron posts', hi: 'ग्लैरोन पोस्ट शेयर करें' },
     noPosts: { en: 'No posts yet. New posts from Glaron India will appear here.', hi: 'अभी कोई पोस्ट नहीं। ग्लैरोन इंडिया की नई पोस्ट यहाँ दिखेंगी।' },
+    // Share Catalogue — the public link handed to customers.
+    shareCatalogue: { en: 'Share Catalogue', hi: 'कैटलॉग शेयर करें' },
+    shareCatalogueSub: { en: 'Send your catalogue link', hi: 'अपना कैटलॉग लिंक भेजें' },
+    catalogueLinkCopied: { en: 'Catalogue link copied', hi: 'कैटलॉग लिंक कॉपी हो गया' },
+    catalogueShareFailed: { en: 'Could not share the link. Please try again.', hi: 'लिंक शेयर नहीं हो सका। पुनः प्रयास करें।' },
     share: { en: 'Share', hi: 'शेयर करें' },
     preparing: { en: 'Preparing…', hi: 'तैयार हो रहा है…' },
     newLabel: { en: 'New', hi: 'नया' },
     postSaved: { en: 'Post saved to your device', hi: 'पोस्ट आपके डिवाइस पर सहेजी गई' },
     postShareFailed: { en: 'Could not share this post. Please try again.', hi: 'यह पोस्ट शेयर नहीं हो सकी। पुनः प्रयास करें।' },
-    // Your-branding card on the Posts page: the shop logo and detail lines this
-    // device stamps onto every post it shares.
-    brandingTitle: { en: 'Your branding', hi: 'आपकी ब्रांडिंग' },
-    brandingHint: { en: 'Stamped onto every post you share. Set it once.', hi: 'आपकी हर शेयर की गई पोस्ट पर लगेगी। एक बार सेट करें।' },
-    brandingLogo: { en: 'Your logo', hi: 'आपका लोगो' },
-    brandingLogoHint: { en: 'Goes in the top-right corner. A PNG with a transparent background works best.', hi: 'ऊपर दाईं ओर लगेगा। पारदर्शी बैकग्राउंड वाली PNG सबसे अच्छी रहती है।' },
-    brandingAddLogo: { en: 'Add logo', hi: 'लोगो जोड़ें' },
-    brandingReplaceLogo: { en: 'Replace logo', hi: 'लोगो बदलें' },
-    brandingRemoveLogo: { en: 'Remove', hi: 'हटाएँ' },
-    brandingDetails: { en: 'Your details', hi: 'आपकी जानकारी' },
-    brandingDetailsHint: { en: 'Goes in the bottom-right corner, one line each, up to four lines.', hi: 'नीचे दाईं ओर लगेगी, हर पंक्ति अलग, अधिकतम चार पंक्तियाँ।' },
-    brandingDetailsPlaceholder: { en: 'Shop name\n+91 98765 43210\nMain Road, Indore', hi: 'दुकान का नाम\n+91 98765 43210\nमेन रोड, इंदौर' },
-    brandingSaved: { en: 'Branding saved', hi: 'ब्रांडिंग सहेजी गई' },
+    // Business-details sheet, opened by tapping a post: the three lines printed
+    // in the black footer strip under the artwork.
+    businessTitle: { en: 'Your business details', hi: 'आपकी दुकान की जानकारी' },
+    businessHint: { en: 'Printed in the footer under every post you share.', hi: 'आपकी हर शेयर की गई पोस्ट के नीचे फुटर में छपेगी।' },
+    businessAdd: { en: 'Add', hi: 'जोड़ें' },
+    businessEdit: { en: 'Edit', hi: 'बदलें' },
+    businessNotSet: { en: 'Not added yet. Tap to add your shop name, mobile and email.', hi: 'अभी नहीं जोड़ी। दुकान का नाम, मोबाइल और ईमेल जोड़ने के लिए टैप करें।' },
+    businessSaved: { en: 'Business details saved', hi: 'दुकान की जानकारी सहेजी गई' },
+    businessShop: { en: 'Shop name', hi: 'दुकान का नाम' },
+    businessShopPlaceholder: { en: 'e.g. Sharma Lights', hi: 'जैसे शर्मा लाइट्स' },
+    businessMobile: { en: 'Mobile number', hi: 'मोबाइल नंबर' },
+    businessMobilePlaceholder: { en: '98765 43210', hi: '98765 43210' },
+    businessEmailPlaceholder: { en: 'shop@example.com', hi: 'shop@example.com' },
+    businessShopRequired: { en: 'Please enter your shop name.', hi: 'कृपया अपनी दुकान का नाम दर्ज करें।' },
+    businessMobileRequired: { en: 'Please enter a valid 10-digit mobile number.', hi: 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें।' },
+    businessShareNow: { en: 'Share post', hi: 'पोस्ट शेयर करें' },
+    postTapToShare: { en: 'Tap the post to share it', hi: 'शेयर करने के लिए पोस्ट पर टैप करें' },
     shopByCategory: { en: 'Shop by Category', hi: 'श्रेणी के अनुसार खरीदें' },
     selectCategoryHint: { en: 'Select a category to view its products.', hi: 'उत्पाद देखने के लिए एक श्रेणी चुनें।' },
     noCategories: { en: 'No categories yet. Please add categories in the admin panel.', hi: 'अभी तक कोई श्रेणी नहीं। कृपया एडमिन पैनल में श्रेणियाँ जोड़ें।' },
@@ -356,14 +368,16 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private settingsService: SettingsService,
     private notificationService: NotificationService,
+    private activity: ActivityLogService,
     private postService: PostService,
     private postShare: PostShareService,
-    public shareBranding: ShareBrandingService,
+    public shareBusiness: ShareBusinessService,
     public i18n: DealerI18nService,
     public pricePrefs: DealerPricePrefsService,
     private dealerAuth: DealerAuthService,
     private swUpdate: SwUpdate,
-    private approval: DealerApprovalService
+    private approval: DealerApprovalService,
+    private catalogShare: CatalogShareService
   ) {}
 
   // The category list a product belongs to (new array field, falling back to the
@@ -431,6 +445,19 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   // Variant definitions are stable per product, so index identity is sufficient.
   trackByVariantIndex(index: number): number {
     return index;
+  }
+
+  // The product fields that ride along on an activity log entry. The product id
+  // IS the SKU here (GLR-DELT-3), so it doubles as both.
+  private productMeta(product: Product, variant?: ProductVariant) {
+    const cat = this.productCategories(product)[0] || '';
+    return {
+      productId: product.id,
+      productName: product.name,
+      sku: product.id,
+      ...(cat ? { category: cat } : {}),
+      ...(variant ? { variant: this.getVariantLabel(variant) } : {})
+    };
   }
 
   ngOnInit() {
@@ -504,6 +531,9 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.reconcileCartFromSession();
     this.applyTabFromQuery();
     this.maybeStartTour();
+    // One entry per launch, written after the identity above is re-read so it
+    // is attributed to whoever is actually signed in now.
+    this.activity.logAppOpen();
   }
 
   // Handles a Back press: if we're anywhere other than the Home tab root, reset
@@ -525,6 +555,13 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     // The reset confirmation is the topmost layer: Back just dismisses it.
     if (this.showResetConfirm) {
       this.showResetConfirm = false;
+      window.history.pushState({ glaronPanel: true }, '');
+      return;
+    }
+
+    // The details editor sits over the posts page: Back closes just it.
+    if (this.showBusinessEditor) {
+      this.closeBusinessEditor();
       window.history.pushState({ glaronPanel: true }, '');
       return;
     }
@@ -672,11 +709,13 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.activeTab = 'home';
     this.homeCategory = null;
     this.scrollTop();
+    this.activity.log('tab', 'Opened the Home tab', { tab: 'home' });
   }
 
   showProducts() {
     this.activeTab = 'products';
     this.scrollTop();
+    this.activity.log('tab', 'Opened the Products tab', { tab: 'products' });
   }
 
   // Orders now live inside this page as a tab (no navigation to another route).
@@ -684,11 +723,13 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.activeTab = 'orders';
     this.homeCategory = null;
     this.scrollTop();
+    this.activity.log('tab', 'Opened the Orders tab', { tab: 'orders' });
   }
 
   openCategory(cat: string) {
     this.homeCategory = cat;
     this.scrollTop();
+    this.activity.log('category', `Browsed the ${cat} category`, { category: cat, tab: 'home' });
   }
 
   // ---- Orders tab data & helpers ----
@@ -718,7 +759,9 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   }
 
   toggleOrder(id: string) {
-    this.expandedOrderId = this.expandedOrderId === id ? null : id;
+    const opening = this.expandedOrderId !== id;
+    this.expandedOrderId = opening ? id : null;
+    if (opening) this.activity.log('order-open', `Opened ${orderRefLabel(id)}`, { orderId: id, tab: 'orders' });
   }
 
   isExpanded(id: string): boolean {
@@ -727,6 +770,11 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   trackByOrderId(_index: number, order: Order): string {
     return order.id;
+  }
+
+  /** Short order label, e.g. `ORD - 417` — same number the admin console shows. */
+  orderRef(id: string): string {
+    return orderRefLabel(id);
   }
 
   // Safe CSS class for the stage badge, e.g. "Order Received" -> "stage-order-received",
@@ -842,6 +890,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   setPriceMode(mode: DealerPriceMode) {
     this.pricePrefs.setPriceMode(mode);
+    this.activity.log('price-mode', 'Changed how prices are shown', { detail: mode });
   }
 
   get showPrices(): boolean {
@@ -995,6 +1044,13 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
     this.saveCartSession();
     this.flashAddedToast(product);
+
+    const line = existingIndex > -1 ? this.orderItems[existingIndex] : this.orderItems[this.orderItems.length - 1];
+    this.activity.log('cart-add', `Added ${product.name} to cart`, {
+      ...this.productMeta(product, variant),
+      qty: line?.quantity ?? qty,
+      amount: line?.totalPrice ?? qty * unitPrice
+    });
   }
 
   // Briefly show a confirmation toast when an item is added to the cart.
@@ -1009,7 +1065,23 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.toastTimer = setTimeout(() => { this.addedToastMessage = ''; }, 1800);
   }
 
-  clearSearch() { this.searchQuery = ''; }
+  clearSearch() {
+    this.searchQuery = '';
+    clearTimeout(this.searchLogTimer);
+  }
+
+  // Search is logged once the dealer stops typing, so "panel" arrives as one
+  // entry rather than five. Very short fragments are skipped — they are mid-word
+  // keystrokes, not a search anyone meant to run.
+  private searchLogTimer: any;
+  onSearchChange(value: string) {
+    clearTimeout(this.searchLogTimer);
+    const term = (value || '').trim();
+    if (term.length < 3) return;
+    this.searchLogTimer = setTimeout(() => {
+      this.activity.log('search', `Searched for "${term}"`, { detail: term, tab: this.activeTab });
+    }, 1200);
+  }
 
   // ---- First-login welcome tour (one-time) ----
   private maybeStartTour() {
@@ -1117,7 +1189,16 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   numpadConfirm() {
     const qty = parseInt(this.numpadValue || '0', 10) || 0;
     if (this.numpadProduct) {
-      this.setCartQuantity(this.numpadProduct, this.numpadVariant, qty);
+      const product = this.numpadProduct;
+      const variant = this.numpadVariant;
+      this.setCartQuantity(product, variant, qty);
+      this.activity.log(
+        qty > 0 ? 'cart-qty' : 'cart-remove',
+        qty > 0
+          ? `Set ${product.name} quantity to ${qty}`
+          : `Removed ${product.name} from cart`,
+        { ...this.productMeta(product, variant), qty }
+      );
     }
     this.closeNumpad();
   }
@@ -1136,6 +1217,11 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   goToCheckout() {
     this.saveCartSession();
+    this.activity.log('checkout-open', 'Opened checkout', {
+      qty: this.totalItemsCount,
+      amount: this.orderItems.reduce((sum, i) => sum + i.totalPrice, 0),
+      detail: `${this.orderItems.length} line${this.orderItems.length === 1 ? '' : 's'} in cart`
+    });
     this.router.navigate(['/dealer/checkout']);
   }
 
@@ -1146,6 +1232,10 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   openVariantsModal(product: Product) {
     if (product.variants && product.variants.length > 0) {
       this.selectedVariantProduct = product;
+      this.activity.log('product-variants', `Viewed ${product.name} variants`, {
+        ...this.productMeta(product),
+        detail: `${product.variants.length} variants`
+      });
     }
   }
 
@@ -1155,6 +1245,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   openDescModal(product: Product) {
     this.selectedDescProduct = product;
+    this.activity.log('product-detail', `Viewed ${product.name} details`, this.productMeta(product));
   }
 
   closeDescModal() {
@@ -1165,6 +1256,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     if (imgUrl) {
       this.selectedModalImage = imgUrl;
       this.selectedModalImageTitle = name;
+      this.activity.log('product-image', `Zoomed the ${name} image`, { productName: name });
     }
   }
 
@@ -1179,6 +1271,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   toggleProfile() {
     this.showProfile = !this.showProfile;
+    if (this.showProfile) this.activity.log('profile-open', 'Opened their profile');
   }
 
   closeProfile() {
@@ -1360,6 +1453,11 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.showCustomPrice = false;
     this.customPriceError = '';
     this.flashToast(this.t('pricesSaved'));
+    const count = Object.keys(prices).length;
+    this.activity.log('price-custom', 'Saved their own selling prices', {
+      qty: count,
+      detail: `${count} price${count === 1 ? '' : 's'} set` + (isFinite(pct) && pct ? ` · ${pct}% discount` : '')
+    });
   }
 
   // ---- Price settings module 3: reset back to the Glaron prices ----
@@ -1375,6 +1473,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.pricePrefs.reset();
     this.showResetConfirm = false;
     this.flashToast(this.t('pricesReset'));
+    this.activity.log('price-reset', 'Reset prices back to Glaron rates');
   }
 
   // ---- Edit profile ----
@@ -1448,6 +1547,11 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.editSaving = false;
     this.showEditProfile = false;
     this.openDropdown = null;
+
+    this.activity.log('profile-update', 'Updated their profile', {
+      name,
+      detail: [this.editForm.city.trim(), this.editForm.state.trim(), pincode].filter(Boolean).join(', ')
+    });
   }
 
   // ---- State / City / Pincode dropdowns (edit profile) ----
@@ -1594,52 +1698,88 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     return Date.now() - (post.createdAt || 0) < 3 * 24 * 60 * 60 * 1000;
   }
 
-  // ---- Your branding ----
+  // ---- Your business details ----
   //
-  // The dealer's own logo and detail lines, stamped onto every post they share.
-  // Kept on this device (see ShareBrandingService) — Glaron publishes plain
-  // artwork, and each dealer forwards it carrying their own shop's branding.
+  // The shop name, mobile and email printed in the black footer strip under
+  // every post this device shares. They live in their own card at the top of
+  // the Posts page — filled in once, edited from the same card whenever they
+  // change — and are kept on this device (see ShareBusinessService).
 
-  brandingError = '';
+  showBusinessEditor = false;
+  businessForm = { shop: '', mobile: '', email: '' };
+  businessError = '';
 
-  get brandingLogo(): string | null {
-    return this.shareBranding.logo;
+  openBusinessEditor() {
+    const saved = this.shareBusiness.business;
+    const dealer = this.currentDealer;
+    // Nothing saved yet? Start from what the account already knows.
+    this.businessForm = {
+      shop: saved.shop || dealer?.name || '',
+      mobile: saved.mobile || dealer?.phone || this.getLoggedMobile() || '',
+      email: saved.email || dealer?.email || ''
+    };
+    this.businessError = '';
+    this.showBusinessEditor = true;
+    // Arm the Back guard so device Back closes the editor rather than the page.
+    window.history.pushState({ glaronPanel: true }, '');
   }
 
-  get brandingDetails(): string {
-    return this.shareBranding.details;
+  closeBusinessEditor() {
+    this.showBusinessEditor = false;
+    this.businessError = '';
   }
 
-  set brandingDetails(value: string) {
-    this.shareBranding.setDetails(value);
+  saveBusiness() {
+    const shop = this.businessForm.shop.trim();
+    const mobile = this.businessForm.mobile.trim();
+    const email = this.businessForm.email.trim();
+
+    if (!shop) {
+      this.businessError = this.t('businessShopRequired');
+      return;
+    }
+    // Spaces, +91 and dashes are all fine — it just has to hold a real number.
+    if (mobile.replace(/\D/g, '').length < 10) {
+      this.businessError = this.t('businessMobileRequired');
+      return;
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.businessError = this.t('invalidEmail');
+      return;
+    }
+
+    this.shareBusiness.save({ shop, mobile, email });
+    this.closeBusinessEditor();
+    this.flashToast(this.t('businessSaved'));
   }
 
-  async onBrandingLogoSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files && input.files[0];
-    input.value = '';
-    if (!file) return;
-    this.brandingError = (await this.shareBranding.readLogoFile(file)) || '';
-    if (!this.brandingError) this.flashToast(this.t('brandingSaved'));
-  }
-
-  removeBrandingLogo() {
-    this.shareBranding.setLogo(null);
-    this.brandingError = '';
+  /** The number as the footer will print it — with its +91 in front. */
+  printedMobile(raw: string): string {
+    return ShareBusinessService.withDialCode(raw);
   }
 
   // Id of the post currently being composed, so only that card shows a spinner.
   sharingPostId: string | null = null;
 
-  // Hand the picture to the device's share sheet, exactly as published. Two
-  // taps in a row are ignored while the first is still going.
+  // Tapping a post shares it straight away, with the saved details printed
+  // underneath. With nothing saved yet the editor opens instead, so no post
+  // goes out bare by accident. Two taps in a row are ignored while the first
+  // is still going.
   async sharePost(post: SharePost) {
     if (this.sharingPostId) return;
+    if (!this.shareBusiness.hasBusiness) {
+      this.openBusinessEditor();
+      return;
+    }
+
     this.sharingPostId = post.id;
     try {
       const outcome = await this.postShare.share(post);
       if (outcome === 'downloaded') this.flashToast(this.t('postSaved'));
       else if (outcome === 'failed') this.flashToast(this.t('postShareFailed'));
+      this.activity.log('post-share', 'Shared a Glaron post', {
+        detail: (post.caption || '').trim() || outcome
+      });
     } finally {
       this.sharingPostId = null;
     }
@@ -1657,6 +1797,16 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   closePosts() {
     this.showPosts = false;
+  }
+
+  // Hands this account's own catalogue link to the device share sheet (or the
+  // clipboard where there isn't one). The link opens the public catalogue: the
+  // range only, with no prices and nothing orderable.
+  async shareCatalogue() {
+    this.showSidebar = false;
+    const outcome = await this.catalogShare.share(this.getLoggedMobile());
+    if (outcome === 'copied') this.flashToast(this.t('catalogueLinkCopied'));
+    else if (outcome === 'failed') this.flashToast(this.t('catalogueShareFailed'));
   }
 
   // Banners only show when at least one is set AND this dealer's id is in the
@@ -1756,6 +1906,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     if (!number) return;
     // Strip spaces/dashes/parens so the tel: URI dials cleanly.
     const clean = number.replace(/[^\d+]/g, '');
+    this.activity.log('call', 'Called Glaron', { detail: number });
     window.location.href = `tel:${clean}`;
   }
 
@@ -1787,6 +1938,8 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     const shareableImage = this.toShareableImageUrl(product.image);
     if (shareableImage) lines.push(shareableImage);
 
+    this.activity.log('product-enquiry', `Enquired about ${product.name} on WhatsApp`, this.productMeta(product));
+
     const url = `https://wa.me/${digits}?text=${encodeURIComponent(lines.join('\n'))}`;
     window.open(url, '_blank');
   }
@@ -1817,6 +1970,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     event?.stopPropagation();
     if (this.sharingProductId) return;
     this.sharingProductId = product.id;
+    this.activity.log('product-share', `Shared ${product.name}`, this.productMeta(product));
 
     const title = this.tn(product.name) || product.name || '';
     try {
@@ -1961,6 +2115,9 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   }
 
   signOut() {
+    // Logged BEFORE the session is cleared — afterwards there is no actor to
+    // attribute the entry to and it would be dropped.
+    this.activity.log('sign-out', 'Signed out');
     this.dealerAuth.clearSession();
     try {
       // The cart belongs to the signed-out dealer (it carries their pricing);

@@ -134,69 +134,19 @@ ion-content { --background: var(--g-bg); }
   cursor: pointer;
   &:active { transform: scale(.93); }
 }
-.sidebar-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--g-border);
-  border-radius: var(--g-r-md);
-  background: var(--g-surface);
-  box-shadow: var(--g-shadow-sm);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: transform .12s ease, background .15s ease;
-  &:active { transform: scale(.985); background: var(--g-surface-2); }
-
-  .sidebar-avatar {
-    width: 42px; height: 42px;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    background: linear-gradient(135deg, #241150, #170338);
-    color: #fff;
-    .avatar-svg { width: 23px; height: 23px; }
-  }
-  .sidebar-profile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-  .sidebar-profile-name {
-    font-size: 14.5px; font-weight: 800; color: var(--g-text);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .sidebar-profile-sub { font-size: 12px; font-weight: 600; color: var(--g-text-soft); }
-  .sidebar-chevron { width: 17px; height: 17px; flex: 0 0 auto; color: var(--g-text-faint); }
-}
 .sidebar-footer {
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  /* Both stated outright: global.scss also owns a .sidebar-footer (the admin
+     layout's), and its side padding + flex-start would leave this card
+     narrower than the three above it. */
+  align-items: stretch;
   gap: 8px;
-  padding-top: 14px;
+  padding: 14px 0 0;
   border-top: 1px solid var(--g-border);
 }
-.app-version-footer {
-  text-align: center;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--g-text-faint);
-  margin-top: 2px;
-}
-.check-update-link {
-  display: inline-flex;
-  align-self: center;
-  align-items: center;
-  gap: 7px;
-  border: none;
-  background: transparent;
-  color: var(--g-gold-strong);
-  font-size: 13px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  padding: 2px 8px;
-  .check-update-svg { width: 15px; height: 15px; &.spin { animation: g-spin .8s linear infinite; } }
-}
+.check-update-svg.spin { animation: g-spin .8s linear infinite; }
 .check-update-msg { text-align: center; font-size: 12px; font-weight: 600; color: var(--g-text-soft); }
 
 /* ============ Main container ============ */
@@ -251,127 +201,181 @@ ion-content { --background: var(--g-bg); }
   color: var(--g-text-soft);
 }
 
-/* Your branding — the agent's own logo and details, stamped onto every post
-   they share. Saved on this device the moment it changes, so there is no Save
-   button to forget. */
-.branding-card {
+/* Business details — a permanent card at the top of the Posts page. What it
+   shows is exactly what gets printed in the black footer strip under every
+   post shared from this device; tapping it opens the editor below. */
+.biz-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px;
+  gap: 10px;
+  width: 100%;
+  padding: 13px;
+  box-sizing: border-box;
   border: 1px solid var(--g-border);
   border-radius: var(--g-r-lg);
   background: var(--g-surface);
   box-shadow: var(--g-shadow-sm);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .12s ease;
+  &:active { transform: scale(.99); }
 }
-.branding-head { display: flex; flex-direction: column; gap: 2px; }
-.branding-title {
-  font-size: 14px;
+.biz-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.biz-card-title {
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--g-text);
 }
-.branding-sub {
+.biz-card-action {
+  flex: 0 0 auto;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(23,3,56,.07);
+  color: #170338;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.biz-card-empty {
   font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
   color: var(--g-text-soft);
 }
-.branding-field { display: flex; flex-direction: column; gap: 7px; }
-.branding-label {
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 450;
+  background: rgba(23,3,56,.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+}
+.business-card {
+  width: min(420px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  box-sizing: border-box;
+  border-radius: var(--g-r-lg);
+  background: var(--g-surface);
+  box-shadow: 0 18px 40px rgba(0,0,0,.28);
+}
+.business-head { display: flex; flex-direction: column; gap: 3px; }
+.business-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--g-text);
+}
+.business-sub {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--g-text-soft);
+}
+.business-field { display: flex; flex-direction: column; gap: 6px; }
+.business-label {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
   color: var(--g-text-soft);
 }
-.branding-logo-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-/* Chequerboard behind the logo, so a transparent background reads as
-   transparent rather than as a white box. */
-.branding-logo-box {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 88px;
-  height: 66px;
-  padding: 7px;
-  box-sizing: border-box;
-  border: 1px solid var(--g-border);
-  border-radius: var(--g-r-md);
-  background-color: #fff;
-  background-image:
-    linear-gradient(45deg, #eee9f2 25%, transparent 25%, transparent 75%, #eee9f2 75%),
-    linear-gradient(45deg, #eee9f2 25%, transparent 25%, transparent 75%, #eee9f2 75%);
-  background-size: 14px 14px;
-  background-position: 0 0, 7px 7px;
-}
-.branding-logo-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-.branding-logo-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.branding-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 14px;
-  border-radius: var(--g-r-md);
-  background: linear-gradient(135deg, #2b1560, #170338);
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.branding-upload-svg { width: 15px; height: 15px; }
-.branding-remove-btn {
-  padding: 9px 14px;
-  border: 1px solid var(--g-border);
-  border-radius: var(--g-r-md);
-  background: var(--g-surface);
-  color: #c0392b;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.branding-textarea {
+.business-input {
   width: 100%;
   box-sizing: border-box;
-  min-height: 82px;
-  padding: 10px 12px;
+  padding: 11px 12px;
   border: 1px solid var(--g-border);
   border-radius: var(--g-r-md);
   background: var(--g-surface-2);
   color: var(--g-text);
   font-family: inherit;
-  font-size: 13px;
-  line-height: 1.45;
-  resize: vertical;
+  font-size: 13.5px;
   outline: none;
 
   &:focus { border-color: #170338; }
 }
-.branding-hint {
-  font-size: 11.5px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--g-text-faint);
-}
-.branding-error {
+.business-error {
   font-size: 11.5px;
   font-weight: 700;
   color: #c0392b;
+}
+/* A miniature of the strip that will be printed under the artwork. */
+.business-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 11px;
+  border-radius: 0 0 var(--g-r-md) var(--g-r-md);
+  background: #121212;
+  overflow: hidden;
+}
+/* Inside the card the strip is a rounded tile rather than a footer edge. */
+.biz-card .business-preview { border-radius: var(--g-r-md); }
+/* The email keeps its natural width — it's the whole address on the picture,
+   so the preview shouldn't imply it gets cut. */
+.business-preview-side {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 9px;
+  font-weight: 600;
+  color: #f1f1f1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.business-preview-right { text-align: right; }
+.business-preview-shop {
+  flex: 1 1 auto;
+  text-align: center;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.business-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+.business-cancel {
+  flex: 1 1 0;
+  padding: 12px;
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  background: var(--g-surface);
+  color: var(--g-text-soft);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.business-share {
+  flex: 1.4 1 0;
+  padding: 12px;
+  border: none;
+  border-radius: var(--g-r-md);
+  background: linear-gradient(135deg, #2b1560, #170338);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  &:disabled { opacity: .6; cursor: default; }
 }
 
 .post-strip {
@@ -627,9 +631,57 @@ ion-content { --background: var(--g-bg); }
   box-shadow: var(--g-shadow-sm);
   animation: g-fade-up .35s ease both;
 }
+/* Card actions (top-right): ask-on-WhatsApp, then share — same pair, same
+   look, as the dealer panel's product cards. */
+.card-action-btns {
+  position: absolute;
+  top: 10px; right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+.wa-inquiry-btn {
+  width: 32px; height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37,211,102,.35);
+  transition: transform .12s ease;
+  .wa-icon { width: 19px; height: 19px; }
+  &:active { transform: scale(.9); }
+}
+.share-product-btn {
+  width: 32px; height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--g-primary);
+  color: #fff;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(23, 3, 56, .28);
+  transition: transform .12s ease;
+  .share-icon { width: 17px; height: 17px; }
+  &:active { transform: scale(.9); }
+  &.is-busy { opacity: .75; cursor: default; }
+}
+/* Ring spinner while the image is being prepared for the share sheet. */
+.share-spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: shareSpin .7s linear infinite;
+}
+@keyframes shareSpin { to { transform: rotate(360deg); } }
 .card-head-row {
   display: flex;
   gap: 12px;
+  /* Clears the two action buttons floating over the card's top-right. */
+  padding-right: 74px;
 }
 .product-media-box {
   position: relative;
@@ -646,7 +698,7 @@ ion-content { --background: var(--g-bg); }
     animation: g-shimmer 1.4s ease-in-out infinite;
   }
 }
-.product-card-img { width: 100%; height: 100%; object-fit: contain; padding: 4px; display: block; }
+.product-card-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 .card-head-info {
   flex: 1;
@@ -1304,13 +1356,16 @@ ion-content { --background: var(--g-bg); }
   svg { width: 20px; height: 20px; flex: 0 0 auto; color: var(--g-text-soft); }
   &:active { background: var(--g-surface-2); }
 }
-.posts-link {
+/* The card-shaped menu entries: Profile, Posts, Share Catalogue and the update
+   check all read as one set, so they share a single rule. */
+.profile-link, .posts-link, .share-catalog-link, .update-link {
   width: 100%;
   padding: 11px 12px;
   border: 1px solid var(--g-border);
   border-radius: var(--g-r-md);
   background: var(--g-surface);
   box-shadow: var(--g-shadow-sm);
+  &:disabled { opacity: .6; }
 
   .sidebar-link-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
   .sidebar-link-title { font-size: 14px; font-weight: 800; color: var(--g-text); }

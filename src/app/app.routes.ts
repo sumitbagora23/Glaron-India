@@ -150,6 +150,12 @@ export class RootRedirectComponent implements OnInit {
 
   ngOnInit() {
     const hostname = window.location.hostname;
+    // The catalogue site is a customer-facing address: its bare root has to open
+    // the catalogue, not an admin sign-in.
+    if (hostname.includes('catalogue')) {
+      this.router.navigateByUrl('/catalogue', { replaceUrl: true });
+      return;
+    }
     // `agent` as well as `dealer`: the two apps are now one build behind one
     // link, and the old agent host still resolves here for anyone who kept the
     // bookmark. Without it that host fell through to the admin branch below.
@@ -270,12 +276,24 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/notification-form/notification-form.page').then((m) => m.NotificationFormPage),
       },
       {
+        path: 'quotations',
+        loadComponent: () => import('./admin/quotations/quotations.page').then((m) => m.QuotationsPage),
+      },
+      {
         path: 'posts',
         loadComponent: () => import('./admin/posts/posts.page').then((m) => m.PostsPage),
       },
       {
         path: 'posts/new',
         loadComponent: () => import('./admin/post-form/post-form.page').then((m) => m.PostFormPage),
+      },
+      {
+        path: 'logs',
+        loadComponent: () => import('./admin/logs/logs.page').then((m) => m.LogsPage),
+      },
+      {
+        path: 'share-catalogue',
+        loadComponent: () => import('./admin/share-catalogue/share-catalogue.page').then((m) => m.ShareCataloguePage),
       },
       {
         path: 'settings',
@@ -382,6 +400,18 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    // Public catalogue — what a shared "Share Catalogue" link opens. Guard-free
+    // on purpose: the recipient is a customer with no app and no sign-in, so
+    // neither the install wall nor the auth guards may stand in front of it.
+    // The :ref segment is what makes each shared link its own.
+    path: 'catalogue/:ref',
+    loadComponent: () => import('./public-catalog/public-catalog.page').then((m) => m.PublicCatalogPage),
+  },
+  {
+    path: 'catalogue',
+    loadComponent: () => import('./public-catalog/public-catalog.page').then((m) => m.PublicCatalogPage),
+  },
+  {
     path: 'home',
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
   },
@@ -389,5 +419,17 @@ export const routes: Routes = [
     path: '',
     component: RootRedirectComponent,
     pathMatch: 'full'
+  },
+  {
+    // The catalogue site serves the link straight off its root, so the address
+    // a customer is sent reads as the catalogue and nothing else:
+    // https://glaron-catalogue.web.app/q-glaron
+    //
+    // Last on purpose. Every real path above is matched first, so this only
+    // ever catches a bare code. The /catalogue/:ref route above stays exactly
+    // as it was — links already sitting in people's chat threads must keep
+    // working forever.
+    path: ':ref',
+    loadComponent: () => import('./public-catalog/public-catalog.page').then((m) => m.PublicCatalogPage),
   },
 ];

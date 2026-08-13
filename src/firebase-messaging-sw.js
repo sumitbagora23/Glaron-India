@@ -79,7 +79,10 @@ messaging.onBackgroundMessage((payload) => {
   const image = data.image || n.image || '';
   self.registration.showNotification(title, {
     body: data.body || n.body || '',
-    icon: '/assets/icon/icon-192.png',
+    // A thumbnail of the picture while the notification is still collapsed, so
+    // it is obvious there is something to expand; the app logo when there is
+    // no picture. The badge stays the logo — it is the status-bar glyph.
+    icon: image || '/assets/icon/icon-192.png',
     badge: '/assets/icon/icon-192.png',
     ...(image ? { image: image } : {}),
     tag: data.id || undefined,

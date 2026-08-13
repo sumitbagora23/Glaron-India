@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,15 +6,21 @@ import { IonContent } from '@ionic/angular/standalone';
 import {
   NotificationService, NotificationTarget, NotificationAudience,
   NotificationAudienceOption, NOTIFICATION_AUDIENCES,
-  DEFAULT_NOTIFICATION_AUDIENCE, notificationTargets, resolveNotificationTarget
+  DEFAULT_NOTIFICATION_AUDIENCE, notificationTargets, resolveNotificationTarget,
+  audienceIncludesDealer, audienceIncludesAgent, normalisePhone
 } from '../notification.service';
+import { DealerService, Dealer } from '../dealer.service';
+import { AgentService, Agent } from '../agent.service';
+
+// Whether a side of the audience goes to everyone or to a ticked few.
+type RecipientMode = 'all' | 'choose';
 
 /**
  * New Notification — the full page behind the "New Notification" button.
  *
- * Composes a broadcast: who receives it (dealers, agents or both), title,
- * message, an optional picture, and which screen a tap opens. Sending returns
- * to the notifications list.
+ * Composes a broadcast: who receives it (dealers, agents or both, and either
+ * everyone on a side or specific people), title, message, an optional picture,
+ * and which screen a tap opens. Sending returns to the notifications list.
  */
 @Component({
   selector: 'app-admin-notification-form',
@@ -23,7 +29,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, IonContent]
 })
-export class NotificationFormPage {
+export class NotificationFormPage implements OnInit {
   title = '';
   body = '';
   errorMsg = '';
@@ -40,6 +46,24 @@ export class NotificationFormPage {
   audiences: NotificationAudienceOption[] = NOTIFICATION_AUDIENCES;
   audience: NotificationAudience = DEFAULT_NOTIFICATION_AUDIENCE;
 
+  // Within the chosen audience, each side goes either to everyone or to the
+  // people ticked below. The two sides are independent, so a "Both" broadcast
+  // can go to every agent but only three named dealers.
+  dealerMode: RecipientMode = 'all';
+  agentMode: RecipientMode = 'all';
+
+  dealerSearch = '';
+  agentSearch = '';
+
+  // Ticked recipients, held as normalised 10-digit numbers. The mobile number
+  // is the join key: it is what a dealer or agent signs in with AND what their
+  // device's push token is stored against, so it is the only field that links a
+  // record the admin ticked to a phone that can be reached.
+  private selectedDealerPhones = new Set<string>();
+  private selectedAgentPhones = new Set<string>();
+
+  recipientErrorMsg = '';
+
   // Which screen a tap on the notification opens. The typed tab name is the
   // single source of truth — the chips are shortcuts that fill this box in.
   // The underlying path is never shown to the recipient.
@@ -47,8 +71,140 @@ export class NotificationFormPage {
 
   constructor(
     private notificationService: NotificationService,
+    private dealerService: DealerService,
+    private agentService: AgentService,
     private router: Router
   ) {}
+
+  // Both lists render straight from their services' signals; this only waits
+  // for the first Firestore snapshot so the pickers don't sit empty while a
+  // cached list is replaced.
+  async ngOnInit() {
+    await Promise.all([
+      this.dealerService.whenReady(),
+      this.agentService.whenReady()
+    ]);
+  }
+
+  // ---------------- Recipients ----------------
+
+  // Which pickers are on screen follows the audience chips above.
+  get showDealerPicker(): boolean {
+    return audienceIncludesDealer(this.audience);
+  }
+
+  get showAgentPicker(): boolean {
+    return audienceIncludesAgent(this.audience);
+  }
+
+  // Only people we can actually reach: the mobile number is what a push token
+  // is stored against, so a record without one can never be matched to a
+  // device and would be a tick that silently does nothing.
+  get dealers(): Dealer[] {
+    return this.dealerService.dealers.filter((d) => !!normalisePhone(d.phone));
+  }
+
+  get agents(): Agent[] {
+    return this.agentService.agents.filter((a) => !!normalisePhone(a.phone));
+  }
+
+  get filteredDealers(): Dealer[] {
+    const q = this.dealerSearch.toLowerCase().trim();
+    if (!q) return this.dealers;
+    return this.dealers.filter((d) =>
+      (d.name || '').toLowerCase().includes(q) ||
+      (d.phone || '').toLowerCase().includes(q) ||
+      (d.location || '').toLowerCase().includes(q)
+    );
+  }
+
+  get filteredAgents(): Agent[] {
+    const q = this.agentSearch.toLowerCase().trim();
+    if (!q) return this.agents;
+    return this.agents.filter((a) =>
+      (a.name || '').toLowerCase().includes(q) ||
+      (a.phone || '').toLowerCase().includes(q) ||
+      (a.location || '').toLowerCase().includes(q)
+    );
+  }
+
+  trackByPhone(_index: number, person: Dealer | Agent): string {
+    return normalisePhone(person.phone);
+  }
+
+  isDealerSelected(dealer: Dealer): boolean {
+    return this.selectedDealerPhones.has(normalisePhone(dealer.phone));
+  }
+
+  isAgentSelected(agent: Agent): boolean {
+    return this.selectedAgentPhones.has(normalisePhone(agent.phone));
+  }
+
+  toggleDealer(dealer: Dealer) {
+    this.toggleIn(this.selectedDealerPhones, dealer.phone);
+    this.recipientErrorMsg = '';
+  }
+
+  toggleAgent(agent: Agent) {
+    this.toggleIn(this.selectedAgentPhones, agent.phone);
+    this.recipientErrorMsg = '';
+  }
+
+  private toggleIn(set: Set<string>, phone?: string) {
+    const key = normalisePhone(phone);
+    if (!key) return;
+    if (set.has(key)) set.delete(key); else set.add(key);
+  }
+
+  get selectedDealerCount(): number {
+    return this.selectedDealerPhones.size;
+  }
+
+  get selectedAgentCount(): number {
+    return this.selectedAgentPhones.size;
+  }
+
+  // "Select all" reflects the CURRENTLY FILTERED list, so it ticks what the
+  // admin can see rather than silently reaching past the search box.
+  get allDealersSelected(): boolean {
+    const list = this.filteredDealers;
+    return list.length > 0 && list.every((d) => this.isDealerSelected(d));
+  }
+
+  get allAgentsSelected(): boolean {
+    const list = this.filteredAgents;
+    return list.length > 0 && list.every((a) => this.isAgentSelected(a));
+  }
+
+  toggleAllDealers() {
+    const all = this.allDealersSelected;
+    this.filteredDealers.forEach((d) => {
+      const key = normalisePhone(d.phone);
+      if (all) this.selectedDealerPhones.delete(key);
+      else this.selectedDealerPhones.add(key);
+    });
+    this.recipientErrorMsg = '';
+  }
+
+  toggleAllAgents() {
+    const all = this.allAgentsSelected;
+    this.filteredAgents.forEach((a) => {
+      const key = normalisePhone(a.phone);
+      if (all) this.selectedAgentPhones.delete(key);
+      else this.selectedAgentPhones.add(key);
+    });
+    this.recipientErrorMsg = '';
+  }
+
+  setDealerMode(mode: RecipientMode) {
+    this.dealerMode = mode;
+    this.recipientErrorMsg = '';
+  }
+
+  setAgentMode(mode: RecipientMode) {
+    this.agentMode = mode;
+    this.recipientErrorMsg = '';
+  }
 
   // The tabs the chosen audience's app actually has. "Both" narrows this to
   // the screens the dealer and agent apps share.
@@ -170,10 +326,23 @@ export class NotificationFormPage {
 
   async send() {
     this.errorMsg = '';
+    this.recipientErrorMsg = '';
     const title = (this.title || '').trim();
     const body = (this.body || '').trim();
     if (!title) {
       this.errorMsg = 'Please enter a notification title.';
+      return;
+    }
+
+    // "Choose" with nothing ticked would write an empty list, which every
+    // reader treats as "everyone" — the exact opposite of what was meant. Stop
+    // rather than quietly broadcasting to the lot.
+    if (this.showDealerPicker && this.dealerMode === 'choose' && !this.selectedDealerCount) {
+      this.recipientErrorMsg = 'Tick at least one dealer, or switch back to All dealers.';
+      return;
+    }
+    if (this.showAgentPicker && this.agentMode === 'choose' && !this.selectedAgentCount) {
+      this.recipientErrorMsg = 'Tick at least one agent, or switch back to All agents.';
       return;
     }
     // Refuse to send rather than quietly defaulting to Home — a typo would
@@ -185,7 +354,15 @@ export class NotificationFormPage {
     }
     this.sending = true;
     try {
-      await this.notificationService.send(title, body, this.target, this.image, this.audience);
+      await this.notificationService.send(
+        title, body, this.target, this.image, this.audience,
+        {
+          // Only a side set to "Choose" contributes a list; "All" passes
+          // nothing, which is how everyone on that side gets reached.
+          dealerPhones: this.dealerMode === 'choose' ? Array.from(this.selectedDealerPhones) : [],
+          agentPhones: this.agentMode === 'choose' ? Array.from(this.selectedAgentPhones) : []
+        }
+      );
       this.router.navigate(['/admin/notifications']);
     } catch (e) {
       this.errorMsg = 'Could not send the notification. Please try again.';

@@ -1,0 +1,233 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <div class="title-with-back">
+          <button class="back-to-menu-btn" *ngIf="view !== 'menu'" (click)="backToMenu()" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h2 class="page-title">{{ heading }}</h2>
+        </div>
+        <p class="page-subtitle">{{ subheading }}</p>
+      </div>
+
+      <span class="count-chip" *ngIf="view !== 'menu'">
+        {{ visibleCount }} received
+      </span>
+    </div>
+
+    <!-- ============ CHOOSER ============ -->
+    <section class="choice-grid" *ngIf="view === 'menu'">
+
+      <button class="choice-card" (click)="openRequests()">
+        <span class="choice-icon request">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        </span>
+        <span class="choice-title">Requested Quotations</span>
+        <span class="choice-text">
+          Lists customers put together in the catalogue link and sent over to be
+          priced — what they picked, how many, and who to call back.
+        </span>
+        <span class="choice-meta">{{ requests.length }} received</span>
+      </button>
+
+      <button class="choice-card" (click)="openCompare()">
+        <span class="choice-icon compare">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10h6m-6 0V7m6 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          </svg>
+        </span>
+        <span class="choice-title">Compare Quotation</span>
+        <span class="choice-text">
+          Open every quote a customer has uploaded from the catalogue link — their
+          name, their mobile number and the quotation itself.
+        </span>
+        <span class="choice-meta">{{ uploads.length }} received</span>
+      </button>
+
+    </section>
+
+    <!-- ============ REQUESTED QUOTATIONS ============
+         The public catalogue shows no prices, so these are customers asking
+         what a list of products costs. The list is the whole record — there is
+         no amount on it to display. -->
+    <section class="table-section-card" *ngIf="view === 'requests'">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-name">Customer</th>
+            <th class="th-mobile">Mobile</th>
+            <th class="th-items">What they asked for</th>
+            <th class="th-time">Received</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of requests; let last = last; trackBy: trackById" [class.last-row-border]="last">
+
+            <td class="td-name">
+              <span class="customer-name">{{ q.name }}</span>
+              <span class="customer-ref" *ngIf="q.ref">via link {{ q.ref }}</span>
+            </td>
+
+            <td class="td-mobile">
+              <a class="mobile-link" [href]="callHref(q.mobile)">{{ formatMobile(q.mobile) }}</a>
+            </td>
+
+            <td class="td-items">
+              <!-- The pictures first: what was asked for reads faster than it
+                   does off a line of product names. -->
+              <div class="item-thumb-strip" (click)="openPreview(q)" title="See the full list">
+                <div class="item-thumb" *ngFor="let img of itemThumbs(q)">
+                  <img [src]="img" (error)="onThumbError($event)" alt="" loading="lazy" decoding="async" />
+                </div>
+                <span class="item-thumb-more" *ngIf="(q.items?.length || 0) > 4">
+                  +{{ (q.items?.length || 0) - 4 }}
+                </span>
+              </div>
+
+              <span class="items-count-chip">
+                {{ q.items?.length }} {{ q.items?.length === 1 ? 'product' : 'products' }} ·
+                {{ totalPieces(q) }} {{ totalPieces(q) === 1 ? 'pc' : 'pcs' }}
+              </span>
+              <span class="items-summary">{{ itemsSummary(q) }}</span>
+            </td>
+
+            <td class="td-time">
+              <span class="time-text">{{ timeAgo(q.createdAt) }}</span>
+            </td>
+
+            <td class="td-actions">
+              <button class="view-btn" (click)="openPreview(q)" title="See the full list">
+                <svg class="row-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10" />
+                </svg>
+                <span>List</span>
+              </button>
+              <a class="wa-btn compact" [href]="whatsappHref(q)" target="_blank" rel="noopener" title="Reply on WhatsApp">
+                <svg class="row-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Reply</span>
+              </a>
+              <button class="delete-btn" (click)="removeQuotation(q, $event)" title="Delete request">
+                <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="delete-btn-text">Delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="requests.length === 0">
+            <td colspan="5" class="td-empty">
+              No quotation requests yet. They arrive here the moment a customer
+              builds a list in a shared catalogue link and sends it over.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ COMPARE ============ -->
+    <section class="table-section-card" *ngIf="view === 'compare'">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-preview">Quotation</th>
+            <th class="th-name">Customer</th>
+            <th class="th-mobile">Mobile</th>
+            <th class="th-time">Received</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of uploads; let last = last; trackBy: trackById" [class.last-row-border]="last">
+
+            <td class="td-preview">
+              <div class="quote-thumb-box" (click)="openPreview(q)" title="Open full size">
+                <img [src]="q.image" class="quote-thumb-img" alt="" loading="lazy" decoding="async" />
+              </div>
+            </td>
+
+            <td class="td-name">
+              <span class="customer-name">{{ q.name }}</span>
+              <span class="customer-ref" *ngIf="q.ref">via link {{ q.ref }}</span>
+            </td>
+
+            <td class="td-mobile">
+              <a class="mobile-link" [href]="callHref(q.mobile)">{{ formatMobile(q.mobile) }}</a>
+            </td>
+
+            <td class="td-time">
+              <span class="time-text">{{ timeAgo(q.createdAt) }}</span>
+            </td>
+
+            <td class="td-actions">
+              <button class="view-btn" (click)="openPreview(q)" title="View quotation">
+                <svg class="row-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>View</span>
+              </button>
+              <a class="wa-btn compact" [href]="whatsappHref(q)" target="_blank" rel="noopener" title="Reply on WhatsApp">
+                <svg class="row-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span>Reply</span>
+              </a>
+              <button class="delete-btn" (click)="removeQuotation(q, $event)" title="Delete quotation">
+                <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="delete-btn-text">Delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="uploads.length === 0">
+            <td colspan="5" class="td-empty">
+              No uploaded quotations yet. They arrive here the moment a customer
+              uploads one from a shared catalogue link.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Full-size quotation preview: the uploaded picture, or the list of lines
+         a customer picked out of the catalogue. -->
+    <div class="preview-overlay" *ngIf="previewImage || previewItems" (click)="closePreview()">
+      <div class="preview-card" (click)="$event.stopPropagation()">
+        <button class="preview-close" (click)="closePreview()">&times;</button>
+
+        <img *ngIf="previewImage" [src]="previewImage" class="preview-img" alt="Quotation" />
+
+        <div class="preview-items" *ngIf="previewItems">
+          <span class="preview-items-head">Requested products</span>
+          <div class="preview-item-row" *ngFor="let item of previewItems; trackBy: trackByItemIndex">
+            <div class="preview-item-thumb" [class.no-image]="!itemImage(item)">
+              <img *ngIf="itemImage(item)" [src]="itemImage(item)" (error)="onThumbError($event)" alt="" decoding="async" />
+            </div>
+            <div class="preview-item-text">
+              <span class="preview-item-name">{{ item.name }}</span>
+              <span class="preview-item-variant" *ngIf="item.variant">{{ item.variant }}</span>
+              <span class="preview-item-sku" *ngIf="item.sku">{{ item.sku }}</span>
+            </div>
+            <span class="preview-item-qty">× {{ item.quantity }}</span>
+          </div>
+        </div>
+
+        <span class="preview-title">{{ previewTitle }}</span>
+      </div>
+    </div>
+
+  </main>
+</ion-content>

@@ -20,6 +20,17 @@ export interface PushNotification {
   // Who receives it: dealers only, agents only, or both. Missing on documents
   // written before this field existed — those are dealer broadcasts.
   audience?: NotificationAudience;
+  // Named recipients, by the mobile number they sign in with — which is also
+  // what their device's push token is stored against, so it is the one key that
+  // joins a dealer or agent record to a device.
+  //
+  // Absent or empty means EVERYONE on that side of the audience, which is what
+  // every broadcast sent before targeting existed meant. Only the side(s) the
+  // audience covers are written: a dealers-only broadcast carries no
+  // agentPhones. A "both" broadcast can name dealers, agents, or each
+  // independently — leaving one list empty sends to all of that side.
+  dealerPhones?: string[];
+  agentPhones?: string[];
   // Which screen a tap opens (a target key) and the path it resolves to in each
   // app. All three are plumbing only — none is ever rendered inside the
   // notification the dealer or agent sees. `url` is the dealer path (present
@@ -27,6 +38,39 @@ export interface PushNotification {
   target?: string;
   url?: string;
   agentUrl?: string;
+}
+
+// ---------------- Recipients ----------------
+
+// The specific people a broadcast is aimed at, by mobile number. An empty or
+// omitted list means everyone on that side.
+export interface NotificationRecipients {
+  dealerPhones?: string[];
+  agentPhones?: string[];
+}
+
+/**
+ * Reduce a mobile number to the ten digits it is matched on.
+ *
+ * The same number reaches us from three places that format it differently — the
+ * dealer/agent record the admin picked, the token document written by the
+ * device, and the value the device kept in localStorage at sign-in — and any of
+ * them may carry spaces, dashes or a +91 country code. They are only comparable
+ * once flattened, so every side normalises before comparing.
+ */
+export function normalisePhone(input?: string | null): string {
+  const digits = String(input || '').replace(/\D/g, '');
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+// Normalise a list of numbers, dropping blanks and duplicates.
+export function normalisePhones(list?: (string | null | undefined)[]): string[] {
+  const out = new Set<string>();
+  (list || []).forEach((p) => {
+    const n = normalisePhone(p);
+    if (n) out.add(n);
+  });
+  return Array.from(out);
 }
 
 // ---------------- Audience ----------------
@@ -237,12 +281,17 @@ export class NotificationService {
   //
   // `image` is an optional JPEG data URL — it rides along on the document and
   // ends up as the picture inside the notification.
+  //
+  // `recipients` narrows the broadcast to named people by mobile number. Leave
+  // a side out (or pass an empty list) to reach everyone on it, which is the
+  // default and what every earlier broadcast did.
   async send(
     title: string,
     body: string,
     target: string = DEFAULT_NOTIFICATION_TARGET,
     image?: string | null,
-    audience: NotificationAudience = DEFAULT_NOTIFICATION_AUDIENCE
+    audience: NotificationAudience = DEFAULT_NOTIFICATION_AUDIENCE,
+    recipients?: NotificationRecipients
   ): Promise<void> {
     const t = (title || '').trim();
     const b = (body || '').trim();
@@ -254,6 +303,11 @@ export class NotificationService {
     const agentTarget = audienceIncludesAgent(aud)
       ? resolveNotificationTarget(target, 'agent') || AGENT_NOTIFICATION_TARGETS[0]
       : null;
+    // Only keep a recipient list for a side the audience actually covers, so a
+    // dealers-only broadcast can never carry a stale agent selection left
+    // behind by switching the audience chips around in the form.
+    const dealerPhones = dealerTarget ? normalisePhones(recipients?.dealerPhones) : [];
+    const agentPhones = agentTarget ? normalisePhones(recipients?.agentPhones) : [];
     const createdAt = Date.now();
     const id = 'n-' + createdAt;
     const payload: PushNotification = {
@@ -262,7 +316,11 @@ export class NotificationService {
       target: (dealerTarget || agentTarget)!.key,
       ...(dealerTarget ? { url: dealerTarget.url } : {}),
       ...(agentTarget ? { agentUrl: agentTarget.url } : {}),
-      ...(image ? { image } : {})
+      ...(image ? { image } : {}),
+      // Omitted entirely when empty — an absent list is what both the Cloud
+      // Function and the receiving apps read as "everyone".
+      ...(dealerPhones.length ? { dealerPhones } : {}),
+      ...(agentPhones.length ? { agentPhones } : {})
     };
     if (this.firestore) {
       await setDoc(doc(this.firestore, this.COL, id), payload);

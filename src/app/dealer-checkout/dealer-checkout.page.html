@@ -26,7 +26,8 @@
           </svg>
         </div>
         <h3 class="success-title">{{ t('orderConfirmed') }}</h3>
-        <p class="success-sub">{{ t('orderRefId') }} <strong>#{{ orderSuccessId }}</strong></p>
+        <p class="success-sub">{{ t('orderRefId') }} <strong>{{ orderRef(orderSuccessId) }}</strong></p>
+        <p class="success-sub" *ngIf="orderSuccessDate">{{ t('orderDate') }} <strong>{{ orderSuccessDate | date:'mediumDate' }}</strong></p>
         <button class="confirm-order-btn" (click)="goToCatalog()">
           {{ t('backToHome') }}
         </button>

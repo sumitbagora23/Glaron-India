@@ -11,8 +11,10 @@
     "test": "ng test",
     "lint": "ng lint",
     "version:bump": "node scripts/gen-version.mjs",
-    "deploy": "npm run deploy:dealer && npm run deploy:admin && npm run deploy:agent",
+    "deploy": "npm run deploy:dealer && npm run deploy:catalogue && npm run deploy:admin && npm run deploy:agent",
     "deploy:dealer": "node scripts/gen-version.mjs && ng build && firebase deploy --only hosting:dealer",
+
+    "deploy:catalogue": "firebase deploy --only hosting:catalogue",
 
     "start:admin": "ng serve admin",
     "build:admin": "ng build admin",

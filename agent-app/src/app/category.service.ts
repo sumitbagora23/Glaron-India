@@ -10,6 +10,10 @@ export interface Category {
   // Display order (lower first). Falls back to alphabetical when equal/missing.
   order?: number;
   createdAt?: string;
+  // Set once the tile has been moved onto the bundled catalogue render below.
+  // Until it is set the bundled image wins; afterwards an admin's own upload
+  // sticks, so re-uploading a category image still works.
+  imageV2?: boolean;
 }
 
 @Injectable({
@@ -35,6 +39,38 @@ export class CategoryService {
     'Rope & Striped Light',
     'Track Light'
   ];
+
+  // Catalogue-quality tiles that ship with the app. Each category keeps the
+  // product it always showed — these are just the new, uncropped renders on a
+  // white background, replacing the low-res JPEG data URLs seeded by hand.
+  private static readonly BUNDLED_IMAGES: Record<string, string> = {
+    'flood': '/assets/images/products/GLR-GMFL-52.webp',
+    'street': '/assets/images/products/GLR-STRE-55.webp',
+    'solar': '/assets/images/products/GLR-SOLA-56.webp',
+    'cob': '/assets/images/products/GLR-CURV-4.webp',
+    'concealed': '/assets/images/products/GLR-CONC-23.webp',
+    'panel': '/assets/images/products/GLR-SLIM-31.webp',
+    'surface': '/assets/images/products/GLR-NEXU-21.webp',
+    'cylinder': '/assets/images/products/GLR-CYLI-28.webp',
+    'wall-light': '/assets/images/products/GLR-KTYP-41.webp',
+    'foot-light': '/assets/images/products/GLR-FOOT-47.webp',
+    'gate-light': '/assets/images/products/GLR-FREE-62.webp',
+    'rope-striped-light': '/assets/images/products/GLR-ROPE-37.webp',
+    'track-light': '/assets/images/products/GLR-TRAC-24.webp',
+    'striker-1786186247654': '/assets/images/products/GLR-STRI-30.webp',
+    'down-light-1786186261486': '/assets/images/products/GLR-DEEP-19.webp',
+    'spike-1786186284940': '/assets/images/products/GLR-SPIK-48.webp',
+  };
+
+  // Swaps in the bundled render on read, so every device shows it immediately
+  // instead of waiting on a migration. Returns true when the document still
+  // needs the change persisted.
+  private applyBundledImage(c: Category): boolean {
+    const bundled = CategoryService.BUNDLED_IMAGES[c.id];
+    if (!bundled || c.imageV2) return false;
+    c.image = bundled;
+    return true;
+  }
 
   private categoriesSignal = signal<Category[]>(this.loadFromStorage());
 
@@ -76,7 +112,15 @@ export class CategoryService {
           return;
         }
         const list: Category[] = [];
-        snapshot.forEach(docSnap => list.push(docSnap.data() as Category));
+        snapshot.forEach(docSnap => {
+          const c = docSnap.data() as Category;
+          // Persist the swap from whichever client has write access (the admin);
+          // dealers just render it and the write fails harmlessly.
+          if (this.applyBundledImage(c) && this.firestore) {
+            setDoc(doc(this.firestore, 'categories', c.id), { ...c, imageV2: true }).catch(() => {});
+          }
+          list.push(c);
+        });
         const sorted = this.sortCategories(list);
         this.categoriesSignal.set(sorted);
         this.saveToStorage(sorted);
@@ -93,7 +137,10 @@ export class CategoryService {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const parsed: Category[] = JSON.parse(stored);
-        if (parsed && parsed.length) return this.sortCategories(parsed);
+        if (parsed && parsed.length) {
+          parsed.forEach(c => this.applyBundledImage(c));
+          return this.sortCategories(parsed);
+        }
       }
     } catch (e) {
       console.error('Error loading categories from localStorage', e);

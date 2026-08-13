@@ -12,8 +12,10 @@ import { AgentAuthService } from '../agent-auth.service';
 import { AgentCommissionService, CommissionEntry, CommissionPayment } from '../agent-commission.service';
 import { PostService, SharePost } from '../admin/post.service';
 import { PostShareService } from '../post-share.service';
-import { ShareBrandingService } from '../share-branding.service';
+import { ShareBusinessService } from '../share-business.service';
+import { CatalogShareService } from '../catalog-share.service';
 import { NotificationService } from '../admin/notification.service';
+import { ActivityLogService } from '../admin/activity-log.service';
 import { DealerPricePrefsService, DealerPriceMode } from '../dealer-price-prefs.service';
 import { APP_VERSION } from '../version';
 
@@ -87,10 +89,12 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     private commissions: AgentCommissionService,
     private postService: PostService,
     private postShare: PostShareService,
-    public shareBranding: ShareBrandingService,
+    public shareBusiness: ShareBusinessService,
     private notificationService: NotificationService,
+    private activity: ActivityLogService,
     private pricePrefs: DealerPricePrefsService,
-    private swUpdate: SwUpdate
+    private swUpdate: SwUpdate,
+    private catalogShare: CatalogShareService
   ) {}
 
   ngOnInit() {
@@ -107,6 +111,9 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     // Live feed of the pictures the admin publishes — the same `posts`
     // collection the dealer app reads.
     this.postService.start();
+
+    // One 'opened the app' entry per launch for the admin's activity log.
+    this.activity.logAppOpen();
 
     // Android's hardware Back should step back through the panel's own views
     // (category → categories, tab → home) before leaving the app.
@@ -142,6 +149,7 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     if (this.selectedModalImage) { this.closeImageModal(); return; }
     if (this.selectedDescProduct) { this.closeDescModal(); return; }
     if (this.showSidebar) { this.closeSidebar(); return; }
+    if (this.showBusinessEditor) { this.closeBusinessEditor(); return; }
     if (this.showPosts) { this.closePosts(); return; }
     if (this.showProfile) { this.closeProfile(); return; }
     if (this.activeTab === 'home' && this.homeCategory) { this.backToCategories(); return; }
@@ -176,6 +184,7 @@ export class AgentPanelPage implements OnInit, OnDestroy {
   makeCall() {
     const digits = this.callNumber.replace(/[^\d]/g, '');
     if (!digits) return;
+    this.activity.log('call', 'Called Glaron', { detail: this.callNumber });
     window.location.href = `tel:${digits}`;
   }
 
@@ -183,7 +192,204 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     const digits = this.callNumber.replace(/[^\d]/g, '');
     if (!digits) return;
     const wa = digits.length === 10 ? '91' + digits : digits;
+    this.activity.log('whatsapp', 'Messaged Glaron on WhatsApp', { detail: this.callNumber });
     window.open(`https://wa.me/${wa}`, '_blank');
+  }
+
+  // ---- Per-product WhatsApp enquiry & share ---------------------------------
+  // Both mirror the dealer panel exactly: the green button asks the shop about
+  // one product, the dark button hands the product to the device share sheet.
+
+  // The configured number in wa.me form (91-prefixed for a bare 10-digit one).
+  private whatsappDigits(): string {
+    let digits = this.callNumber.replace(/[^\d]/g, '');
+    if (!digits) return '';
+    if (digits.length === 10) digits = '91' + digits;
+    else if (digits.length === 11 && digits.startsWith('0')) digits = '91' + digits.slice(1);
+    return digits;
+  }
+
+  // Opens a WhatsApp chat with the number the admin configured in Settings,
+  // prefilled with an enquiry that names the product and links its image so
+  // WhatsApp renders a preview. Sending the image as a file isn't possible from
+  // a wa.me link — the share button beside this one does that.
+  openWhatsApp(product: Product, event?: Event) {
+    // Don't let the click bubble to the card (which opens the image modal).
+    event?.stopPropagation();
+    const digits = this.whatsappDigits();
+    if (!digits) return;
+
+    const name = product.name || '';
+    const lines = ['Hello, I would like to know more about this product.'];
+    if (name) lines.push(`Product: ${name}`);
+    const shareableImage = this.toShareableImageUrl(product.image);
+    if (shareableImage) lines.push(shareableImage);
+
+    this.activity.log('product-enquiry', `Enquired about ${product.name} on WhatsApp`, this.productMeta(product));
+
+    const url = `https://wa.me/${digits}?text=${encodeURIComponent(lines.join('\n'))}`;
+    window.open(url, '_blank');
+  }
+
+  // Turns a product image reference into a link WhatsApp can preview, or returns
+  // '' when there's nothing shareable (missing image or an inline data: URI,
+  // which WhatsApp can't render and which would bloat the message text).
+  private toShareableImageUrl(image?: string): string {
+    const src = (image || '').trim();
+    if (!src || /^data:/i.test(src)) return '';
+    if (/^https?:\/\//i.test(src)) return src;
+    return `${window.location.origin}/${src.replace(/^\/+/, '')}`;
+  }
+
+  // Hands the OS share sheet a real image FILE plus the product's title,
+  // variants and description. The card being prepared is tracked so its button
+  // can show a spinner — re-encoding the image takes a moment on slow phones.
+  sharingProductId: string | null = null;
+
+  async shareProduct(product: Product, event?: Event) {
+    event?.stopPropagation();
+    if (this.sharingProductId) return;
+    this.sharingProductId = product.id;
+    this.activity.log('product-share', `Shared ${product.name}`, this.productMeta(product));
+
+    const title = product.name || '';
+    try {
+      const text = this.buildShareText(product);
+      const file = await this.buildShareImageFile(product);
+      const nav = navigator as any;
+
+      // Best case (all phones): share sheet with the image attached.
+      if (file && nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file], title, text });
+        return;
+      }
+      // Share sheet available but no file support → send the details alone.
+      if (nav.share) {
+        await nav.share({ title, text });
+        return;
+      }
+      // No share sheet at all (most desktop browsers): save the image and put
+      // the details on the clipboard so they can be pasted into any chat.
+      if (file) this.downloadFile(file);
+      await this.copyToClipboard(text);
+      this.flashToast(file ? 'Image saved and details copied.' : 'Details copied.');
+    } catch (err: any) {
+      // Dismissing the share sheet rejects with AbortError — not a failure.
+      if (err?.name === 'AbortError') return;
+      this.flashToast('Could not share this product. Please try again.');
+    } finally {
+      this.sharingProductId = null;
+    }
+  }
+
+  // Title, variant list and description, formatted for a chat message.
+  private buildShareText(product: Product): string {
+    const lines: string[] = [];
+    const name = product.name || '';
+    // *bold* is WhatsApp's markup and reads fine as plain text elsewhere.
+    if (name) lines.push(`*${name}*`);
+    if (product.category) lines.push(product.category);
+
+    // Skip labels that are just the product name repeated (variants with no
+    // distinguishing specs fall back to the model/name).
+    const variants = (product.variants || [])
+      .map(v => this.getVariantLabel(v))
+      .filter(label => !!label && label !== product.name);
+    if (variants.length) {
+      lines.push('', 'Variants:');
+      variants.forEach(label => lines.push(`• ${label}`));
+    }
+
+    // Same fallback copy the card shows when a product has no description.
+    const description = product.description || 'High-performance lighting solution designed for modern spaces.';
+    if (description) lines.push('', description);
+
+    return lines.join('\n');
+  }
+
+  // Turns the product image into a real File ready for the share sheet, or null
+  // when there's no usable image.
+  private async buildShareImageFile(product: Product): Promise<File | null> {
+    const src = (product.image || '').trim();
+    if (!src) return null;
+    const url = /^(https?:|data:|blob:)/i.test(src)
+      ? src
+      : `${window.location.origin}/${src.replace(/^\/+/, '')}`;
+
+    // Flatten through a canvas first: catalog images are PNGs with transparent
+    // backgrounds, which WhatsApp renders as solid black. A white-backed JPEG
+    // also keeps the attachment small enough to send over mobile data.
+    let blob = await this.flattenImage(url, 'image/jpeg');
+    if (!blob) {
+      // Canvas route failed (e.g. a cross-origin host that blocks CORS, which
+      // taints the canvas) — fall back to sending the original bytes.
+      try {
+        const res = await fetch(url);
+        if (res.ok) blob = await res.blob();
+      } catch (e) {}
+    }
+    if (!blob || !blob.type.startsWith('image/')) return null;
+
+    const ext = (blob.type.split('/')[1] || 'jpg').split('+')[0].replace('jpeg', 'jpg');
+    const base = (product.name || product.id)
+      .replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'product';
+    return new File([blob], `${base}.${ext}`, { type: blob.type });
+  }
+
+  // Draws the image on a white canvas (capped at 1600px on the long edge) and
+  // encodes it as `type`. Resolves null if the image can't be loaded or the
+  // canvas is tainted by a cross-origin source.
+  private flattenImage(url: string, type: string): Promise<Blob | null> {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const max = 1600;
+          const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight) || 1);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => resolve(blob), type, 0.92);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+
+  private downloadFile(file: File) {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  private async copyToClipboard(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      // Clipboard API needs a secure context; fall back to the legacy path.
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand('copy'); } catch (e2) {}
+      area.remove();
+    }
   }
 
   // ---------------- Catalogue ----------------
@@ -242,6 +448,31 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   clearSearch() {
     this.searchQuery = '';
+    clearTimeout(this.searchLogTimer);
+  }
+
+  // The product fields that ride along on an activity log entry. The product id
+  // IS the SKU here (GLR-DELT-3), so it doubles as both.
+  private productMeta(product: Product) {
+    const cat = this.productCategories(product)[0] || '';
+    return {
+      productId: product.id,
+      productName: product.name,
+      sku: product.id,
+      ...(cat ? { category: cat } : {})
+    };
+  }
+
+  // Search is logged once typing stops, so one search is one entry rather than
+  // one per keystroke. Fragments under three characters are mid-word noise.
+  private searchLogTimer: any;
+  onSearchChange(value: string) {
+    clearTimeout(this.searchLogTimer);
+    const term = (value || '').trim();
+    if (term.length < 3) return;
+    this.searchLogTimer = setTimeout(() => {
+      this.activity.log('search', `Searched for "${term}"`, { detail: term, tab: this.activeTab });
+    }, 1200);
   }
 
   // Build a label from whatever descriptors the variant has: wattage, type,
@@ -279,6 +510,7 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   setPriceMode(mode: DealerPriceMode) {
     this.pricePrefs.setPriceMode(mode);
+    this.activity.log('price-mode', 'Changed how prices are shown', { detail: mode });
   }
 
   get showPrices(): boolean {
@@ -453,55 +685,96 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     this.showPosts = false;
   }
 
+  // Hands this account's own catalogue link to the device share sheet (or the
+  // clipboard where there isn't one). The link opens the public catalogue: the
+  // range only, with no prices and nothing orderable.
+  async shareCatalogue() {
+    this.showSidebar = false;
+    const outcome = await this.catalogShare.share(this.agentAuth.getSession() || '');
+    if (outcome === 'copied') this.flashToast('Catalogue link copied.');
+    else if (outcome === 'failed') this.flashToast('Could not share the link. Please try again.');
+  }
+
   // Anything published in the last three days still wears the "New" pill.
   isNewPost(post: SharePost): boolean {
     return Date.now() - (post.createdAt || 0) < 3 * 24 * 60 * 60 * 1000;
   }
 
-  // ---- Your branding ----
+  // ---- Your business details ----
   //
-  // The agent's own logo and detail lines, stamped onto every post they share.
-  // Kept on this device (see ShareBrandingService) — Glaron publishes plain
-  // artwork, and each agent forwards it carrying their own branding.
-
-  brandingError = '';
-
-  get brandingLogo(): string | null {
-    return this.shareBranding.logo;
-  }
-
-  get brandingDetails(): string {
-    return this.shareBranding.details;
-  }
-
-  set brandingDetails(value: string) {
-    this.shareBranding.setDetails(value);
-  }
-
-  async onBrandingLogoSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files && input.files[0];
-    input.value = '';
-    if (!file) return;
-    this.brandingError = (await this.shareBranding.readLogoFile(file)) || '';
-    if (!this.brandingError) this.flashToast('Branding saved.');
-  }
-
-  removeBrandingLogo() {
-    this.shareBranding.setLogo(null);
-    this.brandingError = '';
-  }
-
-  // Stamps this agent's own logo and details onto the picture, then opens the
-  // device share sheet — identical to the dealer app, so a post forwarded by
+  // Tapping a post asks for the shop name, mobile and email, then prints them
+  // in a black footer strip under the artwork. Kept on this device (see
+  // ShareBusinessService) — identical to the dealer app, so a post forwarded by
   // an agent behaves the same as one forwarded by a dealer.
+
+  showBusinessEditor = false;
+  businessForm = { shop: '', mobile: '', email: '' };
+  businessError = '';
+
+  openBusinessEditor() {
+    const saved = this.shareBusiness.business;
+    this.businessForm = {
+      shop: saved.shop,
+      mobile: saved.mobile || this.agentAuth.getSession() || '',
+      email: saved.email
+    };
+    this.businessError = '';
+    this.showBusinessEditor = true;
+    history.pushState({ agentPanel: true }, '');
+  }
+
+  closeBusinessEditor() {
+    this.showBusinessEditor = false;
+    this.businessError = '';
+  }
+
+  saveBusiness() {
+    const shop = this.businessForm.shop.trim();
+    const mobile = this.businessForm.mobile.trim();
+    const email = this.businessForm.email.trim();
+
+    if (!shop) {
+      this.businessError = 'Please enter your shop name.';
+      return;
+    }
+    // Spaces, +91 and dashes are all fine — it just has to hold a real number.
+    if (mobile.replace(/\D/g, '').length < 10) {
+      this.businessError = 'Please enter a valid 10-digit mobile number.';
+      return;
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.businessError = 'Please enter a valid email address.';
+      return;
+    }
+
+    this.shareBusiness.save({ shop, mobile, email });
+    this.closeBusinessEditor();
+    this.flashToast('Business details saved.');
+  }
+
+  /** The number as the footer will print it — with its +91 in front. */
+  printedMobile(raw: string): string {
+    return ShareBusinessService.withDialCode(raw);
+  }
+
+  // Tapping a post shares it straight away, with the saved details printed
+  // underneath. With nothing saved yet the editor opens instead, so no post
+  // goes out bare by accident.
   async sharePost(post: SharePost) {
     if (this.sharingPostId) return;
+    if (!this.shareBusiness.hasBusiness) {
+      this.openBusinessEditor();
+      return;
+    }
+
     this.sharingPostId = post.id;
     try {
       const outcome = await this.postShare.share(post);
       if (outcome === 'downloaded') this.flashToast('Saved to your device.');
       else if (outcome === 'failed') this.flashToast('Could not prepare the post. Please try again.');
+      this.activity.log('post-share', 'Shared a Glaron post', {
+        detail: (post.caption || '').trim() || outcome
+      });
     } finally {
       this.sharingPostId = null;
     }
@@ -547,23 +820,27 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     this.activeTab = 'home';
     this.homeCategory = null;
     this.scrollTop();
+    this.activity.log('tab', 'Opened the Home tab', { tab: 'home' });
   }
 
   showProducts() {
     this.activeTab = 'products';
     this.homeCategory = null;
     this.scrollTop();
+    this.activity.log('tab', 'Opened the Products tab', { tab: 'products' });
   }
 
   showCommission() {
     this.activeTab = 'commission';
     this.homeCategory = null;
     this.scrollTop();
+    this.activity.log('tab', 'Opened the Commission tab', { tab: 'commission' });
   }
 
   openCategory(cat: string) {
     this.homeCategory = cat;
     this.scrollTop();
+    this.activity.log('category', `Browsed the ${cat} category`, { category: cat, tab: 'home' });
   }
 
   backToCategories() {
@@ -579,11 +856,15 @@ export class AgentPanelPage implements OnInit, OnDestroy {
   openProfileFromMenu() {
     this.showSidebar = false;
     this.showProfile = true;
+    this.activity.log('profile-open', 'Opened their profile');
   }
 
   closeProfile() { this.showProfile = false; }
 
   signOut() {
+    // Logged first: once the session is cleared there is no actor to attribute
+    // the entry to and it would be dropped.
+    this.activity.log('sign-out', 'Signed out');
     this.agentAuth.clearSession();
     // The one shared sign-in screen — there is no separate agent login any more.
     this.router.navigateByUrl('/dealer/login', { replaceUrl: true });
@@ -593,6 +874,7 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   openDescModal(product: Product) {
     this.selectedDescProduct = product;
+    this.activity.log('product-detail', `Viewed ${product.name} details`, this.productMeta(product));
   }
 
   closeDescModal() {
@@ -603,6 +885,7 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     if (!image) return;
     this.selectedModalImage = image;
     this.selectedModalImageTitle = title;
+    this.activity.log('product-image', `Zoomed the ${title} image`, { productName: title });
   }
 
   closeImageModal() {

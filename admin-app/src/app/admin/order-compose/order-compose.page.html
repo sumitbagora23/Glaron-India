@@ -11,7 +11,7 @@
     <div class="page-header-row">
       <div class="title-container">
         <h2 class="page-title">{{ mode === 'add' ? 'Add Products to Order' : 'Create New Order' }}</h2>
-        <p class="page-subtitle" *ngIf="mode === 'add'">Order #{{ orderId }} · {{ dealerName || 'Dealer' }}</p>
+        <p class="page-subtitle" *ngIf="mode === 'add'">{{ orderRef(orderId) }} · {{ dealerName || 'Dealer' }}<ng-container *ngIf="orderDate"> · {{ orderDate | date:'mediumDate' }}</ng-container></p>
         <p class="page-subtitle" *ngIf="mode === 'create'">Select a dealer and add products with variants &amp; prices.</p>
       </div>
       <button class="oc-cancel-top" (click)="cancel()">Cancel</button>

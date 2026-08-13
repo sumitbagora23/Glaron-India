@@ -78,7 +78,8 @@
       <div class="orders-list-body">
         <div class="order-row" *ngFor="let order of filteredOrders; trackBy: trackByOrderId">
           <span class="col col-id">
-            <span class="order-id">#{{ order.id }}</span>
+            <span class="order-id">{{ orderRef(order.id) }}</span>
+            <span class="order-date" *ngIf="order.date">{{ order.date | date:'mediumDate' }}</span>
           </span>
 
           <span class="col col-dealer">
@@ -134,8 +135,10 @@
     <div class="order-detail-sheet" (click)="$event.stopPropagation()">
       <div class="odetail-header">
         <div class="odetail-head-text">
-          <h3>Order #{{ selectedOrder.id }}</h3>
-          <span class="odetail-dealer">{{ selectedOrder.dealer }} · {{ stageOf(selectedOrder) }}</span>
+          <h3>{{ orderRef(selectedOrder.id) }}</h3>
+          <span class="odetail-dealer">
+            {{ selectedOrder.dealer }} · {{ stageOf(selectedOrder) }}<ng-container *ngIf="selectedOrder.date"> · {{ selectedOrder.date | date:'mediumDate' }}</ng-container>
+          </span>
         </div>
         <button class="odetail-close" (click)="closeOrderDetail()">&times;</button>
       </div>

@@ -30,6 +30,103 @@
         <span class="hint-text">{{ audienceMessage }}</span>
       </div>
 
+      <!-- Narrow the broadcast to specific people. Each side of the audience is
+           independent, so a "Both" notification can reach every agent but only
+           the three dealers ticked here. Matching is by mobile number — the
+           same number they sign in with, and what their device is registered
+           against. -->
+      <div class="form-field" *ngIf="showDealerPicker">
+        <label class="field-label">Dealers <span class="field-count">(who exactly)</span></label>
+
+        <div class="target-chip-group audience-chip-group">
+          <button type="button" class="target-chip" [class.active]="dealerMode === 'all'" (click)="setDealerMode('all')">
+            All dealers
+          </button>
+          <button type="button" class="target-chip" [class.active]="dealerMode === 'choose'" (click)="setDealerMode('choose')">
+            Choose dealers
+          </button>
+        </div>
+
+        <div class="recipient-picker" *ngIf="dealerMode === 'choose'">
+          <div class="picker-toolbar">
+            <input type="text" class="text-input picker-search" [(ngModel)]="dealerSearch"
+                   placeholder="Search dealers by name, number or city…" autocomplete="off" />
+            <label class="select-all-control" *ngIf="filteredDealers.length">
+              <input type="checkbox" class="row-checkbox" [checked]="allDealersSelected" (change)="toggleAllDealers()" />
+              <span>Select all</span>
+            </label>
+          </div>
+
+          <div class="picker-rows">
+            <label class="picker-row" *ngFor="let d of filteredDealers; trackBy: trackByPhone"
+                   [class.is-checked]="isDealerSelected(d)">
+              <input type="checkbox" class="row-checkbox" [checked]="isDealerSelected(d)" (change)="toggleDealer(d)" />
+              <div class="picker-avatar">{{ d.initial || (d.name || 'D').charAt(0) }}</div>
+              <div class="picker-info">
+                <span class="picker-name">{{ d.name || d.phone }}</span>
+                <span class="picker-sub">{{ d.phone }}<span *ngIf="d.location"> · {{ d.location }}</span></span>
+              </div>
+            </label>
+
+            <div class="picker-empty" *ngIf="!filteredDealers.length">
+              <span *ngIf="!dealers.length">No dealers with a mobile number yet.</span>
+              <span *ngIf="dealers.length">No dealers match your search.</span>
+            </div>
+          </div>
+
+          <span class="hint-text">{{ selectedDealerCount }} of {{ dealers.length }} dealers selected.</span>
+        </div>
+      </div>
+
+      <div class="form-field" *ngIf="showAgentPicker">
+        <label class="field-label">Agents <span class="field-count">(who exactly)</span></label>
+
+        <div class="target-chip-group audience-chip-group">
+          <button type="button" class="target-chip" [class.active]="agentMode === 'all'" (click)="setAgentMode('all')">
+            All agents
+          </button>
+          <button type="button" class="target-chip" [class.active]="agentMode === 'choose'" (click)="setAgentMode('choose')">
+            Choose agents
+          </button>
+        </div>
+
+        <div class="recipient-picker" *ngIf="agentMode === 'choose'">
+          <div class="picker-toolbar">
+            <input type="text" class="text-input picker-search" [(ngModel)]="agentSearch"
+                   placeholder="Search agents by name, number or city…" autocomplete="off" />
+            <label class="select-all-control" *ngIf="filteredAgents.length">
+              <input type="checkbox" class="row-checkbox" [checked]="allAgentsSelected" (change)="toggleAllAgents()" />
+              <span>Select all</span>
+            </label>
+          </div>
+
+          <div class="picker-rows">
+            <label class="picker-row" *ngFor="let a of filteredAgents; trackBy: trackByPhone"
+                   [class.is-checked]="isAgentSelected(a)">
+              <input type="checkbox" class="row-checkbox" [checked]="isAgentSelected(a)" (change)="toggleAgent(a)" />
+              <div class="picker-avatar">{{ a.initial || (a.name || 'A').charAt(0) }}</div>
+              <div class="picker-info">
+                <span class="picker-name">{{ a.name || a.phone }}</span>
+                <span class="picker-sub">{{ a.phone }}<span *ngIf="a.location"> · {{ a.location }}</span></span>
+              </div>
+            </label>
+
+            <div class="picker-empty" *ngIf="!filteredAgents.length">
+              <span *ngIf="!agents.length">No agents with a mobile number yet.</span>
+              <span *ngIf="agents.length">No agents match your search.</span>
+            </div>
+          </div>
+
+          <span class="hint-text">{{ selectedAgentCount }} of {{ agents.length }} agents selected.</span>
+        </div>
+
+        <span class="error-text" *ngIf="recipientErrorMsg">{{ recipientErrorMsg }}</span>
+      </div>
+
+      <!-- The dealers-only case has no agent block below it to carry the
+           warning, so it gets its own. -->
+      <span class="error-text" *ngIf="recipientErrorMsg && !showAgentPicker">{{ recipientErrorMsg }}</span>
+
       <!-- Title -->
       <div class="form-field">
         <label class="field-label" for="notifTitle">Title <span class="req">*</span></label>

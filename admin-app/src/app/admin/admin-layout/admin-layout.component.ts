@@ -35,9 +35,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { name: 'Dealers', icon: 'people' },
     { name: 'Agents', icon: 'badge' },
     { name: 'Orders', icon: 'receipt' },
+    { name: 'Quotations', icon: 'quote' },
     { name: 'Offer Banners', icon: 'pricetag' },
     { name: 'Notifications', icon: 'notifications' },
     { name: 'Posts', icon: 'image' },
+    { name: 'Activity Logs', icon: 'activity' },
+    { name: 'Share Catalogue', icon: 'share' },
     { name: 'Settings', icon: 'settings' }
   ];
 
@@ -142,6 +145,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.activeMenu = 'Agents';
     } else if (url.includes('/admin/orders')) {
       this.activeMenu = 'Orders';
+    } else if (url.includes('/admin/quotations')) {
+      this.activeMenu = 'Quotations';
     } else if (url.includes('/admin/categories')) {
       this.activeMenu = 'Categories';
     } else if (url.includes('/admin/dashboard') || url.includes('/admin/products')) {
@@ -154,6 +159,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.activeMenu = 'Notifications';
     } else if (url.includes('/admin/posts')) {
       this.activeMenu = 'Posts';
+    } else if (url.includes('/admin/logs')) {
+      this.activeMenu = 'Activity Logs';
+    } else if (url.includes('/admin/share-catalogue')) {
+      this.activeMenu = 'Share Catalogue';
     } else if (url.includes('/admin/settings')) {
       this.activeMenu = 'Settings';
     }
@@ -174,12 +183,18 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/agents']);
     } else if (menu === 'Orders') {
       this.router.navigate(['/admin/orders']);
+    } else if (menu === 'Quotations') {
+      this.router.navigate(['/admin/quotations']);
     } else if (menu === 'Offer Banners') {
       this.router.navigate(['/admin/banners']);
     } else if (menu === 'Notifications') {
       this.router.navigate(['/admin/notifications']);
     } else if (menu === 'Posts') {
       this.router.navigate(['/admin/posts']);
+    } else if (menu === 'Activity Logs') {
+      this.router.navigate(['/admin/logs']);
+    } else if (menu === 'Share Catalogue') {
+      this.router.navigate(['/admin/share-catalogue']);
     } else if (menu === 'Settings') {
       this.router.navigate(['/admin/settings']);
     }

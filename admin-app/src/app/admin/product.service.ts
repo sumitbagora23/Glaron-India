@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Firestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, deleteDoc, onSnapshot } from '@angular/fire/firestore';
 
 export interface ProductVariant {
   model?: string;
@@ -21,6 +21,10 @@ export interface Product {
   category: string;
   // Canonical multi-category list. A product can belong to several categories.
   categories?: string[];
+  // Set once the catalogue categories below have been restored onto the stored
+  // product. Until it is set the catalogue assignment wins; afterwards an
+  // admin's own edit sticks, so re-assigning categories by hand still works.
+  categoryV2?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -41,7 +45,8 @@ export class ProductService {
   {
     "id": "GLR-DELT-3",
     "name": "Delta",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -81,7 +86,8 @@ export class ProductService {
   {
     "id": "GLR-CURV-4",
     "name": "Curve",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -121,7 +127,8 @@ export class ProductService {
   {
     "id": "GLR-GEM-5",
     "name": "Gem",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -161,7 +168,8 @@ export class ProductService {
   {
     "id": "GLR-GLAR-6",
     "name": "Glare",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -179,7 +187,8 @@ export class ProductService {
   {
     "id": "GLR-DELT-7",
     "name": "Delta Pro",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -219,7 +228,8 @@ export class ProductService {
   {
     "id": "GLR-VOGU-8",
     "name": "Vogue",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -237,7 +247,8 @@ export class ProductService {
   {
     "id": "GLR-GLON-9",
     "name": "Glon",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -255,7 +266,8 @@ export class ProductService {
   {
     "id": "GLR-ELEG-10",
     "name": "Elegance",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -273,7 +285,8 @@ export class ProductService {
   {
     "id": "GLR-ORBI-11",
     "name": "Orbit",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -291,7 +304,8 @@ export class ProductService {
   {
     "id": "GLR-PRIS-12",
     "name": "Prism",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -309,7 +323,8 @@ export class ProductService {
   {
     "id": "GLR-DUO-13",
     "name": "Duo",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -327,7 +342,8 @@ export class ProductService {
   {
     "id": "GLR-DUOR-14",
     "name": "Duo R",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -345,7 +361,8 @@ export class ProductService {
   {
     "id": "GLR-MOVA-15",
     "name": "Movable",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -398,7 +415,8 @@ export class ProductService {
   {
     "id": "GLR-PULL-16",
     "name": "Pull Out",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -417,7 +435,8 @@ export class ProductService {
   {
     "id": "GLR-LINE-17",
     "name": "Linea",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -435,7 +454,8 @@ export class ProductService {
   {
     "id": "GLR-SPOT-18",
     "name": "Spot",
-    "category": "",
+    "category": "COB",
+    "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -472,7 +492,8 @@ export class ProductService {
   {
     "id": "GLR-DEEP-19",
     "name": "Deep Downlight",
-    "category": "",
+    "category": "Down Light",
+    "categories": ["Down Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -509,7 +530,8 @@ export class ProductService {
   {
     "id": "GLR-NEXU-20",
     "name": "Nexus Pro",
-    "category": "",
+    "category": "Down Light",
+    "categories": ["Down Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -549,7 +571,8 @@ export class ProductService {
   {
     "id": "GLR-NEXU-21",
     "name": "Nexus surface",
-    "category": "",
+    "category": "Surface",
+    "categories": ["Surface"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -567,7 +590,8 @@ export class ProductService {
   {
     "id": "GLR-NOVA-22",
     "name": "Nova",
-    "category": "",
+    "category": "Surface",
+    "categories": ["Surface"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -594,7 +618,8 @@ export class ProductService {
   {
     "id": "GLR-CONC-23",
     "name": "Concealed",
-    "category": "",
+    "category": "Concealed",
+    "categories": ["Concealed"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -643,7 +668,8 @@ export class ProductService {
   {
     "id": "GLR-TRAC-24",
     "name": "Tracklight",
-    "category": "",
+    "category": "Track Light",
+    "categories": ["Track Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -694,7 +720,8 @@ export class ProductService {
   {
     "id": "GLR-TRAC-25",
     "name": "Track Wall",
-    "category": "",
+    "category": "Track Light",
+    "categories": ["Track Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -712,7 +739,8 @@ export class ProductService {
   {
     "id": "GLR-STRE-26",
     "name": "Streak",
-    "category": "",
+    "category": "Cylinder",
+    "categories": ["Cylinder"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -746,7 +774,8 @@ export class ProductService {
   {
     "id": "GLR-MOVA-27",
     "name": "Movable Cylinder",
-    "category": "",
+    "category": "Cylinder",
+    "categories": ["Cylinder"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -764,7 +793,8 @@ export class ProductService {
   {
     "id": "GLR-CYLI-28",
     "name": "Cylinder",
-    "category": "",
+    "category": "Cylinder",
+    "categories": ["Cylinder"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -801,7 +831,8 @@ export class ProductService {
   {
     "id": "GLR-MAGN-29",
     "name": "Magna",
-    "category": "",
+    "category": "Surface",
+    "categories": ["Surface"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -819,7 +850,8 @@ export class ProductService {
   {
     "id": "GLR-STRI-30",
     "name": "Striker",
-    "category": "",
+    "category": "Striker",
+    "categories": ["Striker"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -846,7 +878,8 @@ export class ProductService {
   {
     "id": "GLR-SLIM-31",
     "name": "Slim Panel",
-    "category": "",
+    "category": "Panel",
+    "categories": ["Panel"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -883,7 +916,8 @@ export class ProductService {
   {
     "id": "GLR-SURF-32",
     "name": "Surface Panel",
-    "category": "",
+    "category": "Panel, Surface",
+    "categories": ["Panel","Surface"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -920,7 +954,8 @@ export class ProductService {
   {
     "id": "GLR-TRIM-33",
     "name": "Trimless Surface",
-    "category": "",
+    "category": "Surface",
+    "categories": ["Surface"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -947,7 +982,8 @@ export class ProductService {
   {
     "id": "GLR-TILE-34",
     "name": "Tile",
-    "category": "",
+    "category": "Panel",
+    "categories": ["Panel"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -984,7 +1020,8 @@ export class ProductService {
   {
     "id": "GLR-STRI-35",
     "name": "Strip Light",
-    "category": "",
+    "category": "Rope & Striped Light",
+    "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -1013,7 +1050,8 @@ export class ProductService {
   {
     "id": "GLR-SMPS-36",
     "name": "SMPS",
-    "category": "",
+    "category": "Rope & Striped Light",
+    "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -1061,7 +1099,8 @@ export class ProductService {
   {
     "id": "GLR-ROPE-37",
     "name": "Rope Light",
-    "category": "",
+    "category": "Rope & Striped Light",
+    "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -1107,7 +1146,8 @@ export class ProductService {
   {
     "id": "GLR-PROF-38",
     "name": "Profile",
-    "category": "",
+    "category": "Rope & Striped Light",
+    "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -1136,7 +1176,8 @@ export class ProductService {
   {
     "id": "GLR-MAGN-39",
     "name": "Magnetic",
-    "category": "",
+    "category": "Track Light",
+    "categories": ["Track Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -1161,7 +1202,8 @@ export class ProductService {
   {
     "id": "GLR-LINE-40",
     "name": "Linear Hanging",
-    "category": "",
+    "category": "Surface",
+    "categories": ["Surface"],
     "status": "In Stock",
     "stock": 100,
     "price": 580,
@@ -1179,7 +1221,8 @@ export class ProductService {
   {
     "id": "GLR-KTYP-41",
     "name": "K-Type",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1208,7 +1251,8 @@ export class ProductService {
   {
     "id": "GLR-BALL-42",
     "name": "Ball Light",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1253,7 +1297,8 @@ export class ProductService {
   {
     "id": "GLR-CURV-43",
     "name": "Curve Wall",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1290,7 +1335,8 @@ export class ProductService {
   {
     "id": "GLR-CASE-44",
     "name": "Casette",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1308,7 +1354,8 @@ export class ProductService {
   {
     "id": "GLR-UPDO-45",
     "name": "Updown Wall",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1326,7 +1373,8 @@ export class ProductService {
   {
     "id": "GLR-RUBI-46",
     "name": "Rubik Square",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1344,7 +1392,8 @@ export class ProductService {
   {
     "id": "GLR-FOOT-47",
     "name": "Foot Lights",
-    "category": "",
+    "category": "Foot Light",
+    "categories": ["Foot Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1365,7 +1414,8 @@ export class ProductService {
   {
     "id": "GLR-SPIK-48",
     "name": "Spike",
-    "category": "",
+    "category": "Spike",
+    "categories": ["Spike"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1392,7 +1442,8 @@ export class ProductService {
   {
     "id": "GLR-WALL-49",
     "name": "Wall Washer",
-    "category": "",
+    "category": "Wall Light",
+    "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1410,7 +1461,8 @@ export class ProductService {
   {
     "id": "GLR-INGR-50",
     "name": "Inground",
-    "category": "",
+    "category": "Spike",
+    "categories": ["Spike"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1428,7 +1480,8 @@ export class ProductService {
   {
     "id": "GLR-SWIM-51",
     "name": "Swimming Pool",
-    "category": "",
+    "category": "Spike",
+    "categories": ["Spike"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1446,7 +1499,8 @@ export class ProductService {
   {
     "id": "GLR-GMFL-52",
     "name": "GM Flood",
-    "category": "",
+    "category": "Flood",
+    "categories": ["Flood"],
     "status": "In Stock",
     "stock": 100,
     "price": 4500,
@@ -1487,7 +1541,8 @@ export class ProductService {
   {
     "id": "GLR-SLIM-53",
     "name": "Slim Flood",
-    "category": "",
+    "category": "Flood",
+    "categories": ["Flood"],
     "status": "In Stock",
     "stock": 100,
     "price": 4500,
@@ -1521,7 +1576,8 @@ export class ProductService {
   {
     "id": "GLR-HIBA-54",
     "name": "Hi-Bay",
-    "category": "",
+    "category": "Flood",
+    "categories": ["Flood"],
     "status": "In Stock",
     "stock": 100,
     "price": 4500,
@@ -1539,7 +1595,8 @@ export class ProductService {
   {
     "id": "GLR-STRE-55",
     "name": "Street",
-    "category": "",
+    "category": "Street",
+    "categories": ["Street"],
     "status": "In Stock",
     "stock": 100,
     "price": 3200,
@@ -1557,7 +1614,8 @@ export class ProductService {
   {
     "id": "GLR-SOLA-56",
     "name": "Solar Street",
-    "category": "",
+    "category": "Solar, Street",
+    "categories": ["Solar","Street"],
     "status": "In Stock",
     "stock": 100,
     "price": 3200,
@@ -1584,7 +1642,8 @@ export class ProductService {
   {
     "id": "GLR-AURA-57",
     "name": "Aura Max",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1605,7 +1664,8 @@ export class ProductService {
   {
     "id": "GLR-VIST-58",
     "name": "Vista",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1626,7 +1686,8 @@ export class ProductService {
   {
     "id": "GLR-CUBE-59",
     "name": "Cubex",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1646,7 +1707,8 @@ export class ProductService {
   {
     "id": "GLR-CUBE-60",
     "name": "Cube",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1667,7 +1729,8 @@ export class ProductService {
   {
     "id": "GLR-MASH-61",
     "name": "Mashal",
-    "category": "",
+    "category": "Street",
+    "categories": ["Street"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1687,7 +1750,8 @@ export class ProductService {
   {
     "id": "GLR-FREE-62",
     "name": "Freedom",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1707,7 +1771,8 @@ export class ProductService {
   {
     "id": "GLR-RUBI-63",
     "name": "Rubik",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1725,7 +1790,8 @@ export class ProductService {
   {
     "id": "GLR-TEMP-64",
     "name": "Temple",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1743,7 +1809,8 @@ export class ProductService {
   {
     "id": "GLR-LEGA-65",
     "name": "Legacy",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1761,7 +1828,8 @@ export class ProductService {
   {
     "id": "GLR-FOUR-66",
     "name": "Four Pillar",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1779,7 +1847,8 @@ export class ProductService {
   {
     "id": "GLR-SQUA-67",
     "name": "Square",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1797,7 +1866,8 @@ export class ProductService {
   {
     "id": "GLR-RING-68",
     "name": "Ring",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1815,7 +1885,8 @@ export class ProductService {
   {
     "id": "GLR-ROUN-69",
     "name": "Round",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1833,7 +1904,8 @@ export class ProductService {
   {
     "id": "GLR-OVAL-70",
     "name": "Oval",
-    "category": "",
+    "category": "Gate Light",
+    "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
     "price": 1850,
@@ -1855,33 +1927,20 @@ export class ProductService {
 
   constructor() {
     this.initFirestoreSync();
-    this.runCategoryClearMigration();
   }
 
-  // One-time cleanup: blank out the category on every existing product so the
-  // admin can re-assign categories manually. Guarded by a global Firestore flag
-  // (_meta/migrations) so it runs exactly once for the whole project and never
-  // wipes categories added afterwards.
-  private async runCategoryClearMigration() {
-    if (!this.firestore) return;
-    try {
-      const flagRef = doc(this.firestore, '_meta', 'migrations');
-      const flagSnap = await getDoc(flagRef);
-      if (flagSnap.exists() && flagSnap.data()?.['categoriesClearedV1']) return;
-
-      const snap = await getDocs(collection(this.firestore, 'products'));
-      const writes: Promise<unknown>[] = [];
-      snap.forEach(d => {
-        const data = d.data() as Product;
-        if (data.category && data.category.trim() !== '') {
-          writes.push(setDoc(doc(this.firestore!, 'products', d.id), { ...data, category: '' }));
-        }
-      });
-      await Promise.all(writes);
-      await setDoc(flagRef, { categoriesClearedV1: true }, { merge: true });
-    } catch (e) {
-      console.warn('Category clear migration notice:', e);
-    }
+  // An earlier cleanup blanked the category on every stored product. The
+  // catalogue assignment in defaultProducts is authoritative until an admin
+  // edits the product, so copy it onto the stored copy once and mark it with
+  // categoryV2. Returns true when the document still needs the change saved.
+  private applyCatalogueCategories(p: Product): boolean {
+    if (p.categoryV2) return false;
+    const defP = this.defaultProducts.find(dp => dp.id === p.id);
+    if (!defP || !defP.category) return false;
+    p.category = defP.category;
+    p.categories = defP.categories ? [...defP.categories] : [];
+    p.categoryV2 = true;
+    return true;
   }
 
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
@@ -1927,6 +1986,12 @@ export class ProductService {
                 setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
               }
             }
+            // Restore the catalogue categories. Persisted from whichever client
+            // has write access (the admin); dealers just render them and the
+            // write fails harmlessly.
+            if (this.applyCatalogueCategories(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
           if (remoteProducts.length > 0) {
@@ -1967,6 +2032,9 @@ export class ProductService {
           if (this.isJunkCategory(p.category)) {
             p.category = '';
           }
+          // ...and restore the catalogue categories on the cached copy, so the
+          // list is right on first paint instead of after the Firestore sync.
+          this.applyCatalogueCategories(p);
           return p;
         });
         return parsed;

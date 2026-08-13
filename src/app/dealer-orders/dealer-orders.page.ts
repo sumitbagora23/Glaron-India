@@ -6,6 +6,7 @@ import { OrderService, Order } from '../admin/order.service';
 import { DealerService, Dealer } from '../admin/dealer.service';
 import { SettingsService } from '../admin/settings.service';
 import { DealerAuthService } from '../dealer-auth.service';
+import { orderRefLabel } from '../order-ref';
 
 @Component({
   selector: 'app-dealer-orders',
@@ -42,6 +43,11 @@ export class DealerOrdersPage implements OnInit {
   }
 
   ngOnInit() {}
+
+  /** Short order label, e.g. `ORD - 417` — same number the admin console shows. */
+  orderRef(id: string): string {
+    return orderRefLabel(id);
+  }
 
   get currentDealer(): Dealer | null {
     // Resolve strictly by the signed-in mobile number. Never fall back to

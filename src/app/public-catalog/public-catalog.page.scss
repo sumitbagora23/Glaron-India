@@ -1,0 +1,1009 @@
+/* ============================================================================
+   Public catalogue — the read-only page a shared link opens.
+   Same palette and the same component styling as the dealer panel (deep purple
+   #170338, gold #FEB300/#7E5700, warm #FCF9F8), so a customer opening the link
+   sees the identical catalogue, minus everything that belongs to an account.
+   ============================================================================ */
+ion-content { --background: var(--g-bg); }
+
+.public-catalog-canvas {
+  min-height: 100dvh;
+  background: var(--g-bg);
+  /* Clears the floating dock: 10px offset + ~56px dock + breathing room. */
+  padding-bottom: calc(96px + var(--g-safe-bottom));
+}
+
+/* ============ Top App Bar ============ */
+.top-app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255,255,255,.86);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--g-border);
+  padding-top: var(--g-safe-top);
+}
+.top-bar-inner {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+}
+.left-brand-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.topbar-logo { height: 24px; width: auto; display: block; }
+
+.back-btn {
+  width: 42px; height: 42px;
+  border: 1.5px solid var(--g-border);
+  background: var(--g-surface);
+  border-radius: 13px;
+  display: grid; place-items: center;
+  color: var(--g-text);
+  cursor: pointer;
+  .back-svg { width: 20px; height: 20px; }
+  &:active { background: var(--g-surface-2); }
+}
+.bar-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--g-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Quiet gold chip on the right of the brand bar, so the page reads as a
+   catalogue rather than a half-loaded app. */
+.catalog-pill {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: var(--g-gold-strong);
+  background: rgba(254,179,0,.13);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+/* ============ Main ============ */
+.catalog-main-container {
+  padding: 12px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: g-fade-in .3s ease;
+}
+
+/* ---- Hero ----
+   Deliberately the same purple ground and gold bloom as the share card the link
+   arrives with, so opening the message and opening the page feel like one piece
+   of brand rather than two. */
+.catalog-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 26px 22px 28px;
+  border-radius: var(--g-r-lg);
+  background: linear-gradient(150deg, #24074f 0%, #170338 55%, #0c0120 100%);
+  box-shadow: var(--g-shadow-md);
+  animation: g-fade-up .4s ease;
+
+  /* The light itself: a warm pool spilling in from the top right. */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -55%; right: -30%;
+    width: 90%; aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(254,179,0,.30) 0%, rgba(254,179,0,.06) 48%, rgba(254,179,0,0) 72%);
+    pointer-events: none;
+  }
+  > * { position: relative; z-index: 1; }
+}
+.hero-eyebrow {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--g-gold);
+}
+.hero-title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: #fff;
+}
+.hero-sub {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: rgba(255,255,255,.74);
+  max-width: 30ch;
+}
+
+/* ---- Search bar ---- */
+.catalog-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--g-surface);
+  border: 1.5px solid var(--g-border);
+  border-radius: 999px;
+  box-shadow: var(--g-shadow-sm);
+  transition: border-color .18s ease, box-shadow .18s ease;
+
+  &:focus-within { border-color: var(--g-primary); box-shadow: 0 0 0 4px rgba(23,3,56,.05); }
+
+  .search-ic { width: 20px; height: 20px; margin-left: 16px; color: var(--g-text-soft); flex-shrink: 0; }
+  .search-field {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 14px 12px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--g-text);
+    &::placeholder { color: var(--g-text-faint); }
+  }
+  .search-clear {
+    border: none; background: transparent; cursor: pointer;
+    color: var(--g-text-soft); padding: 0 14px 0 4px;
+    font-size: 20px; line-height: 1;
+  }
+
+  /* Home variant: a tappable pill that opens the products list */
+  &.as-button {
+    width: 100%;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    &:active { transform: scale(.99); }
+  }
+  .search-placeholder {
+    flex: 1;
+    text-align: left;
+    padding: 14px 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--g-text-faint);
+  }
+}
+
+/* ---- Section headings ---- */
+.catalog-title-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.title-text-group { display: flex; flex-direction: column; gap: 4px; }
+.catalog-heading {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--g-text);
+}
+.catalog-subheading {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--g-text-soft);
+}
+
+.filter-controls-row { display: flex; gap: 10px; }
+.category-select-wrapper {
+  position: relative;
+  flex: 1;
+  &::after {
+    content: '';
+    position: absolute; right: 16px; top: 50%;
+    width: 9px; height: 9px;
+    border-right: 2px solid var(--g-text-soft);
+    border-bottom: 2px solid var(--g-text-soft);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+}
+.cat-select-dropdown {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid var(--g-border);
+  background: var(--g-surface);
+  border-radius: var(--g-r-md);
+  padding: 13px 40px 13px 16px;
+  font-size: 14.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--g-text);
+  outline: none;
+  box-shadow: var(--g-shadow-sm);
+  &:focus { border-color: var(--g-primary); }
+}
+
+/* ============ Category grid (home) ============ */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.category-grid-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  background: var(--g-surface);
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--g-shadow-sm);
+  transition: transform .14s ease, box-shadow .22s ease;
+  animation: g-fade-up .4s ease both;
+
+  &:active { transform: translateY(2px) scale(.97); box-shadow: var(--g-shadow-md); }
+}
+.cat-grid-media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--g-surface);
+  display: grid; place-items: center;
+  overflow: hidden;
+  &.no-image {
+    background: linear-gradient(90deg, #e9e9ec 25%, #f4f4f6 37%, #e9e9ec 63%);
+    background-size: 840px 100%;
+    animation: g-shimmer 1.4s ease-in-out infinite;
+  }
+}
+.cat-grid-img { width: 100%; height: 100%; object-fit: contain; padding: 6px; display: block; }
+.cat-grid-name {
+  padding: 9px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--g-text);
+  text-align: center;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.5em;
+}
+.category-empty-state {
+  grid-column: 1 / -1;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--g-text-soft);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ============ Product cards ============ */
+.product-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.product-card {
+  position: relative;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  padding: 12px;
+  box-shadow: var(--g-shadow-sm);
+  animation: g-fade-up .35s ease both;
+  transition: box-shadow .2s ease;
+}
+.card-head-row {
+  display: flex;
+  gap: 12px;
+}
+.product-media-box {
+  position: relative;
+  width: 72px; height: 72px;
+  flex-shrink: 0;
+  border-radius: var(--g-r-sm);
+  overflow: hidden;
+  background: #FFFFFF;
+  display: grid; place-items: center;
+  cursor: pointer;
+  &.no-image {
+    background: linear-gradient(90deg, #e9e9ec 25%, #f4f4f6 37%, #e9e9ec 63%);
+    background-size: 840px 100%;
+    animation: g-shimmer 1.4s ease-in-out infinite;
+  }
+}
+.product-card-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+.card-head-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.category-uppercase-tag {
+  align-self: flex-start;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--g-gold-strong);
+  background: rgba(254,179,0,.13);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.product-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--g-text);
+}
+/* Clamped to two lines; tapping it opens the full text in place — there is no
+   details sheet on this page. */
+.product-description {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--g-text-soft);
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  &.expanded { -webkit-line-clamp: unset; display: block; }
+}
+
+/* ---- Add to list ----
+   The only control on a product card. It carries a quantity and nothing else:
+   a visitor here has no rate, so there is no price for it to sit beside. */
+.add-line { margin-top: 6px; }
+
+.add-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .1px;
+  color: var(--g-primary);
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+  box-shadow: 0 4px 12px rgba(254, 179, 0, .30);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .14s ease;
+
+  .add-ic { width: 14px; height: 14px; }
+  &:active { transform: scale(.94); }
+
+  /* On a variant row there is only the label to share space with. */
+  &.compact { padding: 6px 12px; font-size: 11.5px; .add-ic { width: 13px; height: 13px; } }
+}
+
+.qty-stepper {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1.5px solid var(--g-border);
+  border-radius: 999px;
+  background: var(--g-surface);
+
+  .step-btn {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--g-surface-2);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--g-text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .14s ease, background .18s ease;
+    &:active { transform: scale(.9); background: rgba(254, 179, 0, .18); }
+  }
+  .step-val {
+    min-width: 26px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--g-text);
+  }
+
+  &.compact {
+    .step-btn { width: 25px; height: 25px; font-size: 15px; }
+    .step-val { min-width: 22px; font-size: 12.5px; }
+  }
+}
+
+/* Specification rows — the variants, each addable to the quotation list. */
+.product-details-body {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--g-border);
+}
+.specs-header {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--g-text-soft);
+  margin-bottom: 8px;
+}
+.variants-inline-list { display: flex; flex-direction: column; gap: 7px; }
+.variant-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--g-surface-2);
+  border-radius: var(--g-r-sm);
+}
+.variant-inline-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--g-text);
+  line-height: 1.3;
+}
+
+/* ============ Quotation list (the cart) ============
+   Deliberately without a totals card. The dealer checkout has one because a
+   dealer has prices; a visitor here does not, so the list ends at the request
+   button. */
+.cart-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: g-fade-in .3s ease;
+}
+.cart-head { display: flex; flex-direction: column; gap: 4px; }
+
+.cart-list { display: flex; flex-direction: column; gap: 10px; }
+.cart-row {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  box-shadow: var(--g-shadow-sm);
+  animation: g-fade-up .3s ease both;
+}
+.cart-thumb {
+  width: 64px; height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--g-r-sm);
+  overflow: hidden;
+  background: #FFFFFF;
+  display: grid; place-items: center;
+  img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  &.no-image {
+    background: linear-gradient(90deg, #e9e9ec 25%, #f4f4f6 37%, #e9e9ec 63%);
+    background-size: 840px 100%;
+    animation: g-shimmer 1.4s ease-in-out infinite;
+  }
+}
+.cart-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cart-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.cart-name {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--g-text);
+}
+.cart-remove {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #C0392B;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  svg { width: 16px; height: 16px; }
+  &:active { background: rgba(192, 57, 43, .10); }
+}
+.cart-variant {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--g-text-soft);
+}
+.cart-sku {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--g-text-faint);
+}
+.cart-stepper { align-self: flex-start; margin-top: 6px; }
+
+/* Empty list */
+.cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 24px 38px;
+  text-align: center;
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-lg);
+  background: var(--g-surface);
+  box-shadow: var(--g-shadow-sm);
+}
+.cart-empty-icon {
+  display: grid; place-items: center;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: rgba(254, 179, 0, .14);
+  color: var(--g-gold-strong);
+  svg { width: 27px; height: 27px; }
+}
+.cart-empty-title {
+  margin: 4px 0 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--g-text);
+}
+.cart-empty-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--g-text-soft);
+  max-width: 30ch;
+}
+
+/* The request button and the two fields it opens. */
+.request-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+.request-intro { display: flex; flex-direction: column; gap: 4px; margin-bottom: 2px; }
+.request-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--g-text);
+}
+.request-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--g-text-soft);
+}
+
+/* ============ Compare Quotation ============ */
+.compare-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: g-fade-in .3s ease;
+}
+.compare-hero .hero-sub { max-width: 34ch; }
+
+.quote-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The upload target. It is the label for a hidden file input, so the whole
+   card is tappable — a bare "Choose file" button reads as a broken page on a
+   phone. */
+.quote-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 30px 20px;
+  border: 2px dashed rgba(23, 3, 56, .18);
+  border-radius: var(--g-r-lg);
+  background: var(--g-surface);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .18s ease, background .18s ease;
+
+  &:active { background: var(--g-surface-2); }
+  &.filled {
+    padding: 12px;
+    border-style: solid;
+    border-color: var(--g-gold);
+    background: var(--g-surface);
+  }
+}
+.quote-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.drop-icon {
+  display: grid;
+  place-items: center;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(254, 179, 0, .14);
+  color: var(--g-gold-strong);
+  margin-bottom: 2px;
+  svg { width: 24px; height: 24px; }
+}
+.drop-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--g-text);
+}
+.drop-sub {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--g-text-soft);
+}
+.quote-preview-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: var(--g-r-md);
+  background: #fff;
+  display: block;
+}
+.drop-change {
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--g-gold-strong);
+}
+.quote-remove-btn {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  padding: 0 2px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #C0392B;
+  cursor: pointer;
+}
+
+.quote-field { display: flex; flex-direction: column; gap: 6px; }
+.quote-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: var(--g-text-soft);
+}
+.quote-input {
+  width: 100%;
+  border: 1.5px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  background: var(--g-surface);
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--g-text);
+  outline: none;
+  box-shadow: var(--g-shadow-sm);
+  transition: border-color .18s ease, box-shadow .18s ease;
+
+  &::placeholder { color: var(--g-text-faint); font-weight: 500; }
+  &:focus { border-color: var(--g-primary); box-shadow: 0 0 0 4px rgba(23,3,56,.05); }
+}
+
+.quote-error {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #C0392B;
+}
+
+.quote-submit-btn {
+  margin-top: 2px;
+  border: none;
+  border-radius: var(--g-r-md);
+  padding: 16px 20px;
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: var(--g-primary);
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+  box-shadow: 0 8px 20px rgba(254, 179, 0, .32);
+  cursor: pointer;
+  transition: transform .14s ease, opacity .18s ease;
+
+  &:active { transform: scale(.985); }
+  &:disabled { opacity: .6; cursor: default; }
+}
+.quote-privacy {
+  margin: 0;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--g-text-faint);
+}
+
+/* Sent state — replaces the form entirely, so there is nothing left to submit
+   twice by accident. */
+.quote-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 34px 24px 30px;
+  text-align: center;
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-lg);
+  background: var(--g-surface);
+  box-shadow: var(--g-shadow-sm);
+  animation: g-pop .3s ease;
+}
+.done-tick {
+  display: grid;
+  place-items: center;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+  color: var(--g-primary);
+  box-shadow: 0 8px 20px rgba(254, 179, 0, .34);
+  svg { width: 28px; height: 28px; }
+}
+.done-title {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--g-text);
+}
+.done-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--g-text-soft);
+  max-width: 32ch;
+}
+.quote-ghost-btn {
+  margin-top: 6px;
+  border: 1.5px solid var(--g-border);
+  background: var(--g-surface);
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--g-text);
+  cursor: pointer;
+  &:active { background: var(--g-surface-2); }
+}
+
+/* ============ Bottom navigation (four destinations) ============ */
+.bottom-nav-bar {
+  position: fixed;
+  left: 12px; right: 12px;
+  bottom: calc(10px + var(--g-safe-bottom));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px;
+  border-radius: var(--g-r-xl);
+  background: linear-gradient(150deg, var(--g-primary-80) 0%, var(--g-primary) 62%);
+  box-shadow:
+    0 14px 34px rgba(23, 3, 56, .34),
+    0 4px 12px rgba(23, 3, 56, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
+  animation: g-fade-up .45s ease both;
+}
+.nav-tab-group {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+/* Gold capsule, sized to however many slots this link has: two on a dealer's,
+   four on the office's. */
+.nav-indicator {
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 50%;
+  border-radius: 20px;
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+  box-shadow: 0 4px 14px rgba(254, 179, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .45);
+  transition: transform .42s cubic-bezier(.34, 1.32, .48, 1);
+}
+.nav-tab-group[data-count="4"] .nav-indicator { width: 25%; }
+
+.nav-tab-group[data-active="1"] .nav-indicator { transform: translateX(100%); }
+.nav-tab-group[data-active="2"] .nav-indicator { transform: translateX(200%); }
+.nav-tab-group[data-active="3"] .nav-indicator { transform: translateX(300%); }
+
+.nav-tab-item {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 2px 7px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, .58);
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .26s ease;
+
+  .tab-icon {
+    width: 21px; height: 21px;
+    transition: transform .38s cubic-bezier(.34, 1.4, .64, 1);
+  }
+  .tab-label {
+    max-width: 100%;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: font-weight .2s ease;
+  }
+
+  &.active {
+    color: var(--g-primary);
+    .tab-icon { transform: translateY(-1px); }
+    .tab-label { font-weight: 800; }
+  }
+  &:active .tab-icon { transform: scale(.86); }
+}
+
+/* The badge has to hang off the icon, not the whole tab, or it lands beside
+   the label instead of on the trolley. */
+.tab-icon-wrap { position: relative; display: grid; place-items: center; }
+.tab-badge {
+  position: absolute;
+  top: -5px; right: -9px;
+  min-width: 17px; height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--g-gold);
+  color: var(--g-primary);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1;
+  display: grid; place-items: center;
+  border: 2px solid var(--g-primary);
+  box-shadow: 0 2px 8px rgba(254, 179, 0, .45);
+  animation: g-pop .3s ease;
+}
+/* On the selected tab the capsule is gold, so a gold badge would vanish. */
+.nav-tab-item.active .tab-badge {
+  background: var(--g-primary);
+  color: var(--g-gold);
+  border-color: rgba(255, 255, 255, .6);
+}
+
+/* ============ Added-to-list toast ============ */
+.added-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(84px + var(--g-safe-bottom));
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 40px);
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: var(--g-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(23, 3, 56, .34);
+  animation: g-fade-up .24s ease;
+  pointer-events: none;
+
+  .toast-tick { width: 16px; height: 16px; flex-shrink: 0; color: var(--g-gold); }
+  span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* ============ Image lightbox ============ */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(23,3,56,.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  animation: g-fade-in .2s ease;
+}
+.lightbox-card {
+  position: relative;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: g-pop .3s ease;
+}
+.close-lightbox {
+  position: absolute;
+  top: -14px; right: -6px;
+  width: 40px; height: 40px;
+  border: none;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 24px;
+  color: var(--g-text);
+  cursor: pointer;
+  box-shadow: var(--g-shadow-md);
+  z-index: 2;
+}
+.lightbox-img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: var(--g-r-lg);
+  background: #fff;
+  box-shadow: var(--g-shadow-lg);
+}
+.lightbox-title { color: #fff; font-size: 15px; font-weight: 700; text-align: center; }

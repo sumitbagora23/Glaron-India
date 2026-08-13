@@ -52,7 +52,7 @@
           <div class="order-card-header order-clickable" (click)="toggleOrder(order.id)">
             <div class="order-id-group">
               <span class="order-id-text">
-                #{{ order.id }}
+                {{ orderRef(order.id) }}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="expand-chevron" [class.rotated]="isExpanded(order.id)">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
                 </svg>

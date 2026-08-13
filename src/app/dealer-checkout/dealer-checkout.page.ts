@@ -7,6 +7,8 @@ import { OrderService } from '../admin/order.service';
 import { DealerService, Dealer } from '../admin/dealer.service';
 import { DealerI18nService } from '../dealer-i18n.service';
 import { DealerAuthService } from '../dealer-auth.service';
+import { ActivityLogService } from '../admin/activity-log.service';
+import { orderRefLabel } from '../order-ref';
 
 export interface CheckoutCartItem {
   id: string;
@@ -45,12 +47,14 @@ export class DealerCheckoutPage implements OnInit {
   cartItems: CheckoutCartItem[] = [];
   isSubmitting = false;
   orderSuccessId = '';
+  orderSuccessDate = '';
 
   // Static checkout UI strings, translated the same way as the catalog page.
   private readonly translations: Record<string, { en: string; hi: string }> = {
     checkout: { en: 'Checkout', hi: 'चेकआउट' },
     orderConfirmed: { en: 'Order Confirmed', hi: 'ऑर्डर पुष्ट हुआ' },
     orderRefId: { en: 'Order reference ID:', hi: 'ऑर्डर संदर्भ आईडी:' },
+    orderDate: { en: 'Order date:', hi: 'ऑर्डर दिनांक:' },
     backToHome: { en: 'Back to Home', hi: 'होम पर वापस जाएँ' },
     orderSummary: { en: 'Order Summary', hi: 'ऑर्डर सारांश' },
     emptyCart: { en: 'Your cart is empty.', hi: 'आपका कार्ट खाली है।' },
@@ -80,7 +84,8 @@ export class DealerCheckoutPage implements OnInit {
     private orderService: OrderService,
     private dealerService: DealerService,
     public i18n: DealerI18nService,
-    private dealerAuth: DealerAuthService
+    private dealerAuth: DealerAuthService,
+    private activity: ActivityLogService
   ) {}
 
   get lang(): 'en' | 'hi' {
@@ -187,8 +192,18 @@ export class DealerCheckoutPage implements OnInit {
   }
 
   removeItem(index: number) {
+    const removed = this.cartItems[index];
     this.cartItems.splice(index, 1);
     this.saveCartSession();
+    if (removed) {
+      this.activity.log('cart-remove', `Removed ${removed.name} at checkout`, {
+        productId: removed.id,
+        productName: removed.name,
+        sku: removed.sku || removed.id,
+        ...(removed.variantInfo ? { variant: removed.variantInfo } : {}),
+        qty: removed.quantity
+      });
+    }
   }
 
   private saveCartSession() {
@@ -230,6 +245,9 @@ export class DealerCheckoutPage implements OnInit {
       totalPrice: it.totalPrice
     }));
 
+    // Kept for the success screen, which shows the date next to the reference.
+    const orderDate = new Date().toISOString();
+
     // Add Order to Firestore & OrderService
     this.orderService.addOrder({
       id: orderId,
@@ -237,7 +255,7 @@ export class DealerCheckoutPage implements OnInit {
       location: location,
       value: this.grandTotal,
       stage: 'Order Received',
-      date: new Date().toISOString(),
+      date: orderDate,
       itemsCount: this.totalQuantity,
       items: orderLineItems,
       state: this.deliveryState,
@@ -248,6 +266,19 @@ export class DealerCheckoutPage implements OnInit {
       source: 'dealer'
     });
 
+    // Record it before the cart is emptied, so the entry can name what was in it.
+    this.activity.log('order-placed', `Placed ${orderRefLabel(orderId)}`, {
+      orderId,
+      qty: this.totalQuantity,
+      amount: this.grandTotal,
+      // A readable summary of the basket, trimmed so a 30-line order doesn't
+      // turn the console's activity row into a wall of text.
+      detail: orderLineItems
+        .slice(0, 6)
+        .map(i => `${i.name}${i.variant ? ' (' + i.variant + ')' : ''} ×${i.quantity}`)
+        .join(', ') + (orderLineItems.length > 6 ? ` +${orderLineItems.length - 6} more` : '')
+    });
+
     // Clear Cart
     sessionStorage.removeItem('glaron_checkout_cart');
     this.cartItems = [];
@@ -255,7 +286,13 @@ export class DealerCheckoutPage implements OnInit {
     setTimeout(() => {
       this.isSubmitting = false;
       this.orderSuccessId = orderId;
+      this.orderSuccessDate = orderDate;
     }, 600);
+  }
+
+  /** Short order label, e.g. `ORD - 417` — same number the admin console shows. */
+  orderRef(id: string): string {
+    return orderRefLabel(id);
   }
 
   goToCatalog() {

@@ -125,7 +125,13 @@ function broadcastMessage(app, { id, title, body, path, imageUrl }) {
       notification: {
         title,
         body,
-        icon: app.icon,
+        // The picture doubles as the icon when there is one, so a thumbnail of
+        // it shows while the notification is still COLLAPSED — the big picture
+        // below only appears once expanded, and without this nothing hints that
+        // there is anything to expand. Falls back to the app logo otherwise.
+        icon: imageUrl || app.icon,
+        // Left as the app logo either way: this is the small monochrome glyph
+        // in the status bar, where a photo would be unreadable.
         badge: app.icon,
         // Drawn as the big picture inside the expanded notification on
         // Android/Chrome; platforms without support just ignore it.
@@ -159,13 +165,18 @@ exports.sendDealerNotification = onDocumentCreated('notifications/{id}', async (
   // Which screen a tap opens, once per app: the two lay their tabs out
   // differently, so the admin panel resolves the chosen tab for each and writes
   // both paths onto the document.
+  // Named recipients, if the admin picked any. An absent or empty list means
+  // everyone on that side — see fanOutToTokens.
+  const asPhoneList = (value) => (Array.isArray(value) ? value : []);
+
   const sends = [];
   if (audience === 'dealer' || audience === 'both') {
     sends.push({
       who: 'dealer',
       collection: TOKENS_COLLECTION,
       app: { origin: DEALER_ORIGIN, icon: '/assets/icon/icon-192.png' },
-      path: safePath(n.url, '/dealer/catalog')
+      path: safePath(n.url, '/dealer/catalog'),
+      onlyPhones: asPhoneList(n.dealerPhones)
     });
   }
   if (audience === 'agent' || audience === 'both') {
@@ -175,37 +186,76 @@ exports.sendDealerNotification = onDocumentCreated('notifications/{id}', async (
       // Same origin and same icon as above — it is literally the same installed
       // app; only the panel behind the link and the token collection differ.
       app: { origin: DEALER_ORIGIN, icon: '/assets/icon/icon-192.png' },
-      path: safePath(n.agentUrl, '/agent/panel')
+      path: safePath(n.agentUrl, '/agent/panel'),
+      onlyPhones: asPhoneList(n.agentPhones)
     });
   }
 
   for (const s of sends) {
-    const sent = await fanOutToTokens(s.collection, () =>
-      broadcastMessage(s.app, { id, title, body, path: s.path, imageUrl })
+    const sent = await fanOutToTokens(
+      s.collection,
+      () => broadcastMessage(s.app, { id, title, body, path: s.path, imageUrl }),
+      s.onlyPhones
     );
+    const scope = s.onlyPhones.length
+      ? `${s.onlyPhones.length} named ${s.who}(s)`
+      : `all ${s.who}s`;
     if (!sent) {
-      logger.info(`No ${s.who} tokens registered; nothing to send.`);
+      // With a recipient list this is the ordinary case for someone who has
+      // never opened the app or granted notifications — worth logging plainly,
+      // because from the admin's side it looks like the message vanished.
+      logger.info(`No ${s.who} device matched (${scope}); nothing sent for ${id}.`);
       continue;
     }
-    logger.info(`Notification ${id} pushed to ${sent} ${s.who} device(s).`);
+    logger.info(`Notification ${id} pushed to ${sent} ${s.who} device(s) (${scope}).`);
   }
 });
 
 /**
- * Fan a message out to every token in a collection, pruning dead ones.
+ * Reduce a mobile number to the ten digits it is matched on.
+ *
+ * Mirrors normalisePhone() in the apps' notification.service.ts. The number on
+ * a token document was written by the device from what the user typed at
+ * sign-in, while the one in a recipient list came from the dealer/agent record
+ * the admin ticked — so the two only line up once spaces, dashes and any +91
+ * country code are stripped.
+ */
+function normalisePhone(value) {
+  const digits = String(value == null ? '' : value).replace(/\D/g, '');
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+/**
+ * Fan a message out to the tokens in a collection, pruning dead ones.
  *
  * `build(tokens)` returns the multicast message for one chunk. Returns the
  * number of tokens attempted so the caller can log it.
+ *
+ * `onlyPhones` limits the send to devices whose stored mobile is in that list.
+ * Passing an empty list (or nothing) means every device in the collection,
+ * which is what an untargeted broadcast wants and what every notification
+ * written before targeting existed produces.
  */
-async function fanOutToTokens(collectionName, build) {
+async function fanOutToTokens(collectionName, build, onlyPhones) {
   const db = admin.firestore();
   const snap = await db.collection(collectionName).get();
+
+  // Named recipients are matched in memory rather than with a `where ... in`
+  // query: that operator caps out at 30 values, and these collections hold one
+  // small document per device, so reading them whole costs little.
+  const wanted = new Set((onlyPhones || []).map(normalisePhone).filter(Boolean));
 
   // Map each token back to its doc id so dead ones can be pruned afterwards.
   const entries = [];
   snap.forEach((d) => {
-    const t = (d.data() || {}).token;
-    if (t) entries.push({ docId: d.id, token: t });
+    const data = d.data() || {};
+    const t = data.token;
+    if (!t) return;
+    // A device whose number isn't on the list — or that never recorded one, so
+    // it can't be shown to be on it — is skipped. Failing closed keeps one
+    // dealer's message off another dealer's phone.
+    if (wanted.size && !wanted.has(normalisePhone(data.mobile))) return;
+    entries.push({ docId: d.id, token: t });
   });
 
   if (!entries.length) return 0;
@@ -246,6 +296,22 @@ async function fanOutToTokens(collectionName, build) {
 }
 
 /**
+ * Short order label, e.g. `ORD - 417`. Same FNV-1a hash of the document id the
+ * apps use (src/app/order-ref.ts), so the push names the order by exactly the
+ * number the admin will see on the orders screen.
+ */
+function orderRefLabel(id) {
+  const key = String(id || '');
+  if (!key) return 'ORD - 000';
+  let h = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return `ORD - ${100 + (Math.abs(h) % 900)}`;
+}
+
+/**
  * Tell the admin when a dealer places an order.
  *
  * Fires on every new `orders/{id}` document and pushes to every device
@@ -278,7 +344,7 @@ exports.notifyAdminOnNewOrder = onDocumentCreated(`${ORDERS_COLLECTION}/{id}`, a
   const detail = [items, amount].filter(Boolean).join(' · ');
 
   const title = 'New order received';
-  const body = `${dealer} placed order ${id}${detail ? ` — ${detail}` : ''}`;
+  const body = `${dealer} placed ${orderRefLabel(id)}${detail ? ` — ${detail}` : ''}`;
   // Deep-link straight to the orders screen of the admin PWA.
   const path = '/admin/orders';
   const link = ADMIN_ORIGIN + path;

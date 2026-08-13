@@ -7,6 +7,7 @@ import { SearchService } from '../search.service';
 import { OrderService, Order, OrderStage, OrderItemLine, normalizeStage } from '../order.service';
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { DealerService, Dealer } from '../dealer.service';
+import { orderRefLabel } from '../order-ref';
 
 interface StageDef {
   key: OrderStage;
@@ -120,6 +121,11 @@ export class OrdersPage implements OnInit {
   // state) whenever a Firestore snapshot replaces the orders array.
   trackByOrderId(_index: number, order: Order): string {
     return order.id;
+  }
+
+  /** Short order label, e.g. `ORD - 417` — the same number the dealer sees. */
+  orderRef(id: string): string {
+    return orderRefLabel(id);
   }
 
   get filteredOrders(): Order[] {

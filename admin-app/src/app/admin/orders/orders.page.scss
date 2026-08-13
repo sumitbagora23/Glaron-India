@@ -788,7 +788,10 @@
     white-space: nowrap;
   }
 
+  /* The id column stacks the reference over the date it was placed. */
+  .col-id { display: flex; flex-direction: column; gap: 2px; }
   .order-id { font-weight: 700; color: #170338; }
+  .order-date { font-size: 12px; font-weight: 500; color: #64748B; }
   .dealer-name { font-weight: 600; }
   .col-location { color: #64748B; }
   .col-items { color: #64748B; }

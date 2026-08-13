@@ -7,6 +7,7 @@ import { DealerAuthService } from '../dealer-auth.service';
 import { DealerApprovalService } from '../dealer-approval.service';
 import { AgentAuthService } from '../agent-auth.service';
 import { NotificationService } from '../admin/notification.service';
+import { ActivityLogService } from '../admin/activity-log.service';
 import { APP_VERSION } from '../version';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -37,7 +38,8 @@ export class DealerLoginPage implements OnInit, OnDestroy {
     private dealerAuth: DealerAuthService,
     private agentAuth: AgentAuthService,
     private approval: DealerApprovalService,
-    private notifications: NotificationService
+    private notifications: NotificationService,
+    private activity: ActivityLogService
   ) {
     // The instant the admin approves this device's pending dealer, surface the
     // "approval accepted" banner live — the dealer doesn't need to reload.
@@ -157,6 +159,12 @@ export class DealerLoginPage implements OnInit, OnDestroy {
           // Firestore writes (orders, profile edits) need an authenticated
           // caller; take the anonymous session now that they're in.
           this.dealerAuth.ensureFirebaseSession();
+          // The session key is set above, but the actor is passed explicitly so
+          // the very first entry carries the name from the record we just
+          // matched rather than waiting on a lookup.
+          this.activity.log('sign-in', 'Signed in', {
+            role: 'dealer', phone: mobile, name: result.dealer?.name || ''
+          });
           this.successMessage = 'Signed in successfully!';
           this.router.navigate(['/dealer/catalog']);
           break;
@@ -180,6 +188,9 @@ export class DealerLoginPage implements OnInit, OnDestroy {
           break;
 
         case 'wrong-password':
+          this.activity.log('sign-in-failed', 'Sign-in failed', {
+            role: 'dealer', phone: mobile, detail: 'Wrong password'
+          });
           this.errorMessage = 'Incorrect password. Please try again, or tap "Forgot password?" for help.';
           break;
 
@@ -207,6 +218,9 @@ export class DealerLoginPage implements OnInit, OnDestroy {
       case 'ok':
         this.agentAuth.persistSession(mobile, remember);
         this.agentAuth.ensureFirebaseSession();
+        this.activity.log('sign-in', 'Signed in', {
+          role: 'agent', phone: mobile, name: result.agent?.name || ''
+        });
         this.successMessage = 'Signed in successfully!';
         this.router.navigate(['/agent/panel']);
         break;
@@ -216,6 +230,9 @@ export class DealerLoginPage implements OnInit, OnDestroy {
         break;
 
       case 'wrong-password':
+        this.activity.log('sign-in-failed', 'Sign-in failed', {
+          role: 'agent', phone: mobile, detail: 'Wrong password'
+        });
         this.errorMessage = 'Incorrect password. Please try again, or tap "Forgot password?" for help.';
         break;
 

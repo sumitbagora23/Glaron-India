@@ -6,6 +6,7 @@ import { IonContent } from '@ionic/angular/standalone';
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { DealerService, Dealer } from '../dealer.service';
 import { OrderService, Order, OrderItemLine } from '../order.service';
+import { orderRefLabel } from '../order-ref';
 
 interface CartLine {
   productId: string;
@@ -69,6 +70,16 @@ export class OrderComposePage implements OnInit {
 
   get dealerName(): string {
     return this.mode === 'add' ? (this.existingOrder?.dealer || '') : this.dealer;
+  }
+
+  /** Date the order was placed — shown next to its reference in the subtitle. */
+  get orderDate(): string {
+    return this.existingOrder?.date || '';
+  }
+
+  /** Short order label, e.g. `ORD - 417` — the same number the dealer sees. */
+  orderRef(id: string): string {
+    return orderRefLabel(id);
   }
 
   get dealerOptions(): Dealer[] {

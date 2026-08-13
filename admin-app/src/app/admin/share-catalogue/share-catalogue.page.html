@@ -1,0 +1,64 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Share Catalogue</h2>
+        <p class="page-subtitle">Glaron's own catalogue link — the one that can take quotation requests.</p>
+      </div>
+    </div>
+
+    <section class="share-card">
+      <span class="share-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.684 13.342a3 3 0 100-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684zm0-12.632a3 3 0 105.368-2.684 3 3 0 00-5.368 2.684z" />
+        </svg>
+      </span>
+
+      <h3 class="share-title">Send the catalogue</h3>
+      <p class="share-text">
+        Shares a branded card with the catalogue link written into the message,
+        ready to drop into any chat.
+      </p>
+
+      <button class="primary-btn" (click)="shareLink()" [disabled]="sharing">
+        <span>{{ sharing ? 'Sharing…' : 'Share with card' }}</span>
+      </button>
+
+      <p class="share-note" *ngIf="shareNote">{{ shareNote }}</p>
+
+      <p class="share-help">
+        Phones and tablets open their share sheet. Most desktop browsers have
+        none, and there the link is copied to your clipboard instead.
+      </p>
+    </section>
+
+    <section class="explain-grid">
+      <div class="explain-card office">
+        <span class="explain-tag">This link</span>
+        <h3 class="explain-title">Customers can ask for a price</h3>
+        <p class="explain-text">
+          Whoever opens it can build a list of what they want and send it in as a
+          quotation request, or upload a quote they already hold for you to beat.
+          Both land in <strong>Quotations</strong>.
+        </p>
+      </div>
+
+      <div class="explain-card dealer">
+        <span class="explain-tag">Dealer &amp; agent links</span>
+        <h3 class="explain-title">Catalogue only</h3>
+        <p class="explain-text">
+          When a dealer or agent shares the catalogue, their customer sees the
+          range and nothing else — no list, no quotation request. That customer
+          is theirs, and the sale stays with them.
+        </p>
+      </div>
+    </section>
+
+    <p class="price-note">
+      No link shows a price. A rate belongs to a dealer account, and nobody
+      opening a shared link is signed in to one.
+    </p>
+
+  </main>
+</ion-content>
