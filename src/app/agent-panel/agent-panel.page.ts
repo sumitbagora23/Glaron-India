@@ -5,6 +5,7 @@ import { IonContent } from '@ionic/angular/standalone';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
+import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch } from '../product-spec-tabs';
 import { CategoryService, Category } from '../admin/category.service';
 import { SettingsService } from '../admin/settings.service';
 import { AgentService, Agent } from '../agent.service';
@@ -46,6 +47,13 @@ import { APP_VERSION } from '../version';
   ]
 })
 export class AgentPanelPage implements OnInit, OnDestroy {
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
   readonly appVersion = APP_VERSION;
 
   // The scroll container, so switching tabs resets the view to the top rather
@@ -102,6 +110,10 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     // Which of the three prices the cards show is this person's own choice,
     // kept on this device against their mobile number.
     this.pricePrefs.use(this.agentAuth.getSession());
+    // The details printed under a shared post belong to THIS account, not to
+    // whoever used the app on this device before — one shared slot meant a post
+    // sent from here went out under the other panel's name and number.
+    this.shareBusiness.useAccount('agent', this.agentAuth.getSession() || '');
     this.applyTabFromQuery();
     // Bind this device to the agent side of the broadcast machinery: it
     // registers in the agent token collection and shows only what the admin
@@ -415,6 +427,53 @@ export class AgentPanelPage implements OnInit, OnDestroy {
     return this.categoryService.categories;
   }
 
+  // ---- The fixed catalogue bar ----
+
+  // Which category the list is narrowed to, however it was reached: the
+  // Products tab's own filter, or a category opened from the Home grid.
+  get activeCategory(): string {
+    return this.activeTab === 'home' && this.homeCategory ? this.homeCategory : this.selectedCategory;
+  }
+
+  // The categories open in a sheet over the page, laid out as the Home
+  // browser lays them out, so the bar itself stays one line.
+  categorySheetOpen = false;
+
+  openCategorySheet() {
+    this.categorySheetOpen = true;
+  }
+
+  closeCategorySheet() {
+    this.categorySheetOpen = false;
+  }
+
+  // Whether there is a category to clear. "All Categories" is not a filter,
+  // it is the absence of one, so it shows no cross.
+  get hasCategoryFilter(): boolean {
+    return !this.isCategoryOn('All Categories');
+  }
+
+  // The filter's cross, the twin of the one in the search field.
+  clearCategory() {
+    this.pickCategory('All Categories');
+  }
+
+  isCategoryOn(name: string): boolean {
+    return this.activeCategory.trim().toLowerCase() === name.trim().toLowerCase();
+  }
+
+  // Every category is one tap away from anywhere in the catalogue: picking
+  // one lands on the single product list, narrowed to it. "All Categories"
+  // hands back the whole range, which is where a dealer who already knows the
+  // fitting starts.
+  pickCategory(name: string) {
+    this.categorySheetOpen = false;
+    this.selectedCategory = name;
+    this.homeCategory = null;
+    this.activeTab = 'products';
+    this.scrollTop();
+  }
+
   private get filteredProducts(): Product[] {
     let list = this.products;
 
@@ -423,25 +482,29 @@ export class AgentPanelPage implements OnInit, OnDestroy {
       list = list.filter(p => this.productCategories(p).some(c => c.toLowerCase() === target));
     }
 
-    const q = this.searchQuery.trim().toLowerCase();
-    if (q) {
-      list = list.filter(p =>
-        (p.name || '').toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q) ||
-        (p.description || '').toLowerCase().includes(q) ||
-        (p.variants || []).some(v => this.getVariantLabel(v).toLowerCase().includes(q))
-      );
-    }
+    return this.searchIn(list);
+  }
 
-    return list;
+  // What the search field narrows a list to. Lifted out of the filter above so
+  // a category opened from Home is searched exactly the same way — the bar over
+  // it carries the same field.
+  private searchIn(list: Product[]): Product[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q) ||
+      (p.variants || []).some(v => this.getVariantLabel(v).toLowerCase().includes(q))
+    );
   }
 
   get displayedProducts(): Product[] {
     if (this.activeTab === 'home' && this.homeCategory) {
       const target = this.homeCategory.trim().toLowerCase();
-      return this.products.filter(p =>
+      return this.searchIn(this.products.filter(p =>
         this.productCategories(p).some(c => c.toLowerCase() === target)
-      );
+      ));
     }
     return this.filteredProducts;
   }
@@ -477,6 +540,75 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   // Build a label from whatever descriptors the variant has: wattage, type,
   // dimension, colour and (per-)meter.
+  // ---- Wattage tabs ----
+  // The wattages read as small tabs across the card. The open one lists every
+  // light colour this product is sold in, priced per shade, and the ⓘ beside
+  // its name opens the size, the cut-out and the rest of the sheet. A product
+  // whose variants carry no wattage and no dimension has no tabs at all.
+  private specTabState = new SpecTabState();
+  trackBySpecTab = this.specTabState.trackByKey;
+  trackByColour = (_: number, colour: string) => colour;
+
+  specTabs(product: Product): SpecTab[] {
+    return this.specTabState.tabs(product);
+  }
+
+  openSpecTab(product: Product): SpecTab | null {
+    return this.specTabState.openTab(product);
+  }
+
+  isSpecTabOpen(product: Product, tab: SpecTab): boolean {
+    return this.specTabState.isOpen(product, tab);
+  }
+
+  selectSpecTab(tab: SpecTab) {
+    this.specTabState.toggle(tab);
+  }
+
+  /** The ⓘ sheet of the open option: dimension, cut-out and the rest. */
+  specRows(tab: SpecTab): SpecDetail[] {
+    return specDetails(tab.variant);
+  }
+
+  isSpecSheetOpen(product: Product): boolean {
+    return this.specTabState.isSheetOpen(product);
+  }
+
+  toggleSpecSheet(product: Product) {
+    this.specTabState.toggleSheet(product);
+  }
+
+  // The light colours the admin picked, for this option or — with no option,
+  // or one that carries none of its own — for the product.
+  productLightColours(product: Product, variant?: ProductVariant): string[] {
+    return orderableLightColours(product, variant);
+  }
+
+  // Only the name of the light is shown — no swatch, no colour temperature.
+
+  /**
+   * What an option costs in a given shade.
+   *
+   * A price set against a colour IS the price of that colour — it replaces the
+   * option's price rather than adding to it. What the admin typed is a *catalog*
+   * price though, so the agent's own rate still has to come off it. Without that
+   * a shade priced by hand quietly showed full MRP while every other shade of
+   * the same product carried the discount.
+   *
+   * `base` is the option at the agent's rate and `catalogBase` is the same option
+   * at catalog price, so the ratio between them is exactly that rate — a blanket
+   * discount, or a hand-typed line rate — and applying it to the colour keeps the
+   * same discount whichever shade is picked. In the MRP view the two are equal,
+   * the ratio is 1, and the colour shows its catalog price untouched.
+   */
+  colourPrice(base: number, product: Product, colour: string, catalogBase?: number, variant?: ProductVariant): number {
+    // The option's own price for the shade wins over the product's.
+    const own = lightColourCatalogPrice(product, colour, variant);
+    if (!own || own <= 0) return base;
+    if (!catalogBase || catalogBase <= 0 || !isFinite(base)) return own;
+    return Math.round(own * (base / catalogBase));
+  }
+
   getVariantLabel(variant: ProductVariant): string {
     const parts: string[] = [];
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);

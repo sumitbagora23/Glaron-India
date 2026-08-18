@@ -12,6 +12,17 @@ export interface ProductVariant {
   packing?: string;
   price?: number;
   pricePerMtr?: number;
+  // The shades THIS option is sold in, when they differ from the product's.
+  // Left out when the option is sold in whatever the product is sold in, so an
+  // untouched variant keeps following `Product.lightColours` below. A variant
+  // that carries ["No Colour"] is one option in the range with no shade to
+  // choose, even though its siblings have one.
+  lightColours?: string[];
+  // What one shade costs on THIS option, when it is not the option's own price
+  // ({ "Warm White": 325 }). Same rule as `Product.lightColourPrice`: it is the
+  // price of that colour, not a surcharge. A colour with no entry here falls
+  // back to the product's price for it, then to the option's own price.
+  lightColourPrice?: { [colour: string]: number };
 }
 
 export interface Product {
@@ -25,12 +36,27 @@ export interface Product {
   // product. Until it is set the catalogue assignment wins; afterwards an
   // admin's own edit sticks, so re-assigning categories by hand still works.
   categoryV2?: boolean;
+  // Set once the 1 July 2026 price list has been applied to the stored product.
+  // The seed below only fills in a product that has no options at all, so a
+  // document seeded before that sheet keeps the old packing counts, gate-light
+  // dimensions and headline price forever without this one-time refresh.
+  priceList2026?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
   previewType: 'panel' | 'street' | 'bulb' | 'curve';
   image?: string;
   description?: string;
+  // Light colours this product can be ordered in ("Warm White", "Cool White",
+  // ...). Picked by the admin on the product form; the catalogue cards show
+  // them behind each wattage / dimension tab.
+  lightColours?: string[];
+  // What one shade costs, when it is not the option's own price
+  // ({ "Warm White": 325 }). This is the price of that colour, not a
+  // surcharge on top of it: the card and the cart show exactly this number.
+  // A colour with no entry is sold at the option's own price, so this stays
+  // empty unless a shade is genuinely priced differently.
+  lightColourPrice?: { [colour: string]: number };
   variants?: ProductVariant[];
 }
 
@@ -100,7 +126,7 @@ export class ProductService {
         "wattage": "7W",
         "dimension": "70*50",
         "cutout": "65",
-        "bodyColour": "BK/WH + RG/GBK",
+        "bodyColour": "BK/WH + RG | GBK | MW | MB",
         "packing": "40",
         "price": 580
       },
@@ -109,7 +135,7 @@ export class ProductService {
         "wattage": "12W",
         "dimension": "85*65",
         "cutout": "80",
-        "bodyColour": "BK/WH + RG/GBK",
+        "bodyColour": "BK/WH + RG | GBK | MW | MB",
         "packing": "40",
         "price": 720
       },
@@ -118,7 +144,7 @@ export class ProductService {
         "wattage": "18W",
         "dimension": "95*75",
         "cutout": "90",
-        "bodyColour": "BK/WH + RG/GBK",
+        "bodyColour": "BK/WH + RG | GBK | MW | MB",
         "packing": "20",
         "price": 1030
       }
@@ -131,7 +157,7 @@ export class ProductService {
     "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 670,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-GEM-5.webp",
     "description": "TM TM. Gem. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 73×61 mm / 85×67 mm / 93×73 mm. 65 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38° / 38°. >80. Aluminium. BK / WH. GBK / RG. 2 YEARS",
@@ -365,7 +391,7 @@ export class ProductService {
     "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 665,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-MOVA-15.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W / 30W. 85×40 mm / 108×50 mm / 135×80 mm / 150×100 mm. 80 mm / 100 mm / 120 mm / 132 mm. 3000k / 4000k / 6500k. No. 38°/60°. >80. Aluminium. White. N/A. TM. Movable",
@@ -399,7 +425,7 @@ export class ProductService {
         "wattage": "24W",
         "dimension": "135*80",
         "cutout": "120",
-        "packing": "20",
+        "packing": "10",
         "price": 1520
       },
       {
@@ -458,7 +484,7 @@ export class ProductService {
     "categories": ["COB"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 110,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-SPOT-18.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 1W / 2W / 3W. N/A. 25 mm / 32 mm / 28 mm. 3000k / 4000k / 6500k. No. N/A. >80. Polycarbonate / Aluminium. WH / BK / RG. N/A. TM. Spot",
@@ -496,7 +522,7 @@ export class ProductService {
     "categories": ["Down Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 710,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-DEEP-19.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 18W / 24W. 120 mm / 155 mm / 175 mm. 110 mm / 145 mm / 170 mm. 3000k / 4000k / 6500k. No. N/A. >80. Aluminium. White / Black. N/A. TM. Deep Downlight",
@@ -534,7 +560,7 @@ export class ProductService {
     "categories": ["Down Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 850,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-NEXU-20.webp",
     "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W. 85×45 mm / 100×48 mm / 130×48 mm. 75 mm / 92 mm / 120 mm /140 mm. 3000k / 4000k / 6500k. Available. N/A. >80. Aluminium. WH / BK. WH/ SB / RG / MB /MW. Nexus Pro",
@@ -622,7 +648,7 @@ export class ProductService {
     "categories": ["Concealed"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 140,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-CONC-23.webp",
     "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 108×53 mm. 70 mm. 3000K / 4000K. No. N/A. >80. Polycarbonate. White. N/A. Concealed",
@@ -672,7 +698,7 @@ export class ProductService {
     "categories": ["Track Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 210,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-TRAC-24.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Track channel. 10W / 20W / 30W. 50×125 mm / 65×150 mm / 75×180 mm. N/A. 3000k / 4000k / 6500k. No. N/A. >80. Aluminium. Black / White. 1M / 2M. TM. Tracklight",
@@ -743,7 +769,7 @@ export class ProductService {
     "categories": ["Cylinder"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 1050,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-STRE-26.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 35 × 35 × 120 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. N/A. Aluminium Die-casting. PKW / BK. N/A. TM. Streak",
@@ -797,7 +823,7 @@ export class ProductService {
     "categories": ["Cylinder"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 740,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-CYLI-28.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 60×70 mm / 73×85 mm / 87×100 mm. N/A. 3000k / 4000k / 6500k. No. 34°. >80. Aluminium. BK / WH. MB / MW / GBK / RG. TM. Cylinder",
@@ -854,7 +880,7 @@ export class ProductService {
     "categories": ["Striker"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 106,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-STRI-30.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 5W / 3W. 58×14 mm / 62×18 mm. N/A. 3000k. No. N/A. >80. Metal / Polycarbonate. Black / White. N/A. TM. Striker",
@@ -882,7 +908,7 @@ export class ProductService {
     "categories": ["Panel"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 350,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-SLIM-31.webp",
     "description": "2 YEARS. UNIFORM ILLUMINATION.. EFFORTLESS COMFORT.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 15W / 22W. 120 mm / 170 mm / 225 mm. 105 mm / 155 mm / 205 mm. 3000K / 4000K / 6500K. No. 110°. Metal. White. N/A. TM. Slim Panel",
@@ -892,7 +918,7 @@ export class ProductService {
         "wattage": "8W",
         "dimension": "120",
         "cutout": "105-105",
-        "packing": "40",
+        "packing": "20",
         "price": 350
       },
       {
@@ -900,7 +926,7 @@ export class ProductService {
         "wattage": "15W",
         "dimension": "170",
         "cutout": "155-155",
-        "packing": "40",
+        "packing": "20",
         "price": 530
       },
       {
@@ -917,10 +943,10 @@ export class ProductService {
     "id": "GLR-SURF-32",
     "name": "Surface Panel",
     "category": "Panel, Surface",
-    "categories": ["Panel","Surface"],
+    "categories": ["Panel", "Surface"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 480,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-SURF-32.webp",
     "description": "2 YEARS. WHERE DESIGN MEETS LIGHT.. WHERE QUALITY LASTS.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 15W / 22W. 120 mm / 170 mm / 225 mm. N/A. 3000K / 4000K / 6500K. No. 110°. >80. Metal. White. N/A. TM. Surface Panel",
@@ -930,7 +956,7 @@ export class ProductService {
         "wattage": "8W",
         "dimension": "120",
         "cutout": "-",
-        "packing": "40",
+        "packing": "20",
         "price": 480
       },
       {
@@ -938,7 +964,7 @@ export class ProductService {
         "wattage": "15W",
         "dimension": "170",
         "cutout": "-",
-        "packing": "40",
+        "packing": "20",
         "price": 720
       },
       {
@@ -958,7 +984,7 @@ export class ProductService {
     "categories": ["Surface"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 430,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-TRIM-33.webp",
     "description": "2 YEARS. TM. MODERN FINISHES.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 20W. 120 mm / 150 mm. N/A. 3000K / 4000K / 6500K. No. 180°. >80. Polycarbonate / Metal. White / Black ( Metal ). N/A. Trimless Surface",
@@ -1024,7 +1050,7 @@ export class ProductService {
     "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 120,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-STRI-35.webp",
     "description": "2 YEARS. BUILT TO LAST.. Wattage. Dimension. Roll Length. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12V / 24V. 10MM. 5M. 3000K / 4000K / 6500K. N/A. N/A. >80. Pure copper / Aluminium Mix Copper. N/A. N/A. TM. Strip Light",
@@ -1054,7 +1080,7 @@ export class ProductService {
     "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 370,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-SMPS-36.webp",
     "description": "2 YEARS. RELIABLE POWER.. CONSISTENT PERFORMANCE.. Wattage. Ampere. Roll length. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12V / 24V. 3A / 5A / 10A / 16.7A / 25A. N/A. N/A. N/A. N/A. N/A. Aluminium. N/A. N/A. TM. SMPS",
@@ -1103,7 +1129,7 @@ export class ProductService {
     "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 104,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-ROPE-37.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. ~9W/MTR. 11 mm Thickness. N/A. 3000K / 4000K / 6500K / BLUE / GREEN / RED / AMBER / PINK /. ICE BLUE / MULTI. N/A. N/A. >80. PVC. N/A. N/A. TM. Rope Light",
@@ -1150,7 +1176,7 @@ export class ProductService {
     "categories": ["Rope & Striped Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 580,
+    "price": 140,
     "previewType": "panel",
     "image": "/assets/images/products/GLR-PROF-38.webp",
     "description": "2 YEARS. MODERN FINISHES.. Variants. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. CONCEALED / SURFACE / CORNER / ROUND. 1M / 2M / CUSTOM. 17mm | 12 mm. N/A. No. N/A. N/A. Aluminium / Silicon. Aluminium Finish / Black / White. N/A. TM. Profile",
@@ -1225,7 +1251,7 @@ export class ProductService {
     "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 650,
     "previewType": "street",
     "image": "/assets/images/products/GLR-KTYP-41.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 3W / 6W. 75×75×35 mm / 145×75×60 mm. N/A. 3000k. No. N/A. N/A. Die Cast Aluminium. Sand Black. IP65. TM. K-Type",
@@ -1255,7 +1281,7 @@ export class ProductService {
     "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 380,
     "previewType": "street",
     "image": "/assets/images/products/GLR-BALL-42.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 2W/ 4W. 65×65×55 mm / 74×74×44 mm. N/A. 3000k / Auto RGBP. No. N/A. >80. Aluminium / Polycarbonate. Black. IP65. TM. Ball Light",
@@ -1286,7 +1312,7 @@ export class ProductService {
       },
       {
         "model": "BALL LIGHT WW",
-        "type": "4WAY AUTO RDBP",
+        "type": "4WAY AUTO RGBP",
         "dimension": "74*74*44",
         "bodyColour": "BLACK",
         "packing": "20",
@@ -1301,7 +1327,7 @@ export class ProductService {
     "categories": ["Wall Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 360,
     "previewType": "street",
     "image": "/assets/images/products/GLR-CURV-43.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 2W / 4 W / 6 W. 75×87×38 mm / 90×104×43 mm / 88×161×43 mm. N/A. 3000k. No. N/A. >80. Polycarbonate. Matt Black. IP65. TM. Curve Wall",
@@ -1396,7 +1422,7 @@ export class ProductService {
     "categories": ["Foot Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 570,
     "previewType": "street",
     "image": "/assets/images/products/GLR-FOOT-47.webp",
     "description": "2 YEARS. Variants. Dimension. Fixture. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2M / 4M. 85×85 mm. Wall Concealed / Surface. 3000k. No. N/A. >80. Die Cast Aluminium. Black/White. N/A. TM. Foot Lights",
@@ -1405,7 +1431,7 @@ export class ProductService {
         "model": "FOOT LIGHT WW",
         "wattage": "4W",
         "dimension": "85*85",
-        "bodyColour": "BLACK",
+        "bodyColour": "BLACK | WHITE",
         "packing": "100",
         "price": 570
       }
@@ -1418,7 +1444,7 @@ export class ProductService {
     "categories": ["Spike"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 700,
     "previewType": "street",
     "image": "/assets/images/products/GLR-SPIK-48.webp",
     "description": "2 YEARS. TM. BEAUTIFULLY.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 50×70 mm / 70×80 mm. N/A. WW / WH / GREEN / RED / AMBER. No. Wide / Narrow. >80. Aluminium. Black. N/A. Spike",
@@ -1503,7 +1529,7 @@ export class ProductService {
     "categories": ["Flood"],
     "status": "In Stock",
     "stock": 100,
-    "price": 4500,
+    "price": 1500,
     "previewType": "street",
     "image": "/assets/images/products/GLR-GMFL-52.webp",
     "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 30W / 50W / 100W / 200W. 185×180×50 mm / 227×218×55 mm / 260×250×70 mm / 318×308×75 mm. N/A. 6500K. N/A. N/A. >80. Aluminium. Grey. IP66. GM Flood",
@@ -1545,7 +1571,7 @@ export class ProductService {
     "categories": ["Flood"],
     "status": "In Stock",
     "stock": 100,
-    "price": 4500,
+    "price": 1280,
     "previewType": "street",
     "image": "/assets/images/products/GLR-SLIM-53.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 50W / 100W. 230*155 mm / 275*185 mm. N/A. 6500K. No. N/A. >80. Aluminum. Grey. IP66. TM. Slim Flood",
@@ -1615,10 +1641,10 @@ export class ProductService {
     "id": "GLR-SOLA-56",
     "name": "Solar Street",
     "category": "Solar, Street",
-    "categories": ["Solar","Street"],
+    "categories": ["Solar", "Street"],
     "status": "In Stock",
     "stock": 100,
-    "price": 3200,
+    "price": 3400,
     "previewType": "street",
     "image": "/assets/images/products/GLR-SOLA-56.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 70W / 120W. 275×120×55 mm / 315×135×55 mm / 360×170×55 mm. N/A. 6500K. No. N/A. >80. Aluminium. Black. IP66. TM. Solar Street",
@@ -1646,7 +1672,7 @@ export class ProductService {
     "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 2160,
     "previewType": "street",
     "image": "/assets/images/products/GLR-AURA-57.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 24W. 258 × 258 × 267 mm. N/A. WW. N/A. N/A. >80. Polycarbonate. Black. N/A. TM. Aura Max",
@@ -1668,7 +1694,7 @@ export class ProductService {
     "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 1700,
     "previewType": "street",
     "image": "/assets/images/products/GLR-VIST-58.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 290 x 138 x 270 mm. N/A. WW. No. N/A. >80. Polycarbonate. Grey. N/A. TM. Vista",
@@ -1690,7 +1716,7 @@ export class ProductService {
     "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 1300,
     "previewType": "street",
     "image": "/assets/images/products/GLR-CUBE-59.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 150×150*150 mm. N/A. WW. No. N/A. >80. Polycarbonate. Black. N/A. TM. Cubex",
@@ -1698,9 +1724,10 @@ export class ProductService {
       {
         "model": "CUBE-X",
         "wattage": "20W",
-        "dimension": "150*150",
-        "packing": "18",
-        "price": 1300
+        "dimension": "151 * 151 * 145",
+        "packing": "12",
+        "price": 1300,
+        "type": "LED"
       }
     ]
   },
@@ -1711,7 +1738,7 @@ export class ProductService {
     "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 1140,
     "previewType": "street",
     "image": "/assets/images/products/GLR-CUBE-60.webp",
     "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 151 x 151 x 145 mm. N/A. WW. No. N/A. >80. Polycarbonate. Black. N/A. Cube",
@@ -1733,7 +1760,7 @@ export class ProductService {
     "categories": ["Street"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 900,
     "previewType": "street",
     "image": "/assets/images/products/GLR-MASH-61.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. Holder Based (No LED). 315×145×45 mm. N/A. According to LED bulb. No. N/A. N/A. Polycarbonate. Black. N/A. TM. Mashal",
@@ -1754,7 +1781,7 @@ export class ProductService {
     "categories": ["Gate Light"],
     "status": "In Stock",
     "stock": 100,
-    "price": 1850,
+    "price": 1640,
     "previewType": "street",
     "image": "/assets/images/products/GLR-FREE-62.webp",
     "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 275×120×55 mm. N/A. 3000k / 6500k. No. N/A. >80. Polycarbonate. Black. N/A. TM. Freedom",
@@ -1762,9 +1789,10 @@ export class ProductService {
       {
         "model": "FREEDOM",
         "wattage": "20W",
-        "dimension": "275*120*55",
-        "packing": "18",
-        "price": 1640
+        "dimension": "160 * 230 * 65",
+        "packing": "12",
+        "price": 1640,
+        "type": "LED"
       }
     ]
   },
@@ -1943,6 +1971,44 @@ export class ProductService {
     return true;
   }
 
+  // Every product whose options are printed on the 1 July 2026 price list.
+  // Anything outside it is left exactly as stored.
+  private static readonly PRICE_LIST_2026 = new Set([
+    'GLR-DELT-3', 'GLR-CURV-4', 'GLR-GEM-5', 'GLR-DELT-7', 'GLR-MOVA-15', 'GLR-SPOT-18',
+    'GLR-DEEP-19', 'GLR-NEXU-20', 'GLR-CONC-23', 'GLR-TRAC-24', 'GLR-STRE-26', 'GLR-CYLI-28',
+    'GLR-STRI-30', 'GLR-SLIM-31', 'GLR-SURF-32', 'GLR-TRIM-33', 'GLR-STRI-35', 'GLR-SMPS-36',
+    'GLR-ROPE-37', 'GLR-PROF-38', 'GLR-KTYP-41', 'GLR-BALL-42', 'GLR-CURV-43', 'GLR-FOOT-47',
+    'GLR-SPIK-48', 'GLR-GMFL-52', 'GLR-SLIM-53', 'GLR-SOLA-56', 'GLR-AURA-57', 'GLR-VIST-58',
+    'GLR-CUBE-59', 'GLR-CUBE-60', 'GLR-MASH-61', 'GLR-FREE-62',
+  ]);
+
+  // Brings the stored product back in line with the printed price list: the
+  // rate on every option, the packing count, the dimensions, and the headline
+  // price a quotation line falls back to. Only the sheet's own columns are
+  // copied — the shades an admin has put on an option, and what those shades
+  // cost, are carried across untouched, so this never undoes work done in the
+  // product form. An option list the admin has grown or trimmed is left alone
+  // entirely; only its headline price is corrected.
+  // Returns true when the document still needs the change saved.
+  private applyPriceList2026(p: Product): boolean {
+    if (p.priceList2026) return false;
+    if (!ProductService.PRICE_LIST_2026.has(p.id)) return false;
+    const defP = this.defaultProducts.find(dp => dp.id === p.id);
+    if (!defP) return false;
+    p.price = defP.price;
+    if (defP.variants && p.variants && p.variants.length === defP.variants.length) {
+      p.variants = defP.variants.map((dv, i) => {
+        const stored = p.variants![i] || {};
+        const merged: ProductVariant = { ...dv };
+        if (stored.lightColours) merged.lightColours = stored.lightColours;
+        if (stored.lightColourPrice) merged.lightColourPrice = stored.lightColourPrice;
+        return merged;
+      });
+    }
+    p.priceList2026 = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -1969,10 +2035,19 @@ export class ProductService {
           const remoteProducts: Product[] = [];
           snapshot.forEach(docSnap => {
             const p = docSnap.data() as Product;
-            // Variant definitions are authoritative from code (the catalog),
-            // so always refresh them from defaultProducts by id.
+            // Seed variants only onto a product that has none of its own.
+            //
+            // This used to overwrite p.variants from defaultProducts on every
+            // snapshot, on the reasoning that the catalogue in code was the
+            // authority. That stopped being true once the product form could
+            // edit variants: the admin's save reached Firestore intact, the
+            // snapshot for that very write came straight back, and this line
+            // replaced the edit with the seed again — so a variant change
+            // looked like it silently refused to save, and reappeared on
+            // refresh. The stored document wins now; the seed only fills in a
+            // product that predates having variants at all.
             const defP = this.defaultProducts.find(dp => dp.id === p.id);
-            if (defP && defP.variants) {
+            if (defP && defP.variants && !(p.variants && p.variants.length)) {
               p.variants = defP.variants;
             }
             if (defP && defP.image && this.isBundledProductImage(p.image)) {
@@ -1990,6 +2065,11 @@ export class ProductService {
             // has write access (the admin); dealers just render them and the
             // write fails harmlessly.
             if (this.applyCatalogueCategories(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // Same deal for the printed price list. Dealers apply it in memory
+            // on every load; the admin's client is the one that persists it.
+            if (this.applyPriceList2026(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
             remoteProducts.push(p);
@@ -2021,8 +2101,10 @@ export class ProductService {
         let parsed = JSON.parse(stored);
         // Merge variants from defaultProducts if missing or updated
         parsed = parsed.map((p: any) => {
+          // Same rule as the Firestore snapshot above: never clobber variants
+          // the admin has edited, only fill in a product that has none.
           const defP = this.defaultProducts.find(dp => dp.id === p.id);
-          if (defP && defP.variants) {
+          if (defP && defP.variants && !(p.variants && p.variants.length)) {
             p.variants = defP.variants;
           }
           if (defP && defP.image && this.isBundledProductImage(p.image)) {
@@ -2035,6 +2117,7 @@ export class ProductService {
           // ...and restore the catalogue categories on the cached copy, so the
           // list is right on first paint instead of after the Firestore sync.
           this.applyCatalogueCategories(p);
+          this.applyPriceList2026(p);
           return p;
         });
         return parsed;

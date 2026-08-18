@@ -102,7 +102,21 @@ ion-content {
   background: #FCF9F8;
   border-right: 1px solid #CBC4D0;
   z-index: 10;
+  /* Fourteen nav entries plus the footer button run past a laptop's viewport,
+     and the wrapper clips at 100vh — without this the last tabs simply could
+     not be reached. Scrolls only when it has to. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
+
+/* A scrollbar the sidebar can afford: visible while scrolling, invisible when
+   the list fits. */
+.sidebar-container::-webkit-scrollbar { width: 6px; }
+.sidebar-container::-webkit-scrollbar-thumb {
+  background: rgba(23, 3, 56, 0.18);
+  border-radius: 3px;
+}
+.sidebar-container::-webkit-scrollbar-track { background: transparent; }
 
 .brand-header {
   display: flex;
@@ -928,13 +942,241 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
 }
 
 /* ==========================================================================
-   Mobile page chrome (≤700px)
+   Admin list pages — one table, one card, one scroll model
 
-   Shared across every routed admin page. Page-specific work (turning the data
-   tables into cards) lives in each page's own SCSS — routed pages are outside
-   the layout component's style scope, so anything shared has to be here.
+   Every list tab in the console (products, categories, dealers, agents, orders,
+   banners, notifications, quotations, posts, logs) renders the same table
+   inside the same card. The rules live here rather than in each page's SCSS so
+   the tabs cannot drift apart again: a page's own file should only describe
+   what is peculiar to its columns.
+
+   Scroll model — the PAGE scrolls, never the card. The card must not clip or
+   shrink: as a flex child of .content-canvas an `overflow: hidden` lets
+   flexbox squash it to the viewport and the rows below the fold disappear.
+   Tables too wide for the canvas go in a .table-scroll-container, which takes
+   the sideways scroll on itself and leaves the page's vertical scroll alone.
    ========================================================================== */
-@media (max-width: 700px) {
+
+.table-section-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: visible;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  thead tr {
+    height: 44px;
+    background: #F8F9FA;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  th {
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #170338;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #E2E8F0;
+    transition: background-color 0.15s ease;
+
+    &:hover { background-color: rgba(248, 249, 250, 0.5); }
+    &.last-row-border { border-bottom: none; }
+  }
+
+  td {
+    padding: 10px 16px;
+    vertical-align: middle;
+  }
+}
+
+/* Actions always sit on the right of the row and read as links, not buttons. */
+.th-actions,
+.td-actions { text-align: right; }
+
+.actions-group {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.row-action-btn,
+.edit-btn,
+.delete-btn,
+.view-btn {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+
+  svg { width: 14px; height: 14px; }
+}
+
+/* Colour says what the action does; the shape stays the same everywhere. */
+.edit-btn,
+.row-action-btn.is-gold {
+  color: #7E5700;
+  &:hover { background: rgba(254, 179, 0, 0.08); color: #614300; }
+}
+
+.view-btn,
+.row-action-btn.is-ink {
+  color: #170338;
+  &:hover { background: rgba(23, 3, 56, 0.06); }
+}
+
+.row-action-btn.is-blue {
+  color: #2563EB;
+  &:hover { background: rgba(37, 99, 235, 0.08); color: #1D4ED8; }
+}
+
+.row-action-btn.is-green {
+  color: #0F9B72;
+  &:hover { background: rgba(16, 185, 129, 0.1); color: #0A7355; }
+}
+
+.delete-btn,
+.row-action-btn.is-danger {
+  color: #DC2626;
+  &:hover { background: rgba(220, 38, 38, 0.08); color: #991B1B; }
+}
+
+.td-empty {
+  padding: 32px 16px;
+  text-align: center;
+  font-family: 'Outfit';
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+/* Row count strip under a table. */
+.table-pagination-footer {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  width: 100%;
+  background: #F8F9FA;
+  border-top: 1px solid #E2E8F0;
+  border-radius: 0 0 8px 8px;
+}
+
+.summary-text {
+  font-family: 'Outfit';
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.2px;
+  color: #49454E;
+}
+
+/* Status pill with a dropdown inside it (dealers, agents, orders). */
+.status-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #E2E8F0;
+  background: #F1F5F9;
+  max-width: 100%;
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #94A3B8;
+  }
+
+  select {
+    border: none;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 13px;
+    color: #1C1B1B;
+    max-width: 100%;
+  }
+
+  &.status-active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.25);
+    .status-dot { background: #10B981; }
+    select { color: #0F9B72; }
+  }
+
+  &.status-inactive {
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(148, 163, 184, 0.3);
+    .status-dot { background: #94A3B8; }
+    select { color: #64748B; }
+  }
+}
+
+/* ==========================================================================
+   Mobile page chrome (≤900px)
+
+   Shared across every routed admin page, including turning the data tables
+   into one card per row — routed pages are outside the layout component's
+   style scope, so anything shared has to be here.
+
+   Same breakpoint as the shell drawer (MOBILE_QUERY in admin-layout): the
+   moment the sidebar stops being a fixed column, the pages inside it go
+   compact. They used to part ways at 700px, which left 701–900px showing a
+   drawer shell wrapped around desktop tables — dealers (880px), agents
+   (1000px) and orders (880px) all had to be read by scrolling sideways.
+
+   Each page's own stylesheet carries the companion `min-width: 0` for its
+   table at this same width. That cannot live here: component styles are
+   emitted with an `[_ngcontent-*]` attribute and out-specify a bare global
+   selector, so a table's desktop floor width would survive this block and
+   every card would render at its desktop width. Move the two together.
+   ========================================================================== */
+@media (max-width: 900px) {
   .content-canvas {
     padding: 16px 14px 28px;
     gap: 16px;
@@ -971,12 +1213,120 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
 
   /* Cards lose their desktop insets so content keeps its width. */
   .table-section-card {
-    padding: 0;
+    padding: 10px;
     border-radius: 12px;
   }
 
+  /* A wide table stops being wide down here — it becomes cards. */
   .table-scroll-container {
     overflow-x: visible;
+  }
+
+  /* ------------------------------------------------------------------
+     Table → one card per row.
+
+     No column count survives a 375px screen, and dropping columns hides
+     the fields an admin came to read. Each row reflows into a card
+     instead: the cells stack, every cell that needs one carries its
+     column heading in `data-label`, and the actions sit across the
+     bottom where they stay tappable.
+     ------------------------------------------------------------------ */
+  .inventory-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    border-collapse: separate;
+
+    thead { display: none; }
+    tbody { display: block; }
+  }
+
+  .inventory-table tbody tr {
+    display: block;
+    /* Overrides any fixed desktop row height. */
+    height: auto;
+    padding: 12px;
+    margin: 0 0 10px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background: #FFFFFF;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  /* The `[class]` is load-bearing, not decoration.
+
+     Every page sizes its desktop columns with rules like
+     `.th-status, .td-status { width: 13%; }`. Angular compiles those with an
+     `[_ngcontent-*]` attribute, making them two-weight selectors, so a plain
+     `.inventory-table td` (one class, one element) loses to them — and the
+     desktop column width survived into card mode. A status cell kept 13% of
+     the card and rendered 39px wide on a 375px screen; an address kept 18%
+     and wrapped one word per line. Matching the attribute here puts this
+     rule at the same weight and, being the more specific of the two, it
+     wins. Pages no longer need to reset each column by hand.
+
+     `.td-preview` is re-widened just below and must stay after this. */
+  .inventory-table td[class] {
+    display: block;
+    width: 100%;
+    padding: 4px 0;
+    border: none;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  /* Re-creates the heading the <thead> used to carry. */
+  .inventory-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94A3B8;
+  }
+
+  /* A thumbnail column sits beside the text rather than above it. */
+  .inventory-table .td-preview {
+    float: left;
+    width: auto;
+    margin: 0 12px 6px 0;
+    padding: 0;
+  }
+
+  .inventory-table .td-actions {
+    clear: both;
+    text-align: left;
+    padding: 12px 0 0;
+    margin-top: 6px;
+    border-top: 1px solid #F1F5F9;
+
+    .actions-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+    }
+
+    button {
+      flex: 1 1 auto;
+      justify-content: center;
+      /* Apple's minimum comfortable touch target. */
+      min-height: 44px;
+    }
+  }
+
+  .inventory-table .td-empty {
+    text-align: center;
+    padding: 24px 8px;
+  }
+
+  .table-pagination-footer {
+    margin-top: 4px;
+    border-radius: 10px;
+    border-top: none;
   }
 
   /* Anything still laid out for a desktop width scrolls rather than clips. */
@@ -992,4 +1342,77 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   textarea {
     font-size: 16px;
   }
+}
+
+/* ==========================================================================
+   Touch targets
+
+   Keyed off a coarse pointer rather than a width: these controls are only
+   hard to hit when the pointer is a fingertip, and a narrow desktop window
+   is still driven by a mouse. Everything below measured under 32px tall on a
+   phone, against the 44px both Apple and Google ask for.
+
+   Only the box grows. Font size, colour and the pill shapes are left alone,
+   so nothing here changes how the console looks on a desktop.
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  /* A <select> only opens from the select itself — padding on the pill around
+     it is dead space — so the height has to go on the control. */
+  .status-select-wrap select,
+  .status-filter-box select,
+  .status-filter-select {
+    min-height: 44px;
+  }
+
+  /* The pills these sit in are sized by their content; let them follow. */
+  .status-select-wrap,
+  .status-filter-box {
+    min-height: 44px;
+  }
+
+  /* Chip pickers (notification audience/target, and anything reusing them). */
+  .target-chip {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* A phone number in a table cell is a tel: link — the row it sits in is the
+     card, so it gets a real hit box without becoming a button. */
+  .mobile-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  /* Small inline actions that never got a minimum: "view", "fill remaining",
+     and the icon-only row buttons. */
+  .view-btn,
+  .fill-remaining-btn,
+  .row-delete-btn {
+    min-height: 40px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Light colour swatch
+   The small box of colour drawn before every light colour name — catalogue
+   cards, the product form's picker, the Light Colours page. The colour itself
+   comes from the name through lightColourSwatch() and is bound inline, so all
+   that is set here is the shape and the border a near-white shade needs to be
+   seen against the card. It sits INSIDE the name element, so a row that spaces
+   its name and price apart is not given a third thing to space.
+   -------------------------------------------------------------------------- */
+.lc-swatch {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  margin-right: 7px;
+  vertical-align: -1px;
+  background-color: #e2e8f0;
+  background-size: cover;
+  border: 1px solid rgba(15, 23, 42, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }

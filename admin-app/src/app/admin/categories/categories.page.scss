@@ -1,4 +1,6 @@
-/* Categories list page */
+/* Categories list page
+   The card, table, row buttons and the mobile card treatment are the console's
+   shared list styling — see "Admin list pages" in global.scss. */
 
 .add-product-btn {
   display: flex;
@@ -29,60 +31,6 @@
   line-height: 20px;
   letter-spacing: 0.14px;
   color: #FFFFFF;
-}
-
-/* Table card */
-.table-section-card {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0px;
-  width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: visible;
-  flex-shrink: 0;
-  margin-bottom: 16px;
-}
-
-.inventory-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-
-  thead tr {
-    height: 44px;
-    background: #F8F9FA;
-    border-bottom: 1px solid #E2E8F0;
-  }
-
-  th {
-    padding: 10px 16px;
-    font-family: 'Outfit';
-    font-weight: 700;
-    font-size: 12px;
-    line-height: 16px;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    color: #170338;
-  }
-
-  tbody tr {
-    height: 60px;
-    border-bottom: 1px solid #E2E8F0;
-    transition: background-color 0.15s ease;
-
-    &:hover { background-color: rgba(248, 249, 250, 0.5) !important; }
-    &.last-row-border { border-bottom: none; }
-  }
-
-  td {
-    padding: 6px 16px;
-    vertical-align: middle;
-  }
 }
 
 .td-preview { width: 72px; }
@@ -126,122 +74,13 @@
   color: #170338;
 }
 
-.th-actions,
-.td-actions { text-align: right; }
+@media (max-width: 900px) {
+  .td-preview { width: auto; }
 
-.actions-group {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
-  justify-content: flex-end;
-}
-
-.edit-btn,
-.delete-btn {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.edit-btn {
-  color: #7E5700;
-  &:hover { background: rgba(254, 179, 0, 0.08); color: #614300; }
-}
-
-.delete-btn {
-  color: #DC2626;
-  &:hover { background: rgba(220, 38, 38, 0.08); color: #991B1B; }
-}
-
-.edit-icon,
-.delete-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.td-empty {
-  padding: 32px 16px;
-  text-align: center;
-  font-family: 'Outfit';
-  font-size: 14px;
-  color: #94A3B8;
-}
-
-/* ==========================================================================
-   Mobile: one card per category (≤700px)
-
-   Same treatment as the product table — thumbnail, name, then full-width
-   actions — so the Edit/Delete buttons don't fall off the right edge.
-   ========================================================================== */
-@media (max-width: 700px) {
-  .inventory-table {
-    display: block;
-    width: 100%;
-
-    thead { display: none; }
-    tbody { display: block; }
+  .td-preview .product-preview-box {
+    width: 56px;
+    height: 56px;
   }
 
-  .inventory-table tbody tr {
-    display: grid;
-    /* Overrides the fixed desktop row height. */
-    height: auto;
-    grid-template-columns: 56px minmax(0, 1fr);
-    grid-template-areas:
-      "preview name"
-      "actions actions";
-    align-items: center;
-    gap: 8px 12px;
-    padding: 12px;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    background: #FFFFFF;
-    margin: 0 0 10px;
-  }
-
-  .inventory-table td {
-    display: block;
-    padding: 0;
-    border: none;
-    min-width: 0;
-  }
-
-  .td-preview { grid-area: preview; }
-
-  .td-name {
-    grid-area: name;
-    font-size: 15px;
-    font-weight: 600;
-    word-break: break-word;
-  }
-
-  .td-actions {
-    grid-area: actions;
-    padding-top: 10px;
-    border-top: 1px solid #F1F5F9;
-
-    .actions-group {
-      display: flex;
-      gap: 8px;
-      width: 100%;
-    }
-
-    button {
-      flex: 1 1 0;
-      justify-content: center;
-      min-height: 44px;
-    }
-  }
+  .td-name .product-name { font-size: 15px; }
 }

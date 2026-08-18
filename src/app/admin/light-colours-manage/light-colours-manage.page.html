@@ -1,0 +1,140 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <!-- Page Header -->
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Light Colours</h2>
+        <p class="page-subtitle">The shades a product can be sold in. Everything listed here is what the Light Colour picker on a product offers.</p>
+      </div>
+
+      <button class="back-btn" (click)="goBack()">
+        <svg class="back-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span class="back-btn-text">Done</span>
+      </button>
+    </div>
+
+    <!-- Add a new shade -->
+    <section class="add-colour-card">
+      <label class="field-label" for="lc-new">Add a Light Colour</label>
+      <div class="add-row">
+        <input
+          id="lc-new"
+          type="text"
+          class="text-input"
+          placeholder="e.g. Amber White"
+          [(ngModel)]="newName"
+          [class.input-error]="addError"
+          (keyup.enter)="addColour()"
+        />
+        <button type="button" class="add-product-btn" (click)="addColour()" [disabled]="busy">
+          <svg class="btn-plus-white-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="btn-text-white">Add Light Colour</span>
+        </button>
+      </div>
+      <span class="error-text" *ngIf="addError">{{ addError }}</span>
+      <span class="input-hint-text">The name is what a dealer sees on the product card, so write it the way you sell it.</span>
+    </section>
+
+    <!-- Result of the last add / rename / delete -->
+    <div class="notice-banner" *ngIf="notice">{{ notice }}</div>
+    <div class="save-error-banner" *ngIf="saveError">{{ saveError }}</div>
+
+    <!-- The full list -->
+    <section class="table-section-card">
+      <table class="inventory-table compact">
+        <thead>
+          <tr>
+            <th class="th-order">Order</th>
+            <th class="th-name">Light Colour</th>
+            <th class="th-used">Used On</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let colour of colours; let last = last; trackBy: trackByColourId" [class.last-row-border]="last">
+
+            <!-- Order Cell -->
+            <td class="td-order" data-label="Order">
+              <div class="order-group">
+                <button class="order-btn" (click)="move(colour, -1)" [disabled]="busy || isFirst(colour)" title="Move up">
+                  <svg class="order-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+                <button class="order-btn" (click)="move(colour, 1)" [disabled]="busy || isLast(colour)" title="Move down">
+                  <svg class="order-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+
+            <!-- Name Cell (turns into a rename box) -->
+            <td class="td-name" data-label="Light Colour">
+              <ng-container *ngIf="editingId !== colour.id">
+                <span class="colour-name"><span class="lc-swatch" [style.background]="swatch(colour.name)"></span>{{ colour.name }}</span>
+              </ng-container>
+
+              <div class="rename-box" *ngIf="editingId === colour.id">
+                <input
+                  type="text"
+                  class="text-input"
+                  [(ngModel)]="editingName"
+                  [class.input-error]="editError"
+                  (keyup.enter)="saveEdit(colour)"
+                  (keyup.escape)="cancelEdit()"
+                />
+                <span class="error-text" *ngIf="editError">{{ editError }}</span>
+              </div>
+            </td>
+
+            <!-- Product count Cell -->
+            <td class="td-used" data-label="Used On">
+              <span class="used-count" [class.unused]="productCount(colour.name) === 0">
+                {{ productCount(colour.name) }} product{{ productCount(colour.name) === 1 ? '' : 's' }}
+              </span>
+            </td>
+
+            <!-- Actions Cell -->
+            <td class="td-actions">
+              <div class="actions-group" *ngIf="editingId !== colour.id">
+                <button class="edit-btn" (click)="startEdit(colour)" [disabled]="busy"
+                        title="Rename">
+                  <svg class="edit-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <span class="edit-btn-text">Edit</span>
+                </button>
+                <button class="delete-btn" (click)="deleteColour(colour)" [disabled]="busy"
+                        title="Delete light colour">
+                  <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span class="delete-btn-text">Delete</span>
+                </button>
+              </div>
+
+              <div class="actions-group" *ngIf="editingId === colour.id">
+                <button class="save-inline-btn" (click)="saveEdit(colour)" [disabled]="busy">Save</button>
+                <button class="cancel-inline-btn" (click)="cancelEdit()" [disabled]="busy">Cancel</button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="colours.length === 0">
+            <td colspan="4" class="td-empty">
+              No light colours yet. Add the first one above.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</ion-content>

@@ -82,21 +82,22 @@ export class DealerPricingPage implements OnInit {
 
   loadPricingData() {
     const products = this.productService.products;
-    const customPrices = this.currentDealer?.customPrices || {};
-    const storageKey = `dealer_prices_${this.dealerId}`;
-    let savedPrices: Record<string, number> = { ...customPrices };
+    let savedPrices: Record<string, number> = { ...(this.currentDealer?.customPrices || {}) };
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        savedPrices = { ...savedPrices, ...parsed };
+    // localStorage only stands in for a dealer record that hasn't synced — it is
+    // never merged on top of one that has. Older builds cached every product's
+    // price there, and letting that copy win would re-pin lines the dealer
+    // record has since released back to the catalog.
+    if (Object.keys(savedPrices).length === 0) {
+      try {
+        const stored = localStorage.getItem(`dealer_prices_${this.dealerId}`);
+        if (stored) savedPrices = { ...JSON.parse(stored) };
+      } catch (e) {
+        console.error('Error loading custom pricing from localStorage', e);
       }
-    } catch (e) {
-      console.error('Error loading custom pricing from localStorage', e);
     }
 
-    const mult = this.currentDealer?.multiplier || 1.0;
+    const mult = this.effectiveMultiplier;
 
     this.pricingGroups = products.map(product => {
       const rows: PricingRow[] = [];
@@ -126,6 +127,40 @@ export class DealerPricingPage implements OnInit {
     if (variant.pricePerMtr) parts.push('per mtr');
     if (parts.length === 0) parts.push(variant.model || 'Variant');
     return parts.join(' · ');
+  }
+
+  /**
+   * The rate that will be saved: the discount box when it holds a usable
+   * percentage, otherwise the rate already on the dealer's record.
+   */
+  private get effectiveMultiplier(): number {
+    const pct = this.discountPercent;
+    return (pct !== null && pct >= 0 && pct <= 100)
+      ? (100 - pct) / 100
+      : (this.currentDealer?.multiplier || 1.0);
+  }
+
+  /** What a line shows when it simply follows the catalog at the blanket rate. */
+  discountedPrice(row: PricingRow): number {
+    return Math.round(row.catalogPrice * this.effectiveMultiplier);
+  }
+
+  /**
+   * True when the line carries a hand-typed rate rather than the blanket
+   * discount. Only these get written to the dealer record; every other line is
+   * left to be recomputed from the catalog, so a later price edit in Products
+   * reaches the dealer at the same discount. A blank or nonsense box counts as
+   * following the catalog rather than pinning them to Rs. 0.
+   */
+  isPinned(row: PricingRow): boolean {
+    const typed = Number(row.customPrice);
+    if (!isFinite(typed) || typed <= 0) return false;
+    return Math.round(typed) !== this.discountedPrice(row);
+  }
+
+  /** Drop a line's typed rate so it tracks the catalog again. */
+  followCatalog(row: PricingRow) {
+    row.customPrice = this.discountedPrice(row);
   }
 
   applyDiscount() {
@@ -158,15 +193,18 @@ export class DealerPricingPage implements OnInit {
 
     this.isLoading = true;
     const storageKey = `dealer_prices_${this.dealerId}`;
+    const mult = this.effectiveMultiplier;
     const pricingMap: Record<string, number> = {};
 
+    // Only hand-typed rates are written down. A line still sitting at the blanket
+    // discount is left out on purpose: the dealer panel recomputes that line from
+    // whatever the catalog says at the time, so editing a price in Products
+    // reaches the dealer at the same discount instead of the amount frozen here.
     this.pricingGroups.forEach(group => {
       group.rows.forEach(row => {
-        pricingMap[row.key] = row.customPrice;
+        if (this.isPinned(row)) pricingMap[row.key] = Math.round(Number(row.customPrice));
       });
     });
-
-    const mult = this.discountPercent !== null ? (100 - this.discountPercent) / 100 : (this.currentDealer?.multiplier || 1.0);
 
     // Save to DealerService & Firestore
     const targetId = this.currentDealer?.id || this.dealerId;

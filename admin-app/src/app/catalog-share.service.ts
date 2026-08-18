@@ -29,6 +29,12 @@ export class CatalogShareService {
     'The Glaron India lighting catalogue — designer lights, profiles and fixtures, ' +
     'the whole range in one place. Open it here:';
 
+  /** The caption for the area-wise link, which asks for something different. */
+  private readonly AREA_CAPTION =
+    'The Glaron India lighting catalogue — pick your areas (kitchen, lobby, ' +
+    'bedroom…), fill each one with the lights you want, and send it over for a ' +
+    'quotation. Open it here:';
+
   /**
    * Marks a link the Glaron office shared itself.
    *
@@ -47,9 +53,28 @@ export class CatalogShareService {
    */
   private readonly OFFICE_PREFIX = 'q-';
 
+  /**
+   * Marks the office's area-wise link.
+   *
+   * It is the office link plus one thing: the customer names the rooms of their
+   * job — kitchen, lobby, master bedroom — and fills each one with products, so
+   * what arrives is a list per area rather than one flat list. Everything the
+   * plain office link can do, this can do as well, which is why `isOfficeRef`
+   * below answers for it too.
+   *
+   * Same rule as the office prefix: the '-' is what makes it safe to test for,
+   * and a base-36 hash can never begin with 'qa-' by accident.
+   */
+  private readonly AREA_PREFIX = 'qa-';
+
   /** True when this link came from the office, so it may ask for a quotation. */
   isOfficeRef(ref: string): boolean {
-    return (ref || '').startsWith(this.OFFICE_PREFIX);
+    return (ref || '').startsWith(this.OFFICE_PREFIX) || this.isAreaRef(ref);
+  }
+
+  /** True when the link is the area-wise one, which carries the extra tab. */
+  isAreaRef(ref: string): boolean {
+    return (ref || '').startsWith(this.AREA_PREFIX);
   }
 
   /** Stable per-account code. Falls back to a generic one with no seed. */
@@ -109,21 +134,33 @@ export class CatalogShareService {
     return `${this.origin(origin)}/${this.OFFICE_PREFIX}${this.linkCode(seed)}`;
   }
 
+  /** The office's area-wise link: the quotation flow, plus the Areas tab. */
+  areaLinkFor(seed: string, origin?: string): string {
+    return `${this.origin(origin)}/${this.AREA_PREFIX}${this.linkCode(seed)}`;
+  }
+
   /**
    * Hands the card and the link to the device share sheet, falling back to the
    * link alone and then to the clipboard.
    */
-  async share(seed: string, opts?: { office?: boolean; origin?: string }): Promise<CatalogShareOutcome> {
-    const url = opts?.office
-      ? this.officeLinkFor(seed, opts?.origin)
-      : this.linkFor(seed, opts?.origin);
-    const caption = `${this.CAPTION}\n${url}`;
+  async share(seed: string, opts?: { office?: boolean; area?: boolean; origin?: string }): Promise<CatalogShareOutcome> {
+    const url = opts?.area
+      ? this.areaLinkFor(seed, opts?.origin)
+      : opts?.office
+        ? this.officeLinkFor(seed, opts?.origin)
+        : this.linkFor(seed, opts?.origin);
+    const caption = opts?.area
+      ? `${this.AREA_CAPTION}\n${url}`
+      : `${this.CAPTION}\n${url}`;
     const nav = navigator as any;
 
-    // Preferred path: the branded card with the link as its caption.
+    // Preferred path: the branded card with the link as its caption. Each link
+    // has its own card — the plain one advertises the range, the area-wise one
+    // advertises planning a job room by room, which is a different offer and
+    // should not arrive looking like the same message twice.
     let file: File | null = null;
     try {
-      file = await this.buildCard();
+      file = opts?.area ? await this.buildAreaCard() : await this.buildCard();
     } catch (e) {
       console.warn('Catalogue share: could not draw the card', e);
     }
@@ -140,7 +177,11 @@ export class CatalogShareService {
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Glaron India Catalogue', text: this.CAPTION, url });
+        await navigator.share({
+          title: 'Glaron India Catalogue',
+          text: opts?.area ? this.AREA_CAPTION : this.CAPTION,
+          url
+        });
         return 'shared';
       } catch (e: any) {
         // Dismissing the sheet is not an error worth reporting.
@@ -184,6 +225,161 @@ export class CatalogShareService {
       canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/jpeg', 0.92);
     });
     return new File([blob], 'glaron-catalogue.jpg', { type: 'image/jpeg' });
+  }
+
+  /**
+   * The area-wise card.
+   *
+   * Same ground and the same mark as the card above — it is the same brand
+   * arriving — but what is drawn over it is a plan rather than a pendant: four
+   * rooms with a light lit in each, which is exactly what the link asks the
+   * customer to do. Somebody scrolling a chat should be able to tell the two
+   * messages apart without reading either.
+   */
+  private async buildAreaCard(): Promise<File> {
+    try { await (document as any).fonts?.ready; } catch (e) {}
+
+    const canvas = document.createElement('canvas');
+    canvas.width = this.W;
+    canvas.height = this.H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('canvas unavailable');
+
+    this.drawBackground(ctx);
+    this.drawPlan(ctx);
+    await this.drawAreaLogo(ctx);
+    this.drawAreaCopy(ctx);
+    this.drawFrame(ctx);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/jpeg', 0.92);
+    });
+    return new File([blob], 'glaron-catalogue-areas.jpg', { type: 'image/jpeg' });
+  }
+
+  /**
+   * The plan: four rooms in gold hairline, each one lit and named.
+   *
+   * Drawn rather than photographed because the names are the point — "KITCHEN",
+   * "LIVING", "BEDROOM", "LOBBY" is the whole instruction the link carries, and
+   * anyone who has ever wired a house reads it at a glance.
+   */
+  private drawPlan(ctx: CanvasRenderingContext2D) {
+    const X = 176, Y = 168, W = 728, H = 344;
+    const split = 312;   // where the top row divides
+    const row = 208;     // where the two rows divide
+    const lower = 400;   // where the bottom row divides
+
+    const rooms = [
+      { x: X,           y: Y,       w: split,     h: row,     name: 'KITCHEN' },
+      { x: X + split,   y: Y,       w: W - split, h: row,     name: 'LIVING' },
+      { x: X,           y: Y + row, w: lower,     h: H - row, name: 'BEDROOM' },
+      { x: X + lower,   y: Y + row, w: W - lower, h: H - row, name: 'LOBBY' }
+    ];
+
+    ctx.save();
+
+    // A lit pool in each room, laid down first so the walls sit over it.
+    ctx.globalCompositeOperation = 'lighter';
+    for (const room of rooms) {
+      const cx = room.x + room.w / 2;
+      const cy = room.y + room.h * 0.38;
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(room.w, room.h) * 0.78);
+      glow.addColorStop(0, 'rgba(255,214,122,.34)');
+      glow.addColorStop(0.45, 'rgba(254,179,0,.10)');
+      glow.addColorStop(1, 'rgba(254,179,0,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(room.x, room.y, room.w, room.h);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+
+    // The walls. The outer wall is heavier than the partitions, the way a plan
+    // is actually drawn.
+    ctx.strokeStyle = 'rgba(254,179,0,.62)';
+    ctx.lineWidth = 4;
+    this.roundRect(ctx, X, Y, W, H, 16);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(254,179,0,.32)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(X + split, Y + 14);      ctx.lineTo(X + split, Y + row - 14);
+    ctx.moveTo(X + 14, Y + row);        ctx.lineTo(X + W - 14, Y + row);
+    ctx.moveTo(X + lower, Y + row + 14); ctx.lineTo(X + lower, Y + H - 14);
+    ctx.stroke();
+
+    // The fitting itself in each room, and the room's name under it.
+    for (const room of rooms) {
+      const cx = room.x + room.w / 2;
+      const cy = room.y + room.h * 0.38;
+
+      ctx.fillStyle = '#fff7e2';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,231,168,.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 19, 0, Math.PI * 2);
+      ctx.stroke();
+
+      this.drawTracked(ctx, room.name, cx, room.y + room.h * 0.78, `700 21px ${this.FONT}`, 4, 'rgba(255,255,255,.82)');
+    }
+
+    ctx.restore();
+  }
+
+  /** The mark, sized to leave the plan room to breathe. */
+  private async drawAreaLogo(ctx: CanvasRenderingContext2D) {
+    const { W } = this;
+    try {
+      const logo = await this.loadImage('assets/glaron-logo-white.png');
+      const width = Math.round(W * 0.34);
+      const height = Math.round((logo.height / logo.width) * width);
+      ctx.drawImage(logo, Math.round((W - width) / 2), 566, width, height);
+    } catch (e) {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `800 66px ${this.FONT}`;
+      ctx.fillText('GLARON', W / 2, 660);
+      ctx.restore();
+    }
+
+    this.drawTracked(ctx, 'THE AREA-WISE CATALOGUE', W / 2, 810, `700 24px ${this.FONT}`, 7, '#FEB300');
+  }
+
+  /** Headline, the line that explains it, and the call to action. */
+  private drawAreaCopy(ctx: CanvasRenderingContext2D) {
+    const { W } = this;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+
+    ctx.shadowColor = 'rgba(254,179,0,.35)';
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `800 84px ${this.FONT}`;
+    ctx.fillText('Light it', W / 2, 908);
+    ctx.fillText('room by room.', W / 2, 1003);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#FEB300';
+    ctx.fillRect(W / 2 - 55, 1048, 110, 4);
+
+    ctx.fillStyle = 'rgba(255,255,255,.78)';
+    ctx.font = `500 33px ${this.FONT}`;
+    // Two lines, deliberately. A third would run into the pill below it.
+    this.wrap(
+      ctx,
+      'Name every area, fill each one from the Glaron range, and get one quotation back.',
+      W / 2, 1116, W - 280, 46
+    );
+
+    ctx.restore();
+
+    this.drawCta(ctx, 1204, 'Plan your areas  →');
   }
 
   /** The unlit room the lamps hang in: deep purple, darkest at the corners. */
@@ -374,8 +570,8 @@ export class CatalogShareService {
   }
 
   /** Gold pill: the one thing the card is asking anyone to do. */
-  private drawCta(ctx: CanvasRenderingContext2D, top: number) {
-    const label = 'Open the catalogue  →';
+  private drawCta(ctx: CanvasRenderingContext2D, top: number, text?: string) {
+    const label = text || 'Open the catalogue  →';
     const font = `700 38px ${this.FONT}`;
 
     ctx.save();

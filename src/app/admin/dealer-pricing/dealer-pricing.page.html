@@ -75,7 +75,7 @@
           </div>
           
           <div class="card-body-inputs">
-            <p class="section-instruction-text">Enter a discount percentage to bulk apply to all catalog prices. You can still manually adjust prices afterwards.</p>
+            <p class="section-instruction-text">Enter a discount percentage and apply it across the catalog. Lines left at that rate keep following the catalog, so a later price change in Products reaches this dealer at the same discount. Type over a line to fix it at that exact amount instead.</p>
             <div class="calculator-row">
               <div class="calc-input-wrapper">
                 <input 
@@ -121,8 +121,21 @@
                 <div class="pricing-item-row" *ngFor="let row of group.rows">
                   <div class="product-info-wrap">
                     <span class="variant-name-txt">{{ row.variantLabel || 'Standard' }}</span>
-                    <span class="product-catalog-price">Catalog: Rs. {{ row.catalogPrice | number:'1.0-0' }}</span>
+                    <span class="product-catalog-price">
+                      Catalog: Rs. {{ row.catalogPrice | number:'1.0-0' }}
+                      <span class="rate-tag" *ngIf="!isPinned(row)">follows catalog</span>
+                      <span class="rate-tag rate-tag-fixed" *ngIf="isPinned(row)">fixed rate</span>
+                    </span>
                   </div>
+
+                  <button
+                    type="button"
+                    class="follow-catalog-btn"
+                    *ngIf="isPinned(row)"
+                    (click)="followCatalog(row)"
+                    title="Drop the fixed amount so this line follows the catalog price at the discount">
+                    Follow catalog
+                  </button>
 
                   <div class="price-input-container">
                     <span class="currency-symbol">Rs.</span>

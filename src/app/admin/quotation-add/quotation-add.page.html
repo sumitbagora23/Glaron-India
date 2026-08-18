@@ -1,0 +1,130 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item" (click)="done()" style="cursor:pointer;">{{ quoteRef }}</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Add Products</span>
+    </div>
+
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Add Products</h2>
+        <p class="page-subtitle">Every tap goes straight onto {{ quoteRef }}.</p>
+      </div>
+      <button class="qa-done-top" (click)="done()">Done</button>
+    </div>
+
+    <div class="qa-controls">
+      <div class="qa-field">
+        <label>Search products</label>
+        <input type="text" class="qa-input" [(ngModel)]="productSearch"
+               placeholder="Search by name, code or category" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="qa-products-grid">
+      <div class="qa-card" *ngFor="let product of products; trackBy: trackByProductId">
+        <div class="qa-card-head">
+          <div class="qa-media" [class.no-image]="!product.image">
+            <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" alt="Product" loading="lazy" decoding="async" />
+            <span *ngIf="!product.image" class="qa-no-img">No Image</span>
+          </div>
+          <div class="qa-card-info">
+            <span class="qa-cat" *ngIf="product.category">{{ product.category }}</span>
+            <h4 class="qa-name">{{ product.name }}</h4>
+            <p class="qa-code">{{ product.id }}</p>
+          </div>
+        </div>
+
+        <div class="qa-pricing">
+          <!-- Wattage · dimension as tabs, and under the open one every shade
+               with its own quantity — the same card the catalogue link shows. -->
+          <ng-container *ngIf="specTabs(product).length; else qaPlain">
+            <div class="qa-tab-row">
+              <button type="button" class="qa-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
+                      [class.is-open]="isSpecTabOpen(product, tab)" (click)="selectSpecTab(tab)">
+                <span>{{ tab.label }}</span>
+                <span class="qa-tab-qty" *ngIf="tabTotalQty(product, tab) > 0">{{ tabTotalQty(product, tab) }}</span>
+              </button>
+            </div>
+
+            <div class="qa-tab-panel" *ngIf="openSpecTab(product) as tab">
+              <ng-container *ngIf="productLightColours(product, tab.variant).length; else qaTabPlain">
+                <div class="qa-variant-row" *ngFor="let colour of productLightColours(product, tab.variant); trackBy: trackByColour"
+                     [class.is-on]="quantityOf(product, tab.variant, colour) > 0">
+                  <span class="qa-variant-label"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
+                  <div class="qa-variant-right">
+                    <span class="qa-price">₹{{ money(unitPrice(product, tab.variant, colour)) }}</span>
+                    <div class="qa-stepper">
+                      <button type="button" (click)="remove(product, tab.variant, colour)" aria-label="One less">−</button>
+                      <span>{{ quantityOf(product, tab.variant, colour) }}</span>
+                      <button type="button" (click)="add(product, tab.variant, colour)" aria-label="One more">+</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- No shades on this product: the option is quoted as it is. -->
+              <ng-template #qaTabPlain>
+                <div class="qa-variant-row" [class.is-on]="quantityOf(product, tab.variant) > 0">
+                  <span class="qa-variant-label">{{ tab.label }}</span>
+                  <div class="qa-variant-right">
+                    <span class="qa-price">₹{{ money(unitPrice(product, tab.variant)) }}</span>
+                    <div class="qa-stepper">
+                      <button type="button" (click)="remove(product, tab.variant)" aria-label="One less">−</button>
+                      <span>{{ quantityOf(product, tab.variant) }}</span>
+                      <button type="button" (click)="add(product, tab.variant)" aria-label="One more">+</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </ng-container>
+
+          <!-- Variants with neither a wattage nor a dimension keep the old rows. -->
+          <ng-template #qaPlain>
+          <ng-container *ngIf="product.variants?.length; else qaBase">
+            <div class="qa-variant-row" *ngFor="let v of product.variants; let vi = index; trackBy: trackByVariantIndex"
+                 [class.is-on]="quantityOf(product, v) > 0">
+              <span class="qa-variant-label">{{ variantLabel(v) }}</span>
+              <div class="qa-variant-right">
+                <span class="qa-price">₹{{ money(unitPrice(product, v)) }}</span>
+                <div class="qa-stepper">
+                  <button type="button" (click)="remove(product, v)" aria-label="One less">−</button>
+                  <span>{{ quantityOf(product, v) }}</span>
+                  <button type="button" (click)="add(product, v)" aria-label="One more">+</button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #qaBase>
+            <div class="qa-variant-row" [class.is-on]="quantityOf(product) > 0">
+              <span class="qa-variant-label">MRP</span>
+              <div class="qa-variant-right">
+                <span class="qa-price">₹{{ money(unitPrice(product)) }}</span>
+                <div class="qa-stepper">
+                  <button type="button" (click)="remove(product)" aria-label="One less">−</button>
+                  <span>{{ quantityOf(product) }}</span>
+                  <button type="button" (click)="add(product)" aria-label="One more">+</button>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="qa-empty" *ngIf="products.length === 0">No products match your search.</div>
+    </div>
+  </main>
+
+  <footer class="qa-footer">
+    <div class="qa-summary">
+      <span class="qa-summary-count">{{ draft.itemCount }} item{{ draft.itemCount === 1 ? '' : 's' }} on this quotation</span>
+      <span class="qa-summary-total">₹{{ money(draft.subtotal) }}</span>
+    </div>
+    <button class="qa-done" (click)="done()">Done</button>
+  </footer>
+</ion-content>

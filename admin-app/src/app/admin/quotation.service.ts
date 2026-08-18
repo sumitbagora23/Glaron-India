@@ -25,7 +25,22 @@ export interface QuotationItem {
 }
 
 /**
- * A quotation a customer sent in from the public catalogue. Two kinds arrive
+ * One area of a job — a kitchen, a lobby, a master bedroom — with the products
+ * the customer wants in it.
+ *
+ * The area-wise link asks for the list this way round: the customer names the
+ * space first and fills it, so the quotation that goes back can be read room by
+ * room instead of as one undivided list of forty lines.
+ */
+export interface QuotationArea {
+  /** Whatever the customer typed, e.g. `Master Bedroom`. */
+  name: string;
+  /** What they put in it. Never empty — an area with nothing in it is dropped. */
+  items: QuotationItem[];
+}
+
+/**
+ * A quotation a customer sent in from the public catalogue. Three kinds arrive
  * here, and the shape says which:
  *
  *   • `image` — a quote the customer already holds from somewhere else,
@@ -49,6 +64,12 @@ export interface CustomerQuotation {
   image?: string;
   /** What the customer picked out of the catalogue. Absent on an upload. */
   items?: QuotationItem[];
+  /**
+   * The same thing, split by area, from the area-wise link. A document carries
+   * either this or `items`, never both — which is what the console's three
+   * lists are told apart by.
+   */
+  areas?: QuotationArea[];
   /** The link code the customer arrived on — which shared link brought them. */
   ref?: string;
   /** Epoch millis — ordering and the "time ago" label. */
@@ -84,8 +105,13 @@ export class QuotationService {
           const list: CustomerQuotation[] = [];
           snap.forEach((d) => {
             const data = d.data() as CustomerQuotation;
-            // Either kind counts: an uploaded picture, or a list of picked lines.
-            if (data && (data.image || (data.items && data.items.length))) list.push(data);
+            // Any of the three counts: an uploaded picture, a list of picked
+            // lines, or that list split by area.
+            if (data && (
+              data.image ||
+              (data.items && data.items.length) ||
+              (data.areas && data.areas.length)
+            )) list.push(data);
           });
           this.listSignal.set(list);
         },
@@ -159,6 +185,48 @@ export class QuotationService {
         ...(i.variant ? { variant: i.variant } : {}),
         ...(i.sku ? { sku: i.sku } : {}),
         ...(this.slimImage(i.image) ? { image: this.slimImage(i.image) } : {})
+      })),
+      createdAt: Date.now(),
+      ...(ref ? { ref } : {})
+    });
+  }
+
+  /**
+   * Send a list built area by area from the area-wise link.
+   *
+   * The same request as `submitRequest` in every other respect — no prices, the
+   * name and mobile to call back on — except that the products arrive already
+   * grouped by the room they are for, and the console keeps that grouping all
+   * the way through to the PDF.
+   */
+  async submitAreaRequest(
+    name: string, mobile: string, areas: QuotationArea[], ref?: string
+  ): Promise<void> {
+    const groups = (areas || [])
+      .map(area => ({
+        name: (area?.name || '').trim() || 'Area',
+        items: (area?.items || []).filter(i => i && i.name && i.quantity > 0)
+      }))
+      // An area the customer named but never filled has nothing to quote.
+      .filter(area => area.items.length);
+
+    if (!groups.length || !this.firestore) return;
+
+    await this.write({
+      id: this.newId(),
+      name: (name || '').trim(),
+      mobile: (mobile || '').replace(/\D/g, ''),
+      areas: groups.map(area => ({
+        name: area.name,
+        // Field by field, for the same reason as above: Firestore rejects a
+        // document with an undefined property anywhere in it.
+        items: area.items.map(i => ({
+          name: i.name,
+          quantity: i.quantity,
+          ...(i.variant ? { variant: i.variant } : {}),
+          ...(i.sku ? { sku: i.sku } : {}),
+          ...(this.slimImage(i.image) ? { image: this.slimImage(i.image) } : {})
+        }))
       })),
       createdAt: Date.now(),
       ...(ref ? { ref } : {})

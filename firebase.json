@@ -23,7 +23,7 @@
           "headers": [
             {
               "key": "Cache-Control",
-              "value": "no-cache, no-store, must-revalidate"
+              "value": "no-cache"
             }
           ]
         },
@@ -37,7 +37,25 @@
           ]
         },
         {
-          "source": "**/@(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js)",
+          "source": "**/*.@(png|jpg|jpeg|gif|svg|ico|webp|avif)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=604800"
+            }
+          ]
+        },
+        {
+          "source": "/manifest.webmanifest",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        {
+          "source": "**/@(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js|firebase-messaging-sw.js|admin-messaging-sw.js)",
           "headers": [
             {
               "key": "Cache-Control",
@@ -50,6 +68,11 @@
         {
           "source": "/notification-image/**",
           "function": "notificationImage",
+          "region": "us-central1"
+        },
+        {
+          "source": "/quotation-image/**",
+          "function": "quotationImage",
           "region": "us-central1"
         },
         {
@@ -101,7 +124,7 @@
           "headers": [
             {
               "key": "Cache-Control",
-              "value": "no-cache, no-store, must-revalidate"
+              "value": "no-cache"
             }
           ]
         },
@@ -115,7 +138,25 @@
           ]
         },
         {
-          "source": "**/@(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js)",
+          "source": "**/*.@(png|jpg|jpeg|gif|svg|ico|webp|avif)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=604800"
+            }
+          ]
+        },
+        {
+          "source": "/manifest.webmanifest",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        {
+          "source": "**/@(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js|firebase-messaging-sw.js|admin-messaging-sw.js)",
           "headers": [
             {
               "key": "Cache-Control",
@@ -147,7 +188,7 @@
           "headers": [
             {
               "key": "Cache-Control",
-              "value": "no-cache, no-store, must-revalidate"
+              "value": "no-cache"
             }
           ]
         },
@@ -161,7 +202,25 @@
           ]
         },
         {
-          "source": "**/@(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js)",
+          "source": "**/*.@(png|jpg|jpeg|gif|svg|ico|webp|avif)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=604800"
+            }
+          ]
+        },
+        {
+          "source": "/manifest.webmanifest",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        {
+          "source": "**/@(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js|firebase-messaging-sw.js|admin-messaging-sw.js)",
           "headers": [
             {
               "key": "Cache-Control",
@@ -174,6 +233,11 @@
         {
           "source": "/notification-image/**",
           "function": "notificationImage",
+          "region": "us-central1"
+        },
+        {
+          "source": "/quotation-image/**",
+          "function": "quotationImage",
           "region": "us-central1"
         },
         {

@@ -1,0 +1,1517 @@
+/* Quotation detail — pricing a request and turning it into a PDF.
+   The card, table and row buttons are shared; see "Admin list pages" in
+   global.scss. Everything below is what this page adds on top. */
+
+.page-subtitle {
+  margin: 4px 0 0;
+  font-family: 'Outfit';
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.qd-phone {
+  color: #170338;
+  font-weight: 600;
+  text-decoration: none;
+  &:hover { color: #7E5700; text-decoration: underline; }
+}
+
+.count-chip {
+  flex-shrink: 0;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #7E5700;
+  background: rgba(254, 179, 0, 0.14);
+  padding: 7px 12px;
+  border-radius: 999px;
+}
+
+.qd-empty-card {
+  padding: 40px 20px;
+  text-align: center;
+  font-family: 'Outfit';
+  font-size: 14px;
+  color: #94A3B8;
+  background: #FFFFFF;
+  border: 1px solid #E7E1E9;
+  border-radius: 10px;
+}
+
+/* ============ The controls, above the list ============
+   Add Product and the discount sit here rather than below the table: both are
+   things you reach for before reading the figures, not after. */
+.qd-actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.qd-add-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #170338;
+  box-shadow: 0 6px 16px rgba(23, 3, 56, 0.18);
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #FFFFFF;
+  cursor: pointer;
+
+  svg { width: 16px; height: 16px; color: #FEB300; }
+  &:hover { background: #2D145A; }
+}
+
+.qd-discount-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E7E1E9;
+  border-radius: 12px;
+}
+
+/* Opens the MRP column. Reads as "on" while it is open, because an editable
+   price column is a state you want to be able to see you are in. */
+.qd-edit-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 1px solid #E7E1E9;
+  border-radius: 10px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #170338;
+  cursor: pointer;
+
+  svg { width: 15px; height: 15px; color: #7E5700; }
+  &:hover { background: #FAF9FB; }
+
+  &.active {
+    background: rgba(254, 179, 0, 0.16);
+    border-color: #FEB300;
+    color: #7E5700;
+    svg { color: #7E5700; }
+  }
+}
+
+/* One Apply for both: the percentage typed beside it, or the prices typed into
+   the column Edit Price opens. */
+.qd-apply {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
+  box-shadow: 0 6px 16px rgba(254, 179, 0, 0.28);
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #170338;
+  cursor: pointer;
+
+  &:hover { background: linear-gradient(135deg, #FFC01F 0%, #F79A22 100%); }
+}
+
+.qd-applied {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 13px;
+  color: #0F9B72;
+}
+
+.qd-discount-pct {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 15px;
+  color: #170338;
+}
+
+.qd-discount-head {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+
+/* The lines take the full width of the canvas.
+   The width declarations are not decoration: .content-canvas is a flex column
+   with align-items:flex-start, so anything that does not claim the full width
+   shrinks to its own content and the table stops short of the page. */
+.qd-body { display: block; width: 100%; }
+
+.qd-lines { width: 100%; min-width: 0; }
+
+/* ============ The lines ============
+   No floor width and no sideways scroll: the list is the point of this page,
+   so it takes the whole canvas and the product column absorbs whatever the
+   priced columns do not need. */
+.qd-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: auto;
+}
+
+.qd-th-no, .qd-td-no { width: 42px; }
+.qd-th-product, .qd-td-product { width: auto; }
+.qd-th-mrp, .qd-td-mrp { width: 108px; }
+.qd-th-rate, .qd-td-rate { width: 112px; }
+.qd-th-qty, .qd-td-qty { width: 128px; }
+.qd-th-amount, .qd-td-amount { width: 106px; text-align: right; }
+.qd-th-remove, .qd-td-remove { width: 44px; }
+
+.qd-no {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #94A3B8;
+}
+
+/* The list price, read-only until Edit Price is on. */
+.qd-mrp-text {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  color: #6B7280;
+  white-space: nowrap;
+
+  /* No price in the catalogue — it has to be typed or the line prints as nil. */
+  &.is-empty {
+    color: #B45309;
+    background: rgba(254, 179, 0, 0.14);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+}
+
+/* What is actually being quoted. */
+.qd-rate {
+  display: block;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #170338;
+  white-space: nowrap;
+}
+
+.qd-rate-off {
+  display: block;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: #0F9B72;
+}
+
+.qd-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.qd-thumb {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  &.no-image { background: #F1F5F9; }
+  &.small { width: 42px; height: 42px; }
+}
+
+.qd-product-text { min-width: 0; }
+
+/* Names and descriptors are shown whole — wrapped onto another line rather
+   than trailed off, since the price beside them is only meaningful if you can
+   read what it is for. */
+.qd-name {
+  display: block;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  color: #170338;
+  overflow-wrap: anywhere;
+}
+
+.qd-variant {
+  display: block;
+  font-family: 'Outfit';
+  font-weight: 500;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: #6B7280;
+  overflow-wrap: anywhere;
+}
+
+.qd-sku {
+  display: block;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+
+/* The MRP box. An empty one is outlined in gold: nothing is wrong with it yet,
+   but it cannot go out at zero either. */
+.qd-mrp-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  background: #FFFFFF;
+
+  &:focus-within { border-color: #170338; }
+  &.is-empty { border-color: #FEB300; background: rgba(254, 179, 0, 0.06); }
+}
+
+.qd-rupee {
+  font-family: 'Outfit';
+  font-size: 13px;
+  color: #94A3B8;
+}
+
+.qd-mrp-input {
+  width: 76px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #170338;
+}
+
+.qd-stepper {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  background: #FFFFFF;
+  overflow: hidden;
+
+  button {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: none;
+    font-size: 18px;
+    line-height: 1;
+    color: #49454E;
+    cursor: pointer;
+    &:hover { background: #F1F5F9; color: #170338; }
+  }
+}
+
+.qd-qty-input {
+  width: 46px;
+  height: 34px;
+  border: none;
+  border-left: 1px solid #F1F5F9;
+  border-right: 1px solid #F1F5F9;
+  outline: none;
+  text-align: center;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #170338;
+}
+
+/* Spinners steal room the numbers need, and the steppers do the same job. */
+.qd-mrp-input::-webkit-outer-spin-button,
+.qd-mrp-input::-webkit-inner-spin-button,
+.qd-qty-input::-webkit-outer-spin-button,
+.qd-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qd-mrp-input, .qd-qty-input { -moz-appearance: textfield; appearance: textfield; }
+
+.qd-amount {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 15px;
+  color: #170338;
+  white-space: nowrap;
+}
+
+.qd-remove {
+  padding: 6px;
+  .delete-icon { width: 16px; height: 16px; }
+}
+
+.qd-warn {
+  margin: 12px 2px 0;
+  font-family: 'Outfit';
+  font-size: 13px;
+  color: #B45309;
+}
+
+.qd-error {
+  margin: 14px 2px 0;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #DC2626;
+}
+
+.qd-discount-input {
+  width: 118px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  outline: none;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #170338;
+
+  &:focus { border-color: #170338; }
+}
+
+.qd-discount-note {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 13px;
+  color: #7E5700;
+  white-space: nowrap;
+}
+
+/* ============ Sticky footer ============ */
+.qd-footer {
+  position: sticky;
+  bottom: 0;
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+}
+
+.qd-footer-summary { display: flex; flex-direction: column; }
+.qd-footer-count { font-family: 'Outfit'; font-size: 12px; color: #64748B; }
+.qd-footer-total { font-family: 'Outfit'; font-size: 20px; font-weight: 700; color: #170338; }
+
+.qd-footer-actions { display: flex; gap: 10px; }
+
+.qd-back {
+  padding: 11px 18px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  color: #1C1B1B;
+  cursor: pointer;
+
+  &:hover { background: #F8F9FA; }
+}
+
+.qd-pdf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
+  box-shadow: 0 8px 20px rgba(254, 179, 0, 0.28);
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  color: #170338;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: linear-gradient(135deg, #FFC01F 0%, #F79A22 100%); }
+  &:disabled { opacity: 0.55; box-shadow: none; cursor: not-allowed; }
+}
+
+.qd-pdf-icon { width: 16px; height: 16px; }
+
+@media (max-width: 900px) {
+  /* Rows become cards down here (global.scss), so the desktop floor width goes
+     or every card would be 720px wide. */
+  .qd-table { min-width: 0; }
+
+  .qd-th-mrp, .qd-td-mrp,
+  .qd-th-qty, .qd-td-qty,
+  .qd-th-amount, .qd-td-amount,
+  .qd-th-remove, .qd-td-remove { width: auto; }
+
+  .qd-td-amount { text-align: left; }
+
+  .qd-actions-bar { flex-direction: column; align-items: stretch; }
+  .qd-add-product { justify-content: center; }
+  .qd-discount-bar { justify-content: space-between; }
+  .qd-discount-input { flex: 1; width: auto; min-width: 0; }
+
+  .qd-footer { padding: 10px 14px; }
+  .qd-footer-actions { gap: 8px; }
+  .qd-pdf { padding: 11px 16px; }
+}
+
+/* ============================================================================
+   Area-wise quotation â€” everything this page adds on top of the pricing screen
+   above: the areas themselves, the summary read before sending, and the sheet
+   products are picked into.
+   ============================================================================ */
+
+/* ---- Naming an area the customer left out ---- */
+.qa-add-area {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+.qa-area-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-size: 14px;
+  font-weight: 500;
+  color: #1C1B1B;
+  outline: none;
+
+  &::placeholder { color: #A0AEC0; }
+  &:focus { border-color: #170338; box-shadow: 0 0 0 3px rgba(23, 3, 56, .07); }
+}
+
+/* ---- One card per area ---- */
+.qa-area-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.qa-area-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid #E7E1E9;
+  border-radius: 12px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(23, 3, 56, .05);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease;
+
+  &:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(23, 3, 56, .10); border-color: #D8CFE0; }
+}
+.qa-area-mark {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(150deg, #37215f 0%, #170338 100%);
+  color: #FEB300;
+  font-family: 'Outfit';
+  font-size: 18px;
+  font-weight: 800;
+}
+.qa-area-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.qa-area-name {
+  font-family: 'Outfit';
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #1C1B1B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qa-area-meta { font-family: 'Outfit'; font-size: 12.5px; color: #64748B; }
+
+.qa-area-total { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.qa-area-amount { font-family: 'Outfit'; font-size: 16px; font-weight: 700; color: #170338; }
+.qa-area-mrp {
+  font-family: 'Outfit';
+  font-size: 12px;
+  color: #94A3B8;
+  text-decoration: line-through;
+}
+
+.qa-area-del {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #94A3B8;
+
+  svg { width: 17px; height: 17px; }
+  &:hover { color: #DC2626; background: rgba(220, 38, 38, .08); }
+}
+
+/* ---- The figures read before either PDF is built ---- */
+.qa-summary {
+  padding: 20px 22px;
+  border: 1px solid #E7E1E9;
+  border-radius: 12px;
+  background: linear-gradient(160deg, #FFFDF9 0%, #FFF7EC 100%);
+  margin-bottom: 20px;
+}
+.qa-summary-title {
+  margin: 0 0 14px;
+  font-family: 'Outfit';
+  font-size: 15px;
+  font-weight: 700;
+  color: #170338;
+}
+.qa-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.qa-sum-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #F2E7D8;
+  border-radius: 10px;
+  background: #FFFFFF;
+
+  &.is-off { border-color: #FAD9B7; background: #FFF6EB; }
+  &.is-total {
+    border-color: #FEB300;
+    background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
+    .qa-sum-label { color: rgba(23, 3, 56, .72); }
+    .qa-sum-value { color: #170338; }
+  }
+}
+.qa-sum-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit';
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: #7A7383;
+}
+.qa-sum-chip {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(254, 179, 0, .2);
+  color: #7E5700;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.qa-sum-value { font-family: 'Outfit'; font-size: 18px; font-weight: 700; color: #170338; }
+.qa-summary-note {
+  margin: 12px 0 0;
+  font-family: 'Outfit';
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #6B7280;
+}
+
+/* ---- One area, opened ---- */
+.qa-area-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.qa-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  svg { width: 15px; height: 15px; }
+}
+.qa-area-title {
+  margin: 0;
+  font-family: 'Outfit';
+  font-size: 19px;
+  font-weight: 700;
+  color: #170338;
+}
+.qa-area-sub { font-family: 'Outfit'; font-size: 13px; color: #64748B; }
+
+.qa-line-off {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, .12);
+  color: #16A34A;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.qa-area-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 14px 20px;
+  border: 1px solid #F2E7D8;
+  border-radius: 10px;
+  background: #FFF9F1;
+}
+.qa-foot-label {
+  margin-right: auto;
+  font-family: 'Outfit';
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: #7A7383;
+}
+.qa-foot-mrp { font-family: 'Outfit'; font-size: 13px; color: #94A3B8; text-decoration: line-through; }
+.qa-foot-total { font-family: 'Outfit'; font-size: 20px; font-weight: 700; color: #170338; }
+
+/* ---- The product picker ---- */
+.qa-pick-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(12, 1, 32, .5);
+  backdrop-filter: blur(3px);
+}
+.qa-pick-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: 88vh;
+  padding: 18px 18px 16px;
+  border-radius: 18px 18px 0 0;
+  background: #FFFFFF;
+  box-shadow: 0 -18px 50px rgba(12, 1, 32, .35);
+}
+.qa-pick-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.qa-pick-heading { display: flex; flex-direction: column; gap: 2px; }
+.qa-pick-kicker {
+  font-family: 'Outfit';
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: #7E5700;
+}
+.qa-pick-title { font-family: 'Outfit'; font-size: 18px; font-weight: 700; color: #170338; }
+.qa-pick-close {
+  width: 34px; height: 34px;
+  border: 1px solid #E2E8F0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  display: grid; place-items: center;
+  font-size: 20px;
+  line-height: 1;
+  color: #64748B;
+  cursor: pointer;
+  &:hover { background: #F8F9FA; }
+}
+/* ---- Search + filter, above the scrolling list ----
+   Both sit outside .qa-pick-list, so a few hundred products can go past
+   underneath them without either one leaving the screen. */
+.qa-pick-tools {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.qa-pick-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  border: 1px solid #E2E8F0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  transition: border-color .16s ease;
+
+  &:focus-within { border-color: #170338; }
+
+  .qa-search-ic { width: 17px; height: 17px; margin-left: 13px; color: #94A3B8; flex-shrink: 0; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 10px;
+    border: none;
+    background: transparent;
+    font-family: 'Outfit';
+    font-size: 14px;
+    color: #1C1B1B;
+    outline: none;
+  }
+}
+.qa-search-clear {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  margin: 0 9px 0 2px;
+  border: none;
+  border-radius: 50%;
+  background: #F1F5F9;
+  color: #64748B;
+  display: grid; place-items: center;
+  cursor: pointer;
+  padding: 0;
+  svg { width: 12px; height: 12px; }
+  &:hover { background: #E2E8F0; color: #170338; }
+}
+
+/* Icon only. The name of what is filtered lives on the chip below it. */
+.qa-filter-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  border: 1px solid #E2E8F0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  color: #334155;
+  display: grid; place-items: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+
+  svg { width: 19px; height: 19px; }
+  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+
+  &.on {
+    background: #170338;
+    border-color: #170338;
+    color: #FFFFFF;
+  }
+}
+.qa-filter-dot {
+  position: absolute;
+  top: 7px; right: 7px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #FEB300;
+  box-shadow: 0 0 0 2px #170338;
+}
+
+.qa-filter-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+}
+.qa-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  background: rgba(254, 179, 0, .16);
+  border: 1px solid rgba(254, 179, 0, .36);
+}
+.qa-chip-text {
+  font-family: 'Outfit';
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #7E5700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qa-chip-clear {
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(126, 87, 0, .14);
+  color: #7E5700;
+  display: grid; place-items: center;
+  cursor: pointer;
+  padding: 0;
+  svg { width: 11px; height: 11px; }
+  &:hover { background: rgba(126, 87, 0, .26); }
+}
+.qa-filter-count {
+  font-family: 'Outfit';
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+/* ============ Category sheet ============
+   Above the product sheet, on the same manners: the ground closes it. */
+.qa-cat-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(12, 1, 32, .55);
+  backdrop-filter: blur(3px);
+}
+.qa-cat-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(680px, 100%);
+  max-height: 84vh;
+  padding: 18px;
+  border-radius: 18px;
+  background: #FFFFFF;
+  box-shadow: 0 24px 60px rgba(12, 1, 32, .38);
+}
+.qa-cat-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.qa-cat-heading { display: flex; flex-direction: column; gap: 2px; }
+.qa-x-ic { width: 15px; height: 15px; }
+
+.qa-cat-search {
+  display: flex;
+  align-items: center;
+  border: 1px solid #E2E8F0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  margin-bottom: 14px;
+
+  &:focus-within { border-color: #170338; }
+
+  .qa-search-ic { width: 16px; height: 16px; margin-left: 13px; color: #94A3B8; flex-shrink: 0; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 10px;
+    border: none;
+    background: transparent;
+    font-family: 'Outfit';
+    font-size: 14px;
+    color: #1C1B1B;
+    outline: none;
+  }
+}
+
+.qa-cat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+/* The whole range is not a category, so it gets a row rather than a tile. */
+.qa-cat-all {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px;
+  margin-bottom: 14px;
+  border: 1px solid #E2E8F0;
+  border-radius: 11px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease;
+
+  &:hover { background: #F8F9FA; }
+  &.selected { border-color: #170338; background: rgba(23, 3, 56, .04); }
+
+  .qa-cat-all-icon {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: #F1F5F9;
+    display: grid; place-items: center;
+    color: #64748B;
+    svg { width: 18px; height: 18px; }
+  }
+  .qa-cat-all-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+  .qa-cat-all-name { font-size: 14px; font-weight: 700; color: #170338; }
+  .qa-cat-all-count { font-size: 11.5px; font-weight: 500; color: #64748B; }
+
+  .qa-cat-tick { position: static; flex-shrink: 0; width: 22px; height: 22px; }
+}
+
+.qa-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+.qa-cat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #E2E8F0;
+  border-radius: 11px;
+  background: #FFFFFF;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Outfit';
+  transition: border-color .16s ease, box-shadow .2s ease, transform .12s ease;
+
+  &:hover { border-color: #CBD5E1; transform: translateY(-1px); }
+  &.selected {
+    border-color: #170338;
+    box-shadow: 0 0 0 3px rgba(23, 3, 56, .08);
+  }
+}
+.qa-cat-media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #FFFFFF;
+  display: grid; place-items: center;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: contain; padding: 7px; display: block; }
+  &.no-image { background: #F1F5F9; }
+}
+.qa-cat-tick {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #170338;
+  color: #FFFFFF;
+  display: grid; place-items: center;
+  svg { width: 12px; height: 12px; }
+}
+.qa-cat-name {
+  padding: 7px 7px 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #1C1B1B;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.5em;
+}
+.qa-cat-count {
+  padding: 0 7px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #94A3B8;
+  text-align: center;
+}
+
+.qa-cat-foot {
+  display: flex;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid #EDE8F0;
+}
+.qa-cat-clear {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-size: 14px;
+  font-weight: 600;
+  color: #170338;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: #F8F9FA; }
+  &:disabled { opacity: .45; cursor: default; }
+}
+.qa-cat-done {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 9px;
+  background: #170338;
+  font-family: 'Outfit';
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  cursor: pointer;
+  &:hover { background: #24074f; }
+}
+.qa-pick-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 12px -4px;
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.qa-pick-product {
+  border: 1px solid #EDE8F0;
+  border-radius: 11px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+}
+.qa-pick-row { display: flex; align-items: center; gap: 12px; }
+.qa-pick-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.qa-pick-price {
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #170338;
+  white-space: nowrap;
+}
+.qa-pick-step { flex-shrink: 0; }
+.qa-pick-qty {
+  min-width: 28px;
+  text-align: center;
+  font-family: 'Outfit';
+  font-size: 14px;
+  font-weight: 700;
+  color: #1C1B1B;
+}
+.qa-pick-variants {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #EDE8F0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.qa-pick-variant { display: flex; align-items: center; gap: 12px; }
+/* No shade name on the line — the ⓘ head above already named the option. */
+.qa-pick-variant.no-name { justify-content: flex-end; }
+.qa-pick-variant-label {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Outfit';
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #4B5563;
+}
+
+/* The wattage tabs, the line that names the open option and the ⓘ sheet —
+   the same card the dealer app, the catalogue link and the order screen show,
+   in the colours of the admin. */
+.qa-pick-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.qa-pick-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 27px;
+  padding: 5px 11px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #49454E;
+  font-family: 'Outfit';
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+
+  &.is-open { background: #170338; border-color: #170338; color: #FFFFFF; }
+}
+.qa-pick-tab-qty {
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #FEB300;
+  color: #170338;
+  font-size: 10px;
+  font-weight: 800;
+}
+.qa-pick-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #FBFAFA;
+}
+.qa-pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.qa-pick-head-name {
+  font-family: 'Outfit';
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #170338;
+}
+.qa-pick-info {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border: 1.3px solid #C9C5D0;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #49454E;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 10.5px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+
+  &.is-on { background: #170338; border-color: #170338; color: #FFFFFF; }
+}
+.qa-pick-sheet {
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: #F3F1F7;
+}
+.qa-pick-sheet-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+}
+.qa-pick-sheet-key { font-family: 'Outfit'; font-size: 11px; font-weight: 600; color: #6B6673; }
+.qa-pick-sheet-val { font-family: 'Outfit'; font-size: 11.5px; font-weight: 700; color: #170338; text-align: right; }
+.qa-pick-done {
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #170338;
+  cursor: pointer;
+}
+
+/* The plain-list PDF sits beside the priced one; it must not compete with it. */
+.qa-list-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-color: #170338;
+  color: #170338;
+  font-weight: 700;
+
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+@media (max-width: 700px) {
+  .qa-add-area { flex-direction: column; }
+  .qa-area-grid { grid-template-columns: 1fr; }
+  .qa-summary { padding: 16px; }
+  .qd-footer-actions { flex-wrap: wrap; }
+  .qa-list-pdf, .qd-pdf { flex: 1; justify-content: center; }
+  /* Three buttons will not sit on one phone-width row, so the pair that make
+     the same document share the line under Back. */
+  .qa-plain-pdf, .qd-pdf { min-width: 132px; }
+  .qa-pick-sheet { max-height: 92vh; }
+}
+
+
+/* ---- The two ways of looking at the job ---- */
+.qa-switch {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.qa-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  color: #4B5563;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+
+  svg { width: 17px; height: 17px; }
+  &:hover { background: #F8F9FA; }
+
+  &.active {
+    border-color: transparent;
+    background: linear-gradient(135deg, #170338 0%, #37215f 100%);
+    color: #FFFFFF;
+    box-shadow: 0 8px 20px rgba(23, 3, 56, .22);
+
+    .qa-switch-count { background: rgba(254, 179, 0, .95); color: #170338; }
+  }
+}
+.qa-switch-count {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #F1EDF4;
+  color: #6B7280;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* The room a flattened row belongs to, above its name. */
+.qa-row-area {
+  align-self: flex-start;
+  margin-bottom: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(23, 3, 56, .07);
+  font-family: 'Outfit';
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: #170338;
+}
+
+.qa-final-foot { background: linear-gradient(135deg, #FFFDF9 0%, #FFF3E4 100%); }
+.qa-foot-off {
+  font-family: 'Outfit';
+  font-size: 13px;
+  font-weight: 700;
+  color: #16A34A;
+}
+
+/* Choosing the room in the picker. */
+.qa-pick-area-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.qa-pick-area-label {
+  font-family: 'Outfit';
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: #7A7383;
+}
+.qa-pick-area-select {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid #E2E8F0;
+  border-radius: 9px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-size: 14px;
+  font-weight: 600;
+  color: #170338;
+  outline: none;
+  &:focus { border-color: #170338; }
+}
+
+
+/* The summary's own PDF button. It is the gold button of that screen, so it
+   takes the gold â€” but a shade cooler than the priced one, which is the button
+   that ends the job. */
+.qa-list-pdf {
+  background: linear-gradient(135deg, #170338 0%, #37215f 100%);
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px rgba(23, 3, 56, .24);
+
+  &:hover:not(:disabled) { background: linear-gradient(135deg, #24074f 0%, #452a72 100%); }
+}
+
+/* The unsigned quotation, beside the signed one. Outlined rather than filled:
+   both make the same document, and the gold belongs to the one that goes out
+   on Glaron's paper â€” this is the deliberate exception, taken on purpose. */
+.qa-plain-pdf {
+  background: #FFFFFF;
+  border: 1px solid #D8CFE4;
+  box-shadow: none;
+  color: #170338;
+
+  &:hover:not(:disabled) { background: #F7F4FA; border-color: #170338; }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+
+/* ---- The top bar: switches left, that view's controls right ---- */
+.qa-switch {
+  align-items: center;
+  gap: 10px;
+}
+.qa-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 260px;
+  /* Pushed to the right edge, hard against nothing â€” the switches keep the
+     left, and the controls sit where the eye goes next. */
+  justify-content: flex-end;
+  flex-wrap: wrap;
+
+  .qa-area-input { max-width: 320px; }
+  .qd-add-product, .qd-edit-price, .qd-apply { white-space: nowrap; }
+}
+.qa-applied-line {
+  margin: -8px 0 14px;
+  text-align: right;
+}
+
+/* Four rooms to a row, which is how a plan is read. */
+.qa-area-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 1400px) { .qa-area-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1050px) { .qa-area-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .qa-area-grid { grid-template-columns: 1fr; }
+  .qa-tools { justify-content: stretch; min-width: 0; }
+  .qa-tools .qa-area-input { max-width: none; flex: 1; }
+  .qa-applied-line { text-align: left; }
+}
+
+/* ---- The other rooms, above the open one's list ----
+   Pills rather than the square switches at the top of the page: this is the
+   second level of the same choice, and it should not compete with the first. */
+.qa-area-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+
+  /* Both lines are load-bearing. The page canvas is a fixed-height flex column,
+     and a row that scrolls sideways has an automatic minimum height of zero —
+     so once the areas ran past one screen the flex algorithm crushed this row
+     to its own padding and, since overflow-x forces overflow-y to match, the
+     pills inside were sliced in half rather than spilling out. */
+  flex-shrink: 0;
+  min-height: 41px;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 999px; }
+}
+.qa-area-tab {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  padding: 9px 15px;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  background: #FFFFFF;
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4B5563;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+
+  &:hover { background: #F8F9FA; border-color: #D8CFE0; }
+
+  &.active {
+    border-color: transparent;
+    background: linear-gradient(135deg, #170338 0%, #37215f 100%);
+    color: #FFFFFF;
+    box-shadow: 0 6px 16px rgba(23, 3, 56, .20);
+
+    .qa-area-tab-count { background: rgba(254, 179, 0, .95); color: #170338; }
+  }
+}
+.qa-area-tab-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qa-area-tab-count {
+  flex-shrink: 0;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #F1EDF4;
+  color: #6B7280;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* The card is narrower at four across, so it stacks its own contents. */
+.qa-area-card {
+  gap: 12px;
+  padding: 14px;
+}
+.qa-area-mark { width: 40px; height: 40px; border-radius: 12px; font-size: 16px; }
+.qa-area-name { font-size: 14.5px; }
+.qa-area-meta { font-size: 12px; }
+
+
+/* See agent-pay: the mobile top bar supplies Back for the area detail screen,
+   so the in-page one steps aside below the shell breakpoint. */
+@media (max-width: 900px) {
+  .qa-back-btn { display: none; }
+}

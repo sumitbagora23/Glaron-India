@@ -13,18 +13,14 @@
     "version:bump": "node scripts/gen-version.mjs",
     "deploy": "npm run deploy:dealer && npm run deploy:catalogue && npm run deploy:admin && npm run deploy:agent",
     "deploy:dealer": "node scripts/gen-version.mjs && ng build && firebase deploy --only hosting:dealer",
-
     "deploy:catalogue": "firebase deploy --only hosting:catalogue",
-
     "start:admin": "ng serve admin",
     "build:admin": "ng build admin",
     "version:bump:admin": "node scripts/gen-version-admin.mjs",
     "deploy:admin": "node scripts/gen-version-admin.mjs && ng build admin && firebase deploy --only hosting:admin",
-
     "start:agent": "ng serve agent",
     "build:agent": "ng build agent",
     "version:bump:agent": "node scripts/gen-version-agent.mjs",
-
     "deploy:agent": "firebase deploy --only hosting:agent",
     "deploy:functions": "firebase deploy --only functions"
   },
@@ -48,6 +44,8 @@
     "@ionic/angular": "^8.0.0",
     "firebase": "^12.17.0",
     "ionicons": "^7.0.0",
+    "jspdf": "^4.2.1",
+    "pdfjs-dist": "^6.2.108",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

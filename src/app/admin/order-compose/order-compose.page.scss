@@ -201,11 +201,13 @@
   font-size: 14px;
 }
 
-/* Sticky footer */
+/* The cart summary and the submit, at the end of the page.
+   Not pinned to the bottom of the screen: this page scrolls as one from top to
+   bottom, the same way the products tab does, and a footer floating over the
+   last row of cards is what stopped it doing that. */
 .oc-footer {
-  position: sticky;
-  bottom: 0;
-  left: 0; right: 0;
+  position: static;
+  margin-top: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -238,3 +240,60 @@
 }
 
 .req-star { color: #EF4444; font-weight: 700; margin-left: 2px; }
+
+
+/* ---- Wattage / dimension tabs on the picker cards ----
+   The same shape the dealer app and the catalogue link use: the specs across
+   the top, the shades and their quantities underneath the open one. */
+.oc-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.oc-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 6px 12px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 999px;
+  background: #fff;
+  color: #49454E;
+  font-family: 'Outfit';
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+
+  &.is-open {
+    background: #170338;
+    border-color: #170338;
+    color: #fff;
+  }
+}
+
+.oc-tab-qty {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #FEB300;
+  color: #170338;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.oc-tab-panel {
+  padding: 4px 10px;
+  border: 1px solid #F1F5F9;
+  border-radius: 10px;
+  background: #FBFAFA;
+}

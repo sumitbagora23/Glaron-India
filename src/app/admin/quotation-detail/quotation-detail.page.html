@@ -1,0 +1,178 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item" (click)="back()" style="cursor:pointer;">Request Quotation</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">{{ quoteRef }}</span>
+    </div>
+
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Quotation for {{ customerName }}</h2>
+        <p class="page-subtitle">
+          {{ quoteRef }}
+          <ng-container *ngIf="customerMobile"> · <a class="qd-phone" [href]="callHref()">{{ customerMobile }}</a></ng-container>
+          <ng-container *ngIf="quotation?.ref"> · via link {{ quotation?.ref }}</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <!-- The request may not have reached us yet; it arrives on the live feed. -->
+    <section class="qd-empty-card" *ngIf="loading">Loading this quotation…</section>
+
+    <section class="qd-empty-card" *ngIf="!loading && !quotation">
+      This quotation is no longer in the list. It may have been deleted.
+    </section>
+
+    <ng-container *ngIf="quotation">
+
+      <!-- ============ The two controls, above the list ============ -->
+      <div class="qd-actions-bar">
+        <button class="qd-add-product" (click)="addProducts()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Add Product</span>
+        </button>
+
+        <!-- Edit and discount are two ways of setting the same column, so one
+             Apply serves both: type a percentage, or open the price column and
+             set a particular product yourself, then apply. -->
+        <button class="qd-edit-price" [class.active]="editPrices" (click)="toggleEditPrices()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Edit Price</span>
+        </button>
+
+        <div class="qd-discount-bar">
+          <span class="qd-discount-head">Discount</span>
+          <input type="number" min="0" max="100" step="0.5" class="qd-discount-input"
+                 [(ngModel)]="draft.discountValue" placeholder="0" />
+          <span class="qd-discount-pct">%</span>
+        </div>
+
+        <button class="qd-apply" (click)="apply()">Apply</button>
+
+        <span class="qd-applied" *ngIf="applied">{{ applied }}</span>
+      </div>
+
+      <p class="qd-error" *ngIf="error">{{ error }}</p>
+
+      <!-- ============ The lines. What it comes to is in the footer. ============ -->
+      <div class="qd-body">
+
+        <div class="qd-lines">
+          <section class="table-section-card">
+            <div class="table-scroll-container">
+              <table class="inventory-table compact qd-table">
+                <thead>
+                  <tr>
+                    <th class="qd-th-no">#</th>
+                    <th class="qd-th-product">Product</th>
+                    <th class="qd-th-mrp">MRP</th>
+                    <th class="qd-th-rate">Price</th>
+                    <th class="qd-th-qty">Quantity</th>
+                    <th class="qd-th-amount">Amount</th>
+                    <th class="qd-th-remove"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let line of lines; let i = index; let last = last; trackBy: trackByKey" [class.last-row-border]="last">
+
+                    <td class="qd-td-no" data-label="#">
+                      <span class="qd-no">{{ i + 1 }}</span>
+                    </td>
+
+                    <td class="qd-td-product" data-label="Product">
+                      <div class="qd-product">
+                        <div class="qd-thumb" [class.no-image]="!line.image">
+                          <img *ngIf="line.image" [src]="line.image" (error)="onImgError($event)" alt="" loading="lazy" decoding="async" />
+                        </div>
+                        <div class="qd-product-text">
+                          <span class="qd-name">{{ line.name }}</span>
+                          <span class="qd-variant" *ngIf="line.variant">{{ labelHead(line.variant) }}<span class="lc-swatch" *ngIf="labelColour(line.variant)" [style.background]="swatch(labelColour(line.variant))"></span>{{ labelColour(line.variant) }}</span>
+                          <span class="qd-sku" *ngIf="line.sku">{{ line.sku }}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- The list price, exactly as the catalogue holds it. It is
+                         never edited and never discounted. -->
+                    <td class="qd-td-mrp" data-label="MRP">
+                      <span class="qd-mrp-text" [class.is-empty]="!line.mrp">₹{{ money(line.mrp) }}</span>
+                    </td>
+
+                    <!-- What the customer is quoted. The discount moves this
+                         column, and Edit Price opens it for one product. -->
+                    <td class="qd-td-rate" data-label="Price">
+                      <div class="qd-mrp-box" *ngIf="editPrices">
+                        <span class="qd-rupee">₹</span>
+                        <input type="number" min="0" step="1" class="qd-mrp-input"
+                               [value]="line.price || ''" placeholder="0"
+                               (input)="onPriceInput(line, $any($event.target).value)" />
+                      </div>
+                      <span class="qd-rate" *ngIf="!editPrices">₹{{ money(line.price) }}</span>
+                    </td>
+
+                    <td class="qd-td-qty" data-label="Quantity">
+                      <div class="qd-stepper">
+                        <button type="button" (click)="dec(line)" aria-label="One less">−</button>
+                        <input type="number" min="1" step="1" class="qd-qty-input"
+                               [value]="line.quantity"
+                               (input)="onQtyInput(line, $any($event.target).value)" />
+                        <button type="button" (click)="inc(line)" aria-label="One more">+</button>
+                      </div>
+                    </td>
+
+                    <td class="qd-td-amount" data-label="Amount">
+                      <span class="qd-amount">₹{{ money(draft.lineTotal(line)) }}</span>
+                    </td>
+
+                    <td class="qd-td-remove">
+                      <button class="delete-btn qd-remove" (click)="removeLine(line)" title="Remove this line">
+                        <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <tr *ngIf="lines.length === 0">
+                    <td colspan="7" class="td-empty">
+                      Nothing on this quotation yet. Use Add Product to put products on it.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <p class="qd-warn" *ngIf="draft.unpricedCount">
+            {{ draft.unpricedCount }} line{{ draft.unpricedCount === 1 ? ' has' : 's have' }} no price in
+            the catalogue. Type the MRP above, or it prints as zero.
+          </p>
+        </div>
+      </div>
+
+    </ng-container>
+  </main>
+
+  <!-- Sticky footer: what it comes to, and the document itself. -->
+  <footer class="qd-footer" *ngIf="quotation">
+    <div class="qd-footer-summary">
+      <span class="qd-footer-count">{{ draft.itemCount }} item{{ draft.itemCount === 1 ? '' : 's' }}</span>
+      <span class="qd-footer-total">₹{{ money(draft.total) }}</span>
+    </div>
+    <div class="qd-footer-actions">
+      <button class="qd-back" (click)="back()">Back</button>
+      <button class="qd-pdf" [disabled]="!canBuild" (click)="createPdf()">
+        <svg class="qd-pdf-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>{{ building ? 'Creating…' : 'Create PDF' }}</span>
+      </button>
+    </div>
+  </footer>
+</ion-content>

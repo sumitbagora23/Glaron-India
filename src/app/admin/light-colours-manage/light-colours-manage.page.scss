@@ -1,0 +1,270 @@
+/* Light Colours page
+   The card, table and row buttons are the console's shared list styling — see
+   "Admin list pages" in global.scss. What is here is the add card at the top,
+   the reorder arrows and the inline rename box. */
+
+.page-subtitle {
+  margin: 4px 0 0;
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  line-height: 20px;
+  color: #64748B;
+  max-width: 620px;
+}
+
+/* Header "Done" — takes the admin back to whatever sent them here. */
+.back-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 8px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+}
+
+.back-icon {
+  width: 16px;
+  height: 16px;
+  color: #170338;
+}
+
+.back-btn-text {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #170338;
+}
+
+/* Add card */
+.add-colour-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.field-label {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  color: #170338;
+}
+
+.add-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.text-input {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-family: 'Outfit';
+  font-size: 14px;
+  color: #1C1B1B;
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &:focus { border-color: #170338; }
+  &.input-error { border-color: #DC2626; }
+}
+
+.add-product-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  gap: 8px;
+  height: 44px;
+  background: #170338;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover { background: #2D145A; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.btn-plus-white-icon {
+  width: 16px;
+  height: 16px;
+  color: #FFFFFF;
+}
+
+.btn-text-white {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.14px;
+  color: #FFFFFF;
+}
+
+.input-hint-text {
+  font-family: 'Outfit';
+  font-size: 12px;
+  line-height: 17px;
+  color: #94A3B8;
+}
+
+.error-text {
+  font-family: 'Outfit';
+  font-size: 12px;
+  color: #DC2626;
+}
+
+/* Banners */
+.notice-banner,
+.save-error-banner {
+  box-sizing: border-box;
+  width: 100%;
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.notice-banner {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #0A7355;
+}
+
+.save-error-banner {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+}
+
+/* Reorder arrows — this is the order the product form lists them in. */
+.th-order, .td-order { width: 84px; }
+
+.order-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.order-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) { background: #F8F9FA; border-color: #CBD5E1; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+}
+
+.order-icon {
+  width: 14px;
+  height: 14px;
+  color: #170338;
+}
+
+/* Name cell */
+.colour-name {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #170338;
+}
+
+.rename-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 320px;
+
+  .text-input { height: 38px; }
+}
+
+.th-used, .td-used { width: 140px; }
+
+.used-count {
+  font-family: 'Outfit';
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #49454E;
+
+  &.unused { color: #94A3B8; }
+}
+
+/* Inline rename actions, sized to sit in the row next to Edit / Delete. */
+.save-inline-btn,
+.cancel-inline-btn {
+  padding: 6px 14px;
+  height: 34px;
+  border-radius: 6px;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.save-inline-btn {
+  background: #170338;
+  border: none;
+  color: #FFFFFF;
+
+  &:hover:not(:disabled) { background: #2D145A; }
+}
+
+.cancel-inline-btn {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #49454E;
+
+  &:hover:not(:disabled) { background: #F8F9FA; border-color: #CBD5E1; }
+}
+
+@media (max-width: 900px) {
+  .add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-product-btn { width: 100%; }
+
+  .th-order, .td-order,
+  .th-used, .td-used { width: auto; }
+
+  .rename-box { max-width: none; }
+}

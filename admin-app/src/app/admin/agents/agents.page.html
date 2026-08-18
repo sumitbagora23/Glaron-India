@@ -40,7 +40,7 @@
     <section class="table-section-card">
 
       <div class="table-scroll-container">
-        <table class="agents-table">
+        <table class="inventory-table compact">
           <thead>
             <tr>
               <th class="th-name">Agent Name</th>
@@ -66,22 +66,22 @@
                 </div>
               </td>
 
-              <td class="td-phone">
+              <td class="td-phone" data-label="Mobile (login)">
                 <span class="phone-text">{{ agent.phone || '-' }}</span>
                 <span class="no-password-tag" *ngIf="!hasPassword(agent)" title="This agent has no sign-in password yet — use Password to set one.">No password</span>
               </td>
 
-              <td class="td-sales">
+              <td class="td-sales" data-label="Total sales">
                 <span class="money-text">₹{{ totalSales(agent) | number:'1.0-0' }}</span>
               </td>
 
-              <td class="td-commission">
+              <td class="td-commission" data-label="Total commission">
                 <span class="money-text strong">₹{{ totalCommission(agent) | number:'1.0-2' }}</span>
                 <span class="due-tag" *ngIf="remaining(agent) > 0">₹{{ remaining(agent) | number:'1.0-2' }} due</span>
                 <span class="settled-tag" *ngIf="remaining(agent) <= 0 && totalCommission(agent) > 0">Settled</span>
               </td>
 
-              <td class="td-status">
+              <td class="td-status" data-label="Status">
                 <div class="status-select-wrap"
                      [class.status-active]="statusOf(agent) === 'Active'"
                      [class.status-inactive]="statusOf(agent) === 'Inactive'">
@@ -95,27 +95,27 @@
               </td>
 
               <td class="td-actions">
-                <div class="agent-actions-group">
-                  <button class="commission-action-btn" (click)="setCommission(agent)">
-                    <svg class="commission-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="actions-group">
+                  <button class="row-action-btn is-gold" (click)="setCommission(agent)">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-9 0h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
-                    <span class="commission-btn-text">Add Commission</span>
+                    <span>Add Commission</span>
                   </button>
-                  <button class="pricing-action-btn" (click)="setCustomPricing(agent, $event)" title="Set the rate this agent sees on the catalogue">
-                    <svg class="slider-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button class="row-action-btn is-blue" (click)="setCustomPricing(agent, $event)" title="Set the rate this agent sees on the catalogue">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                     </svg>
-                    <span class="pricing-btn-text">Custom Rate</span>
+                    <span>Custom Rate</span>
                   </button>
-                  <button class="agent-pay-btn" (click)="payCommission(agent, $event)" title="Record a commission payout for this agent">
-                    <svg class="pay-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button class="row-action-btn is-green" (click)="payCommission(agent, $event)" title="Record a commission payout for this agent">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h4M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
                     </svg>
-                    <span class="pay-btn-text">Pay</span>
+                    <span>Pay</span>
                   </button>
-                  <button class="agent-delete-btn" (click)="deleteAgent(agent, $event)" title="Delete agent">
-                    <svg class="delete-svg-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button class="delete-btn" (click)="deleteAgent(agent, $event)" title="Delete agent">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                     <span class="delete-btn-text">Delete</span>

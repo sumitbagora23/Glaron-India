@@ -35,12 +35,15 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { name: 'Dealers', icon: 'people' },
     { name: 'Agents', icon: 'badge' },
     { name: 'Orders', icon: 'receipt' },
-    { name: 'Quotations', icon: 'quote' },
+    { name: 'Request Quotation', icon: 'quote' },
+    { name: 'Area Quotation', icon: 'area' },
+    { name: 'Compare Quotation', icon: 'compare' },
     { name: 'Offer Banners', icon: 'pricetag' },
     { name: 'Notifications', icon: 'notifications' },
     { name: 'Posts', icon: 'image' },
     { name: 'Activity Logs', icon: 'activity' },
     { name: 'Share Catalogue', icon: 'share' },
+    { name: 'Share Catalogue (Area)', icon: 'share-area' },
     { name: 'Settings', icon: 'settings' }
   ];
 
@@ -67,6 +70,57 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     return !!window.matchMedia && window.matchMedia(AdminLayoutComponent.MOBILE_QUERY).matches;
   }
 
+  // ---- Back navigation ----
+  //
+  // Every screen that is not a sidebar tab needs a way out. On desktop the
+  // sidebar is always on screen, so it is the way out. On a phone it is behind
+  // the drawer, and an installed PWA has no browser chrome at all — iOS
+  // standalone draws no back button and no back gesture — so from a detail
+  // screen (an agent's payments, a product form, one quotation) there was
+  // nothing to press. The only escape was the drawer, which lands on a tab
+  // rather than the list the screen was opened from.
+  //
+  // Each sub-route below names the list it belongs to. First match wins, so
+  // the more specific patterns are listed above the ones that would also
+  // match them. A route that is not listed here is a tab in its own right and
+  // shows no back button — there is nothing above it to go back to.
+  private static readonly PARENT_ROUTES: ReadonlyArray<readonly [RegExp, string]> = [
+    [/^\/admin\/categories\/(new|edit)/,               '/admin/categories'],
+    [/^\/admin\/products\/(new|edit)/,                 '/admin/dashboard'],
+    [/^\/admin\/dealers\/pricing/,                     '/admin/dealers'],
+    [/^\/admin\/agents\/(commission|pay|pricing)/,     '/admin/agents'],
+    [/^\/admin\/orders\/(create|add)/,                 '/admin/orders'],
+    [/^\/admin\/banners\/(new|dealers)/,               '/admin/banners'],
+    [/^\/admin\/notifications\/new/,                   '/admin/notifications'],
+    [/^\/admin\/posts\/new/,                           '/admin/posts'],
+    [/^\/admin\/quotations\/areas\/[^/]+/,             '/admin/quotations/areas'],
+    [/^\/admin\/quotations\/requests\/[^/]+\/add/,     '/admin/quotations/requests'],
+    [/^\/admin\/quotations\/requests\/[^/]+/,          '/admin/quotations/requests'],
+    [/^\/admin\/settings\/offer-dealers/,              '/admin/settings'],
+  ];
+
+  /** The list this screen belongs to, or null on a tab. Set on every route change. */
+  backTarget: string | null = null;
+
+  /**
+   * Go up one level.
+   *
+   * Deliberately a route, not `history.back()`. This app is opened from a
+   * notification and from a home-screen shortcut as often as it is walked
+   * into, and in both of those the previous history entry is another site or
+   * nothing at all — `back()` would leave the console. Going to the named
+   * parent is the same move every time, however the screen was reached.
+   */
+  goBack() {
+    if (this.backTarget) this.router.navigateByUrl(this.backTarget);
+  }
+
+  private updateBackTarget(url: string) {
+    const path = (url || '').split('?')[0].split('#')[0];
+    const hit = AdminLayoutComponent.PARENT_ROUTES.find(([re]) => re.test(path));
+    this.backTarget = hit ? hit[1] : null;
+  }
+
   constructor(
     private router: Router,
     private searchService: SearchService
@@ -78,6 +132,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.updateActiveMenu(this.router.url);
+    // Also on first paint, not just on later navigations: the console is
+    // routinely opened straight onto a detail screen from a notification.
+    this.updateBackTarget(this.router.url);
 
     // Start receiving new-order alerts. Idempotent, and it only registers for
     // push when permission was already granted — asking needs a button tap.
@@ -89,6 +146,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.updateActiveMenu(event.urlAfterRedirects || event.url);
+      this.updateBackTarget(event.urlAfterRedirects || event.url);
       // Clear search when switching tabs for a clean UX
       this.searchService.clear();
       // A drawer left open over the new page would hide it.
@@ -145,8 +203,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.activeMenu = 'Agents';
     } else if (url.includes('/admin/orders')) {
       this.activeMenu = 'Orders';
+    } else if (url.includes('/admin/quotations/compare')) {
+      this.activeMenu = 'Compare Quotation';
+    } else if (url.includes('/admin/quotations/areas')) {
+      this.activeMenu = 'Area Quotation';
     } else if (url.includes('/admin/quotations')) {
-      this.activeMenu = 'Quotations';
+      this.activeMenu = 'Request Quotation';
     } else if (url.includes('/admin/categories')) {
       this.activeMenu = 'Categories';
     } else if (url.includes('/admin/dashboard') || url.includes('/admin/products')) {
@@ -161,6 +223,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.activeMenu = 'Posts';
     } else if (url.includes('/admin/logs')) {
       this.activeMenu = 'Activity Logs';
+    } else if (url.includes('/admin/share-catalogue-area')) {
+      this.activeMenu = 'Share Catalogue (Area)';
     } else if (url.includes('/admin/share-catalogue')) {
       this.activeMenu = 'Share Catalogue';
     } else if (url.includes('/admin/settings')) {
@@ -183,8 +247,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/agents']);
     } else if (menu === 'Orders') {
       this.router.navigate(['/admin/orders']);
-    } else if (menu === 'Quotations') {
-      this.router.navigate(['/admin/quotations']);
+    } else if (menu === 'Request Quotation') {
+      this.router.navigate(['/admin/quotations/requests']);
+    } else if (menu === 'Area Quotation') {
+      this.router.navigate(['/admin/quotations/areas']);
+    } else if (menu === 'Compare Quotation') {
+      this.router.navigate(['/admin/quotations/compare']);
     } else if (menu === 'Offer Banners') {
       this.router.navigate(['/admin/banners']);
     } else if (menu === 'Notifications') {
@@ -195,6 +263,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/logs']);
     } else if (menu === 'Share Catalogue') {
       this.router.navigate(['/admin/share-catalogue']);
+    } else if (menu === 'Share Catalogue (Area)') {
+      this.router.navigate(['/admin/share-catalogue-area']);
     } else if (menu === 'Settings') {
       this.router.navigate(['/admin/settings']);
     }

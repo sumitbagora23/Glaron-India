@@ -62,16 +62,61 @@
         </div>
 
         <div class="oc-pricing">
+          <!-- Wattage · dimension as tabs, and under the open one every shade
+               with its own quantity — the same card the dealer app shows. -->
+          <ng-container *ngIf="specTabs(product).length; else ocPlain">
+            <div class="oc-tab-row">
+              <button type="button" class="oc-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
+                      [class.is-open]="isSpecTabOpen(product, tab)" (click)="selectSpecTab(tab)">
+                <span>{{ tab.label }}</span>
+                <span class="oc-tab-qty" *ngIf="tabTotalQty(product, tab) > 0">{{ tabTotalQty(product, tab) }}</span>
+              </button>
+            </div>
+
+            <div class="oc-tab-panel" *ngIf="openSpecTab(product) as tab">
+              <ng-container *ngIf="productLightColours(product, tab.variant).length; else ocTabPlain">
+                <div class="oc-variant-row" *ngFor="let colour of productLightColours(product, tab.variant); trackBy: trackByColour">
+                  <span class="oc-variant-label"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
+                  <div class="oc-variant-right">
+                    <span class="oc-price">₹{{ variantUnitPrice(product, tab.index, colour) | number:'1.0-0' }}</span>
+                    <div class="oc-stepper">
+                      <button (click)="dec(product, tab.index, colour)">-</button>
+                      <span>{{ cartQtyFor(product, tab.index, colour) }}</span>
+                      <button (click)="inc(product, tab.index, colour)">+</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- No shades on this product: the option is ordered as it is. -->
+              <ng-template #ocTabPlain>
+                <div class="oc-variant-row">
+                  <span class="oc-variant-label">{{ tab.label }}</span>
+                  <div class="oc-variant-right">
+                    <span class="oc-price">₹{{ variantUnitPrice(product, tab.index) | number:'1.0-0' }}</span>
+                    <div class="oc-stepper">
+                      <button (click)="dec(product, tab.index)">-</button>
+                      <span>{{ cartQtyFor(product, tab.index) }}</span>
+                      <button (click)="inc(product, tab.index)">+</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </ng-container>
+
+          <!-- Variants with neither a wattage nor a dimension keep the old rows. -->
+          <ng-template #ocPlain>
           <ng-container *ngIf="product.variants?.length; else ocBase">
             <div class="oc-variant-row" *ngFor="let v of product.variants; let vi = index; trackBy: trackByVariantIndex">
               <span class="oc-variant-label">{{ variantLabel(v) }}</span>
               <div class="oc-variant-right">
+                <span class="oc-price">₹{{ variantUnitPrice(product, vi) | number:'1.0-0' }}</span>
                 <div class="oc-stepper">
                   <button (click)="dec(product, vi)">-</button>
                   <span>{{ cartQtyFor(product, vi) }}</span>
                   <button (click)="inc(product, vi)">+</button>
                 </div>
-                <span class="oc-price">₹{{ variantUnitPrice(product, vi) | number:'1.0-0' }}</span>
               </div>
             </div>
           </ng-container>
@@ -79,14 +124,15 @@
             <div class="oc-variant-row">
               <span class="oc-variant-label">Base price</span>
               <div class="oc-variant-right">
+                <span class="oc-price">₹{{ variantUnitPrice(product, -1) | number:'1.0-0' }}</span>
                 <div class="oc-stepper">
                   <button (click)="dec(product, -1)">-</button>
                   <span>{{ cartQtyFor(product, -1) }}</span>
                   <button (click)="inc(product, -1)">+</button>
                 </div>
-                <span class="oc-price">₹{{ variantUnitPrice(product, -1) | number:'1.0-0' }}</span>
               </div>
             </div>
+          </ng-template>
           </ng-template>
         </div>
       </div>

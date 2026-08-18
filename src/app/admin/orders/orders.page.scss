@@ -735,141 +735,67 @@
 .status-dot.dot-paid { background: #16a34a; }
 
 /* -------------------------------------------------------------
- * Order Pipeline List (table-style)
+ * Order Pipeline List
+ *
+ * The card, the table, the row buttons and the status pill are the console's
+ * shared list styling — see "Admin list pages" in global.scss. Seven columns
+ * need more room than a narrow canvas gives them, so the table keeps a floor
+ * width and .table-scroll-container takes the sideways scroll; the page still
+ * scrolls down as one.
  * ------------------------------------------------------------- */
-.orders-list-wrap {
-  width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  overflow: hidden;
-  font-family: 'Outfit', sans-serif;
-}
+.inventory-table { min-width: 880px; }
 
-/* Shared grid layout for header + rows */
-.orders-list-head,
-.order-row {
-  display: grid;
-  grid-template-columns: 110px 1.4fr 1.2fr 70px 120px 210px 84px;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-}
+.th-id, .td-id { width: 130px; }
+.th-items, .td-items { width: 70px; }
+.th-value, .td-value { width: 120px; }
+.th-status, .td-status { width: 180px; }
+.th-actions, .td-actions { width: 190px; }
 
-.orders-list-head {
-  background: #F8F9FA;
-  border-bottom: 1px solid #E2E8F0;
-
-  .col {
-    font-size: 11px;
+/* The id cell stacks the reference over the date it was placed. */
+.td-id {
+  .order-id {
+    display: block;
+    font-family: 'Outfit';
     font-weight: 700;
-    letter-spacing: 0.5px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #170338;
+  }
+
+  .order-date {
+    display: block;
+    font-family: 'Outfit';
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 18px;
     color: #64748B;
   }
 }
 
-.orders-list-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.order-row {
-  border-bottom: 1px solid #F1F5F9;
-  transition: background-color 0.15s ease;
-
-  &:last-child { border-bottom: none; }
-  &:hover { background: #F8FAFC; }
-
-  .col {
-    font-size: 14px;
-    color: #1C1B1B;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* The id column stacks the reference over the date it was placed. */
-  .col-id { display: flex; flex-direction: column; gap: 2px; }
-  .order-id { font-weight: 700; color: #170338; }
-  .order-date { font-size: 12px; font-weight: 500; color: #64748B; }
-  .dealer-name { font-weight: 600; }
-  .col-location { color: #64748B; }
-  .col-items { color: #64748B; }
-  .col-value { font-weight: 600; }
-}
-
-/* Status dropdown pill */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px 4px 12px;
-  border-radius: 999px;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
-  max-width: 100%;
-
-  .status-dot {
-    width: 9px;
-    height: 9px;
-  }
-}
-
-.status-select {
-  border: none;
-  background: transparent;
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+.dealer-name {
+  font-family: 'Outfit';
   font-weight: 600;
-  color: #1C1B1B;
-  cursor: pointer;
-  outline: none;
-  padding-right: 2px;
-  max-width: 150px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #170338;
 }
 
-.col-action {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-}
-
-.row-view-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  cursor: pointer;
+.location-text,
+.items-text {
+  font-family: 'Outfit';
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
   color: #64748B;
-  transition: background-color 0.15s ease;
-
-  &:hover { background: #E2E8F0; color: #1C1B1B; }
-
-  .dots-icon { width: 18px; height: 18px; }
 }
 
-.row-delete-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #DC2626;
-  transition: background-color 0.15s ease;
-
-  &:hover { background: #FEF2F2; color: #991B1B; }
-
-  .dots-icon { width: 17px; height: 17px; }
+.value-text {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #1C1B1B;
+  white-space: nowrap;
 }
 
 /* Searchable dealer dropdown (create-order modal) */
@@ -920,36 +846,27 @@
   }
 }
 
-.orders-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 48px 20px;
-  color: #94A3B8;
+/* Mobile: one card per order.
+ *
+ * Rows become cards in global.scss — the shared treatment every list tab uses.
+ * Only what is particular to this table is repeated here. */
+@media (max-width: 900px) {
+  /* The desktop floor width has to go or every card would be 940px wide. */
+  .inventory-table { min-width: 0; }
 
-  .empty-check-icon { width: 40px; height: 40px; }
-  .empty-stage-text { font-size: 14px; }
-}
+  .th-id, .td-id,
+  .th-items, .td-items,
+  .th-value, .td-value,
+  .th-status, .td-status,
+  .th-actions, .td-actions { width: auto; }
 
-/* Responsive: hide less-critical columns on narrow screens */
-@media (max-width: 860px) {
-  .orders-list-head,
-  .order-row {
-    grid-template-columns: 100px 1.3fr 60px 110px 190px 76px;
+  .td-id {
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #F1F5F9;
   }
-  .col-location { display: none; }
-}
 
-@media (max-width: 600px) {
-  .orders-list-head,
-  .order-row {
-    grid-template-columns: 90px 1fr 180px 76px;
-    padding: 12px 14px;
-  }
-  .col-items,
-  .col-value { display: none; }
+  .dealer-name { font-size: 15px; }
 }
 
 /* Order Detail Popup */

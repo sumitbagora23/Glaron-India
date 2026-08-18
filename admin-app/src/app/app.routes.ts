@@ -100,6 +100,13 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/product-form/product-form.page').then((m) => m.ProductFormPage),
       },
       {
+        // The shades a product can be sold in, managed in full. Opened by
+        // "Add Light Colour" on the product form, which passes ?returnTo so
+        // the half-filled product is come back to.
+        path: 'light-colours',
+        loadComponent: () => import('./admin/light-colours-manage/light-colours-manage.page').then((m) => m.LightColoursManagePage),
+      },
+      {
         path: 'dealers',
         loadComponent: () => import('./admin/dealers/dealers.page').then((m) => m.DealersPage),
       },
@@ -155,9 +162,44 @@ export const routes: Routes = [
         path: 'notifications/new',
         loadComponent: () => import('./admin/notification-form/notification-form.page').then((m) => m.NotificationFormPage),
       },
+      // Two sidebar tabs, one page: the route says which list it shows.
       {
         path: 'quotations',
+        redirectTo: 'quotations/requests',
+        pathMatch: 'full',
+      },
+      {
+        path: 'quotations/requests',
         loadComponent: () => import('./admin/quotations/quotations.page').then((m) => m.QuotationsPage),
+        data: { view: 'requests' },
+      },
+      {
+        // The area-wise link's own list: jobs that arrived split by room.
+        path: 'quotations/areas',
+        loadComponent: () => import('./admin/quotations/quotations.page').then((m) => m.QuotationsPage),
+        data: { view: 'areas' },
+      },
+      {
+        // One of those jobs, opened: every area priced, then the two PDFs.
+        path: 'quotations/areas/:id',
+        loadComponent: () => import('./admin/quotation-areas/quotation-areas.page').then((m) => m.QuotationAreasPage),
+      },
+      {
+        path: 'quotations/compare',
+        loadComponent: () => import('./admin/quotations/quotations.page').then((m) => m.QuotationsPage),
+        data: { view: 'compare' },
+      },
+      {
+        // A request opened in full: every line priced, more products added, a
+        // discount across the lot, and the PDF that goes back to the customer.
+        path: 'quotations/requests/:id',
+        loadComponent: () => import('./admin/quotation-detail/quotation-detail.page').then((m) => m.QuotationDetailPage),
+      },
+      {
+        // Putting products on that quotation — its own screen, the same way
+        // adding products to an order is its own screen.
+        path: 'quotations/requests/:id/add',
+        loadComponent: () => import('./admin/quotation-add/quotation-add.page').then((m) => m.QuotationAddPage),
       },
       {
         path: 'posts',
@@ -174,6 +216,12 @@ export const routes: Routes = [
       {
         path: 'share-catalogue',
         loadComponent: () => import('./admin/share-catalogue/share-catalogue.page').then((m) => m.ShareCataloguePage),
+      },
+      {
+        // The same link with the Areas tab on it. Its own page because the two
+        // are sent to different customers, not chosen between on arrival.
+        path: 'share-catalogue-area',
+        loadComponent: () => import('./admin/share-catalogue-area/share-catalogue-area.page').then((m) => m.ShareCatalogueAreaPage),
       },
       {
         path: 'settings',

@@ -7,11 +7,14 @@ import { ProductService, Product, ProductVariant } from '../product.service';
 import { DealerService, Dealer } from '../dealer.service';
 import { OrderService, Order, OrderItemLine } from '../order.service';
 import { orderRefLabel } from '../order-ref';
+import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch } from '../product-spec-tabs';
 
 interface CartLine {
   productId: string;
   productName: string;
   variantIndex: number; // -1 = base price
+  /** The shade this line is for, when the product is sold in several. */
+  lightColour?: string;
   variantLabel?: string;
   unitPrice: number;
   quantity: number;
@@ -25,6 +28,13 @@ interface CartLine {
   imports: [CommonModule, FormsModule, IonContent]
 })
 export class OrderComposePage implements OnInit {
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
   mode: 'create' | 'add' = 'create';
   orderId = '';
 
@@ -119,44 +129,114 @@ export class OrderComposePage implements OnInit {
     this.dealerSearch = name;
     this.dealerOpen = false;
   }
+  // ---- Wattage tabs ----
+  // The same card the dealer app and the catalogue link show: the wattages as
+  // tabs, and under the open one every light colour with its own price and its
+  // own quantity. The cut-out, the body colour and the rest of the sheet sit
+  // behind the ⓘ beside the tab name. A product with no wattage and no
+  // dimension keeps the plain rows below.
+  // with no wattage and no dimension keeps the plain rows below.
+  private specTabState = new SpecTabState();
+  trackBySpecTab = this.specTabState.trackByKey;
+  trackByColour = (_: number, colour: string) => colour;
+
+  specTabs(product: Product): SpecTab[] {
+    return this.specTabState.tabs(product);
+  }
+
+  openSpecTab(product: Product): SpecTab | null {
+    return this.specTabState.openTab(product);
+  }
+
+  isSpecTabOpen(product: Product, tab: SpecTab): boolean {
+    return this.specTabState.isOpen(product, tab);
+  }
+
+  selectSpecTab(tab: SpecTab) {
+    this.specTabState.toggle(tab);
+  }
+
+  /** The ⓘ sheet of the open option: dimension, cut-out and the rest. */
+  specRows(tab: SpecTab): SpecDetail[] {
+    return specDetails(tab.variant);
+  }
+
+  isSpecSheetOpen(product: Product): boolean {
+    return this.specTabState.isSheetOpen(product);
+  }
+
+  toggleSpecSheet(product: Product) {
+    this.specTabState.toggleSheet(product);
+  }
+
+  /** The light colours the admin picked for this product, if any. */
+  productLightColours(product: Product, variant?: ProductVariant): string[] {
+    return orderableLightColours(product, variant);
+  }
+
+  /** Everything on order for one wattage tab, across all of its shades. */
+  tabTotalQty(product: Product, tab: SpecTab): number {
+    const colours = this.productLightColours(product, tab.variant);
+    if (!colours.length) return this.cartQtyFor(product, tab.index);
+    return colours.reduce((sum, c) => sum + this.cartQtyFor(product, tab.index, c), 0);
+  }
 
   // ---- product cards / cart ----
   variantLabel(v: ProductVariant): string {
     return [v.model, v.wattage, v.type, v.dimension].filter(Boolean).join(' · ') || 'Variant';
   }
 
-  variantUnitPrice(product: Product, variantIndex: number): number {
-    if (variantIndex >= 0 && product.variants && product.variants[variantIndex]) {
-      const v = product.variants[variantIndex];
-      return v.price || v.pricePerMtr || product.price || 0;
-    }
-    return product.price || 0;
+  /** The option and the shade together — what the order line ends up reading. */
+  private lineLabel(v: ProductVariant | undefined, lightColour?: string): string | undefined {
+    const label = v ? this.variantLabel(v) : '';
+    const full = lightColour ? (label ? label + ' · ' + lightColour : lightColour) : label;
+    return full || undefined;
   }
 
-  cartQtyFor(product: Product, variantIndex: number): number {
-    const line = this.cart.find(l => l.productId === product.id && l.variantIndex === variantIndex);
-    return line ? line.quantity : 0;
+  variantUnitPrice(product: Product, variantIndex: number, lightColour?: string): number {
+    const variant = variantIndex >= 0 && product.variants ? product.variants[variantIndex] : undefined;
+    let base = product.price || 0;
+    if (variant) base = variant.price || variant.pricePerMtr || product.price || 0;
+    // A shade priced on its own IS the price, not a surcharge on top of the
+    // option's — the same rule the dealer card and the cart follow. An option
+    // that prices the shade itself wins over the product's price for it.
+    const own = lightColour ? lightColourCatalogPrice(product, lightColour, variant) : 0;
+    return own > 0 ? own : base;
   }
 
-  inc(product: Product, variantIndex: number) {
-    const line = this.cart.find(l => l.productId === product.id && l.variantIndex === variantIndex);
-    if (line) {
-      line.quantity += 1;
+  private findLine(product: Product, variantIndex: number, lightColour?: string): number {
+    return this.cart.findIndex(l =>
+      l.productId === product.id &&
+      l.variantIndex === variantIndex &&
+      (l.lightColour || '') === (lightColour || '')
+    );
+  }
+
+  cartQtyFor(product: Product, variantIndex: number, lightColour?: string): number {
+    const idx = this.findLine(product, variantIndex, lightColour);
+    return idx > -1 ? this.cart[idx].quantity : 0;
+  }
+
+  inc(product: Product, variantIndex: number, lightColour?: string) {
+    const idx = this.findLine(product, variantIndex, lightColour);
+    if (idx > -1) {
+      this.cart[idx].quantity += 1;
     } else {
       const v = variantIndex >= 0 && product.variants ? product.variants[variantIndex] : undefined;
       this.cart.push({
         productId: product.id,
         productName: product.name,
         variantIndex,
-        variantLabel: v ? this.variantLabel(v) : undefined,
-        unitPrice: this.variantUnitPrice(product, variantIndex),
+        lightColour,
+        variantLabel: this.lineLabel(v, lightColour),
+        unitPrice: this.variantUnitPrice(product, variantIndex, lightColour),
         quantity: 1
       });
     }
   }
 
-  dec(product: Product, variantIndex: number) {
-    const idx = this.cart.findIndex(l => l.productId === product.id && l.variantIndex === variantIndex);
+  dec(product: Product, variantIndex: number, lightColour?: string) {
+    const idx = this.findLine(product, variantIndex, lightColour);
     if (idx < 0) return;
     if (this.cart[idx].quantity > 1) this.cart[idx].quantity -= 1;
     else this.cart.splice(idx, 1);

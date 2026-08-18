@@ -61,72 +61,83 @@
     </div>
 
     <!-- Order Pipeline List -->
-    <div class="orders-list-wrap">
+    <section class="table-section-card">
+      <div class="table-scroll-container">
+        <table class="inventory-table compact">
+          <thead>
+            <tr>
+              <th class="th-id">Order</th>
+              <th class="th-dealer">Dealer</th>
+              <th class="th-location">Location</th>
+              <th class="th-items">Items</th>
+              <th class="th-value">Value</th>
+              <th class="th-status">Status</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of filteredOrders; let last = last; trackBy: trackByOrderId" [class.last-row-border]="last">
 
-      <!-- Column headers -->
-      <div class="orders-list-head">
-        <span class="col col-id">ORDER</span>
-        <span class="col col-dealer">DEALER</span>
-        <span class="col col-location">LOCATION</span>
-        <span class="col col-items">ITEMS</span>
-        <span class="col col-value">VALUE</span>
-        <span class="col col-status">STATUS</span>
-        <span class="col col-action"></span>
+              <!-- Reference over the date it was placed -->
+              <td class="td-id">
+                <span class="order-id">{{ orderRef(order.id) }}</span>
+                <span class="order-date" *ngIf="order.date">{{ order.date | date:'mediumDate' }}</span>
+              </td>
+
+              <td class="td-dealer" data-label="Dealer">
+                <span class="dealer-name">{{ order.dealer }}</span>
+              </td>
+
+              <td class="td-location" data-label="Location">
+                <span class="location-text">{{ order.location }}</span>
+              </td>
+
+              <td class="td-items" data-label="Items">
+                <span class="items-text">{{ order.itemsCount || (order.items?.length || 0) }}</span>
+              </td>
+
+              <td class="td-value" data-label="Value">
+                <span class="value-text">Rs. {{ order.value | number }}</span>
+              </td>
+
+              <td class="td-status" data-label="Status">
+                <div class="status-select-wrap">
+                  <span class="status-dot" [ngClass]="dotClassFor(order)"></span>
+                  <select [ngModel]="stageOf(order)"
+                          (ngModelChange)="changeStage(order, $event)">
+                    <option *ngFor="let st of stages" [value]="st.key">{{ st.label }}</option>
+                  </select>
+                </div>
+              </td>
+
+              <td class="td-actions">
+                <div class="actions-group">
+                  <button class="row-action-btn is-ink" (click)="openOrderDetail(order, $event)" title="View / edit items">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10" />
+                    </svg>
+                    <span>Items</span>
+                  </button>
+                  <button class="delete-btn" (click)="deleteOrderFromList(order, $event)" title="Delete order">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="delete-btn-text">Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Empty state -->
+            <tr *ngIf="filteredOrders.length === 0">
+              <td colspan="7" class="td-empty">
+                No orders yet. Click "Create Order" to raise one for a dealer.
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      <!-- Rows -->
-      <div class="orders-list-body">
-        <div class="order-row" *ngFor="let order of filteredOrders; trackBy: trackByOrderId">
-          <span class="col col-id">
-            <span class="order-id">{{ orderRef(order.id) }}</span>
-            <span class="order-date" *ngIf="order.date">{{ order.date | date:'mediumDate' }}</span>
-          </span>
-
-          <span class="col col-dealer">
-            <span class="dealer-name">{{ order.dealer }}</span>
-          </span>
-
-          <span class="col col-location">{{ order.location }}</span>
-
-          <span class="col col-items">{{ order.itemsCount || (order.items?.length || 0) }}</span>
-
-          <span class="col col-value">Rs. {{ order.value | number }}</span>
-
-          <span class="col col-status">
-            <span class="status-pill" [ngClass]="dotClassFor(order)">
-              <span class="status-dot" [ngClass]="dotClassFor(order)"></span>
-              <select class="status-select"
-                      [ngModel]="stageOf(order)"
-                      (ngModelChange)="changeStage(order, $event)">
-                <option *ngFor="let st of stages" [value]="st.key">{{ st.label }}</option>
-              </select>
-            </span>
-          </span>
-
-          <span class="col col-action">
-            <button class="row-view-btn" (click)="openOrderDetail(order, $event)" title="View / edit items">
-              <svg class="dots-icon" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
-            </button>
-            <button class="row-delete-btn" (click)="deleteOrderFromList(order, $event)" title="Delete order">
-              <svg class="dots-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </span>
-        </div>
-
-        <!-- Empty state -->
-        <div class="orders-empty" *ngIf="filteredOrders.length === 0">
-          <svg class="empty-check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
-          </svg>
-          <span class="empty-stage-text">No orders yet.</span>
-        </div>
-      </div>
-
-    </div>
+    </section>
 
   </main>
 
@@ -147,7 +158,7 @@
         <div class="odetail-item-row" *ngFor="let item of editItems; let i = index">
           <div class="oi-info">
             <span class="oi-name">{{ item.name }}</span>
-            <span class="oi-variant" *ngIf="item.variant">{{ item.variant }}</span>
+            <span class="oi-variant" *ngIf="item.variant">{{ labelHead(item.variant) }}<span class="lc-swatch" *ngIf="labelColour(item.variant)" [style.background]="swatch(labelColour(item.variant))"></span>{{ labelColour(item.variant) }}</span>
           </div>
           <div class="oi-controls">
             <div class="oi-stepper">

@@ -1,0 +1,660 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item" (click)="back()" style="cursor:pointer;">Area Quotation</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item" [class.active]="view === 'areas'" (click)="backToAreas()" style="cursor:pointer;">{{ quoteRef }}</span>
+      <ng-container *ngIf="view === 'area' && openGroup">
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item active">{{ openGroup?.name }}</span>
+      </ng-container>
+    </div>
+
+    <div class="page-header-row">
+      <div class="title-container">
+        <h2 class="page-title">Quotation for {{ customerName }}</h2>
+        <p class="page-subtitle">
+          {{ quoteRef }}
+          <ng-container *ngIf="customerMobile"> · <a class="qd-phone" [href]="callHref()">{{ customerMobile }}</a></ng-container>
+          <ng-container *ngIf="quotation?.ref"> · via link {{ quotation?.ref }}</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <section class="qd-empty-card" *ngIf="loading">Loading this quotation…</section>
+
+    <section class="qd-empty-card" *ngIf="!loading && !quotation">
+      This quotation is no longer in the list. It may have been deleted.
+    </section>
+
+    <ng-container *ngIf="quotation">
+
+      <!-- One row across the top: the two ways of looking at the job on the
+           left, and on the right whatever that view is worked with — an area
+           added on the summary side, the pricing controls on the final one. It
+           reads as one bar because it is one bar: switch, then act. -->
+      <div class="qa-switch">
+        <button class="qa-switch-btn" [class.active]="view !== 'final'" (click)="showSummary()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span>Area Summary</span>
+          <span class="qa-switch-count">{{ groups.length }}</span>
+        </button>
+
+        <button class="qa-switch-btn" [class.active]="view === 'final'" (click)="showFinal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h4m4-11H7a2 2 0 00-2 2v13l3.5-2.5L12 20l3.5-2.5L19 20V7a2 2 0 00-2-2z" />
+          </svg>
+          <span>Final Quotation</span>
+          <span class="qa-switch-count">{{ draft.lineCount }}</span>
+        </button>
+
+        <!-- Naming an area, on the summary side. -->
+        <div class="qa-tools" *ngIf="view !== 'final'">
+          <input type="text" class="qa-area-input" [(ngModel)]="newAreaName"
+                 placeholder="Add an area — Balcony, Store…"
+                 maxlength="40" (keyup.enter)="addArea()" />
+          <button class="qd-add-product" (click)="addArea()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+            <span>Add Area</span>
+          </button>
+        </div>
+
+        <!-- Pricing, on the final side. -->
+        <div class="qa-tools" *ngIf="view === 'final'">
+          <button class="qd-add-product" (click)="openPicker()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+            <span>Add Product</span>
+          </button>
+
+          <button class="qd-edit-price" [class.active]="editPrices" (click)="toggleEditPrices()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>Edit Price</span>
+          </button>
+
+          <div class="qd-discount-bar">
+            <span class="qd-discount-head">Discount</span>
+            <input type="number" min="0" max="100" step="0.5" class="qd-discount-input"
+                   [(ngModel)]="draft.discountValue" placeholder="0" />
+            <span class="qd-discount-pct">%</span>
+          </div>
+
+          <button class="qd-apply" (click)="apply()">Apply</button>
+        </div>
+      </div>
+
+      <p class="qd-applied qa-applied-line" *ngIf="applied && view === 'final'">{{ applied }}</p>
+
+      <!-- ============ THE AREAS ============
+           The screen this page opens on: one card per room, what is in it, and
+           what it comes to. Tapping one opens it. -->
+      <ng-container *ngIf="view === 'areas'">
+
+        <div class="qa-area-grid">
+          <button class="qa-area-card" *ngFor="let group of groups; trackBy: trackByGroupId" (click)="openArea(group)">
+            <span class="qa-area-mark">{{ group.name.charAt(0).toUpperCase() }}</span>
+
+            <span class="qa-area-text">
+              <span class="qa-area-name">{{ group.name }}</span>
+              <span class="qa-area-meta">
+                {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }}
+                · {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
+              </span>
+            </span>
+
+            <span class="qa-area-del" (click)="removeArea(group, $event)" title="Remove this area">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </span>
+          </button>
+
+          <div class="qd-empty-card" *ngIf="groups.length === 0">
+            No areas on this request. Add one above to start building the quotation.
+          </div>
+        </div>
+
+        <!-- No money on this screen at all. The area summary answers "what is
+             going where" — the sheet it makes is the one checked against the
+             site — and a rate in the corner only starts the other conversation
+             early. Pricing lives on the Final Quotation tab, where it belongs. -->
+      </ng-container>
+
+      <!-- ============ ONE AREA, IN FULL ============ -->
+      <ng-container *ngIf="view === 'area' && openGroup as group">
+
+        <div class="qa-area-head">
+          <button class="qd-back qa-back-btn" (click)="backToAreas()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>All areas</span>
+          </button>
+          <h3 class="qa-area-title">{{ group.name }}</h3>
+          <span class="qa-area-sub">
+            {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }} ·
+            {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
+          </span>
+        </div>
+
+        <!-- The rest of the job, kept on screen. Opening one room used to hide
+             every other one, so moving from Kitchen to Bedroom meant going back
+             to the summary and in again. The areas stay here as tabs, above the
+             list they switch — the same bar the summary itself is switched
+             with, one level down. -->
+        <div class="qa-area-tabs" *ngIf="groups.length > 1">
+          <button class="qa-area-tab" *ngFor="let g of groups; trackBy: trackByGroupId"
+                  [class.active]="g.id === openGroupId" (click)="openArea(g)"
+                  [title]="g.name">
+            <span class="qa-area-tab-name">{{ g.name }}</span>
+            <span class="qa-area-tab-count">{{ draft.groupCount(g) }}</span>
+          </button>
+        </div>
+
+        <!-- One control here, and it is the one this screen is for: putting
+             products into this room. -->
+        <div class="qd-actions-bar">
+          <button class="qd-add-product" (click)="openPicker()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+            <span>Add Product to {{ group.name }}</span>
+          </button>
+        </div>
+
+        <p class="qd-error" *ngIf="error">{{ error }}</p>
+
+        <div class="qd-body">
+          <div class="qd-lines">
+            <section class="table-section-card">
+              <div class="table-scroll-container">
+                <table class="inventory-table compact qd-table">
+                  <thead>
+                    <tr>
+                      <th class="qd-th-no">#</th>
+                      <th class="qd-th-product">Product</th>
+                      <th class="qd-th-qty">Quantity</th>
+                      <th class="qd-th-remove"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let line of group.lines; let i = index; let last = last; trackBy: trackByKey" [class.last-row-border]="last">
+
+                      <td class="qd-td-no" data-label="#">
+                        <span class="qd-no">{{ i + 1 }}</span>
+                      </td>
+
+                      <td class="qd-td-product" data-label="Product">
+                        <div class="qd-product">
+                          <div class="qd-thumb" [class.no-image]="!line.image">
+                            <img *ngIf="line.image" [src]="line.image" (error)="onImgError($event)" alt="" loading="lazy" decoding="async" />
+                          </div>
+                          <div class="qd-product-text">
+                            <span class="qd-name">{{ line.name }}</span>
+                            <span class="qd-variant" *ngIf="line.variant">{{ labelHead(line.variant) }}<span class="lc-swatch" *ngIf="labelColour(line.variant)" [style.background]="swatch(labelColour(line.variant))"></span>{{ labelColour(line.variant) }}</span>
+                            <span class="qd-sku" *ngIf="line.sku">{{ line.sku }}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td class="qd-td-qty" data-label="Quantity">
+                        <div class="qd-stepper">
+                          <button type="button" (click)="dec(line)" aria-label="One less">−</button>
+                          <input type="number" min="1" step="1" class="qd-qty-input"
+                                 [value]="line.quantity"
+                                 (input)="onQtyInput(line, $any($event.target).value)" />
+                          <button type="button" (click)="inc(line)" aria-label="One more">+</button>
+                        </div>
+                      </td>
+
+                      <td class="qd-td-remove">
+                        <button class="delete-btn qd-remove" (click)="removeLine(line)" title="Remove this line">
+                          <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr *ngIf="group.lines.length === 0">
+                      <td colspan="4" class="td-empty">
+                        Nothing in {{ group.name }} yet. Use Add Product to put products in it.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Pieces, not rupees. This side of the page never prices anything. -->
+            <div class="qa-area-foot">
+              <span class="qa-foot-label">{{ group.name }}</span>
+              <span class="qa-foot-total">
+                {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }} ·
+                {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ============ THE FINAL QUOTATION ============
+           Every product of every area in one table — the Request Quotation
+           page, line for line. A product two rooms asked for is one row for
+           the two of them, quantities added up, because a customer reading the
+           quotation counts products and not rooms. This is what the priced PDF
+           is built from. -->
+      <ng-container *ngIf="view === 'final'">
+
+        <p class="qd-error" *ngIf="error">{{ error }}</p>
+
+        <div class="qd-body">
+          <div class="qd-lines">
+            <section class="table-section-card">
+              <div class="table-scroll-container">
+                <table class="inventory-table compact qd-table">
+                  <thead>
+                    <tr>
+                      <th class="qd-th-no">#</th>
+                      <th class="qd-th-product">Product</th>
+                      <th class="qd-th-mrp">MRP</th>
+                      <th class="qd-th-rate">Price</th>
+                      <th class="qd-th-qty">Quantity</th>
+                      <th class="qd-th-amount">Amount</th>
+                      <th class="qd-th-remove"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of allLines; let i = index; let last = last; trackBy: trackByRow" [class.last-row-border]="last">
+
+                      <td class="qd-td-no" data-label="#">
+                        <span class="qd-no">{{ i + 1 }}</span>
+                      </td>
+
+                      <td class="qd-td-product" data-label="Product">
+                        <div class="qd-product">
+                          <div class="qd-thumb" [class.no-image]="!row.image">
+                            <img *ngIf="row.image" [src]="row.image" (error)="onImgError($event)" alt="" loading="lazy" decoding="async" />
+                          </div>
+                          <!-- No room named here. This is the quotation, and it
+                               is the same document every other customer gets.
+                               How many rooms the row stands for is said only on
+                               screen, so the admin knows why the count is what
+                               it is; the PDF carries none of it. -->
+                          <div class="qd-product-text">
+                            <span class="qd-name">{{ row.name }}</span>
+                            <span class="qd-variant" *ngIf="row.variant">{{ labelHead(row.variant) }}<span class="lc-swatch" *ngIf="labelColour(row.variant)" [style.background]="swatch(labelColour(row.variant))"></span>{{ labelColour(row.variant) }}</span>
+                            <span class="qd-sku" *ngIf="row.sku">{{ row.sku }}</span>
+                            <span class="qd-sku" *ngIf="row.sources.length > 1">
+                              combined from {{ row.sources.length }} areas
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td class="qd-td-mrp" data-label="MRP">
+                        <div class="qd-mrp-box" *ngIf="editPrices">
+                          <span class="qd-rupee">₹</span>
+                          <input type="number" min="0" step="1" class="qd-mrp-input"
+                                 [value]="row.mrp || ''" placeholder="0"
+                                 (input)="onRowMrpInput(row, $any($event.target).value)" />
+                        </div>
+                        <span class="qd-mrp-text" *ngIf="!editPrices" [class.is-empty]="!row.mrp">₹{{ money(row.mrp) }}</span>
+                      </td>
+
+                      <td class="qd-td-rate" data-label="Price">
+                        <div class="qd-mrp-box" *ngIf="editPrices">
+                          <span class="qd-rupee">₹</span>
+                          <input type="number" min="0" step="1" class="qd-mrp-input"
+                                 [value]="row.price || ''" placeholder="0"
+                                 (input)="onRowPriceInput(row, $any($event.target).value)" />
+                        </div>
+                        <span class="qd-rate" *ngIf="!editPrices">
+                          ₹{{ money(row.price) }}
+                          <span class="qa-line-off" *ngIf="draft.mergedPercent(row) > 0">−{{ draft.mergedPercent(row) }}%</span>
+                        </span>
+                      </td>
+
+                      <td class="qd-td-qty" data-label="Quantity">
+                        <div class="qd-stepper">
+                          <button type="button" (click)="decRow(row)" aria-label="One less">−</button>
+                          <input type="number" min="1" step="1" class="qd-qty-input"
+                                 [value]="row.quantity"
+                                 (input)="onRowQtyInput(row, $any($event.target).value)" />
+                          <button type="button" (click)="incRow(row)" aria-label="One more">+</button>
+                        </div>
+                      </td>
+
+                      <td class="qd-td-amount" data-label="Amount">
+                        <span class="qd-amount">₹{{ money(draft.mergedTotal(row)) }}</span>
+                      </td>
+
+                      <td class="qd-td-remove">
+                        <button class="delete-btn qd-remove" (click)="removeRow(row)" title="Remove this line">
+                          <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr *ngIf="allLines.length === 0">
+                      <td colspan="7" class="td-empty">
+                        Nothing on this quotation yet. Use Add Product to put products into an area.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <p class="qd-warn" *ngIf="draft.unpricedCount">
+              {{ draft.unpricedCount }} line{{ draft.unpricedCount === 1 ? ' has' : 's have' }} no price in
+              the catalogue. Type the MRP above, or it prints as zero.
+            </p>
+
+            <!-- The same figures as the summary, so the discount is read on
+                 whichever screen the PDF is built from. -->
+            <div class="qa-area-foot qa-final-foot">
+              <span class="qa-foot-label">Total</span>
+              <span class="qa-foot-mrp" *ngIf="draft.discount > 0">₹{{ money(draft.subtotal) }}</span>
+              <span class="qa-foot-off" *ngIf="draft.discount > 0">− ₹{{ money(draft.discount) }} ({{ draft.savedPercent }}%)</span>
+              <span class="qa-foot-total">₹{{ money(draft.total) }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </ng-container>
+  </main>
+
+  <!-- ============ Add products into the open area ============
+       A sheet rather than a page of its own: the area being filled has to stay
+       named on screen, or the wrong room gets the light. -->
+  <div class="qa-pick-overlay" *ngIf="picking && pickGroup as group" (click)="closePicker()">
+    <div class="qa-pick-sheet" (click)="$event.stopPropagation()">
+      <div class="qa-pick-head">
+        <div class="qa-pick-heading">
+          <span class="qa-pick-kicker">Adding to</span>
+          <span class="qa-pick-title">{{ group.name }}</span>
+        </div>
+        <button class="qa-pick-close" (click)="closePicker()" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Which room these products are going into. On the final list there is
+           no room in context, so it is chosen here before anything is tapped. -->
+      <div class="qa-pick-area-row" *ngIf="groups.length > 1">
+        <label class="qa-pick-area-label" for="pick-area">Area</label>
+        <select id="pick-area" class="qa-pick-area-select" [(ngModel)]="pickGroupId">
+          <option *ngFor="let g of groups; trackBy: trackByGroupId" [value]="g.id">{{ g.name }}</option>
+        </select>
+      </div>
+
+      <!-- Search and filter. They sit outside the list below, so they hold
+           their place while a few hundred products scroll past them. The
+           filter is an icon: what it is set to is spelled out on the chip
+           under it, and a word on the button would only say it twice. -->
+      <div class="qa-pick-tools">
+        <div class="qa-pick-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="qa-search-ic">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+          </svg>
+          <input type="text" [(ngModel)]="productSearch" placeholder="Search products by name, code or category" />
+          <button type="button" class="qa-search-clear" *ngIf="productSearch" (click)="clearProductSearch()" aria-label="Clear search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <button type="button" class="qa-filter-btn" [class.on]="categoryFilterActive"
+                (click)="openCategorySheet()" title="Filter by category" aria-label="Filter by category">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M7 12h10M10 19h4" />
+          </svg>
+          <span class="qa-filter-dot" *ngIf="categoryFilterActive"></span>
+        </button>
+      </div>
+
+      <!-- The category in force, and the cross that lifts it. -->
+      <div class="qa-filter-chip-row" *ngIf="categoryFilterActive">
+        <span class="qa-filter-chip">
+          <span class="qa-chip-text">{{ selectedCategory }}</span>
+          <button type="button" class="qa-chip-clear" (click)="clearCategoryFilter()" aria-label="Clear category filter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </span>
+        <span class="qa-filter-count">{{ pickerProducts.length }} shown</span>
+      </div>
+
+      <div class="qa-pick-list">
+        <div class="qa-pick-product" *ngFor="let product of pickerProducts; trackBy: trackByProductId">
+          <div class="qa-pick-row">
+            <div class="qd-thumb" [class.no-image]="!product.image">
+              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" alt="" loading="lazy" decoding="async" />
+            </div>
+            <div class="qa-pick-text">
+              <span class="qd-name">{{ product.name }}</span>
+              <span class="qd-sku">{{ product.id }}</span>
+            </div>
+          </div>
+
+          <!-- The same card the dealer app, the catalogue link and the order
+               screen show: the wattages as tabs, the size and the rest of the
+               sheet behind the ⓘ, and a quantity against every shade. -->
+          <div class="qa-pick-variants">
+            <ng-container *ngIf="specTabs(product).length; else pickBase">
+              <div class="qa-pick-tab-row">
+                <button type="button" class="qa-pick-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
+                        [class.is-open]="isSpecTabOpen(product, tab)" (click)="selectSpecTab(tab)">
+                  <span>{{ tab.label }}</span>
+                  <span class="qa-pick-tab-qty" *ngIf="tabTotalQty(product, tab) > 0">{{ tabTotalQty(product, tab) }}</span>
+                </button>
+              </div>
+
+              <div class="qa-pick-panel" *ngIf="openSpecTab(product) as tab">
+                <div class="qa-pick-head">
+                  <span class="qa-pick-head-name">{{ tab.detail }}</span>
+                  <button type="button" class="qa-pick-info" [class.is-on]="isSpecSheetOpen(product)"
+                          (click)="toggleSpecSheet(product)"
+                          aria-label="Dimension and specifications" title="Dimension &amp; specs">i</button>
+                </div>
+
+                <div class="qa-pick-sheet" *ngIf="isSpecSheetOpen(product)">
+                  <div class="qa-pick-sheet-line" *ngFor="let row of specRows(tab)">
+                    <span class="qa-pick-sheet-key">{{ row.label }}</span>
+                    <span class="qa-pick-sheet-val">{{ row.value }}</span>
+                  </div>
+                  <div class="qa-pick-sheet-key" *ngIf="specRows(tab).length === 0">Nothing else recorded on this option.</div>
+                </div>
+
+                <div class="qa-pick-variant" *ngFor="let colour of productLightColours(product, tab.variant); trackBy: trackByColour">
+                  <span class="qa-pick-variant-label"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
+                  <span class="qa-pick-price" *ngIf="view === 'final'">₹{{ money(unitPrice(product, tab.variant, colour)) }}</span>
+                  <div class="qd-stepper qa-pick-step">
+                    <button type="button" (click)="removeProduct(product, tab.variant, colour)" aria-label="One less">−</button>
+                    <span class="qa-pick-qty">{{ quantityOf(product, tab.variant, colour) }}</span>
+                    <button type="button" (click)="addProduct(product, tab.variant, colour)" aria-label="One more">+</button>
+                  </div>
+                </div>
+
+                <div class="qa-pick-variant no-name" *ngIf="!productLightColours(product, tab.variant).length">
+                  <span class="qa-pick-price" *ngIf="view === 'final'">₹{{ money(unitPrice(product, tab.variant)) }}</span>
+                  <div class="qd-stepper qa-pick-step">
+                    <button type="button" (click)="removeProduct(product, tab.variant)" aria-label="One less">−</button>
+                    <span class="qa-pick-qty">{{ quantityOf(product, tab.variant) }}</span>
+                    <button type="button" (click)="addProduct(product, tab.variant)" aria-label="One more">+</button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- No options at all: the product itself takes the quantity, shade
+                 by shade when it is sold in shades. -->
+            <ng-template #pickBase>
+              <div class="qa-pick-variant" *ngFor="let colour of productLightColours(product); trackBy: trackByColour">
+                <span class="qa-pick-variant-label"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
+                <span class="qa-pick-price" *ngIf="view === 'final'">₹{{ money(unitPrice(product, undefined, colour)) }}</span>
+                <div class="qd-stepper qa-pick-step">
+                  <button type="button" (click)="removeProduct(product, undefined, colour)" aria-label="One less">−</button>
+                  <span class="qa-pick-qty">{{ quantityOf(product, undefined, colour) }}</span>
+                  <button type="button" (click)="addProduct(product, undefined, colour)" aria-label="One more">+</button>
+                </div>
+              </div>
+
+              <div class="qa-pick-variant no-name" *ngIf="!productLightColours(product).length">
+                <span class="qa-pick-price" *ngIf="view === 'final'">₹{{ money(unitPrice(product)) }}</span>
+                <div class="qd-stepper qa-pick-step">
+                  <button type="button" (click)="removeProduct(product)" aria-label="One less">−</button>
+                  <span class="qa-pick-qty">{{ quantityOf(product) }}</span>
+                  <button type="button" (click)="addProduct(product)" aria-label="One more">+</button>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="td-empty" *ngIf="pickerProducts.length === 0">
+          Nothing matches that. Try another word.
+        </div>
+      </div>
+
+      <button class="qa-pick-done" (click)="closePicker()">
+        Done — {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }} in {{ group.name }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Category picker, over the product sheet. A category is recognised by its
+       picture long before its name is read, so it is chosen from the tiles the
+       catalogue itself is browsed with rather than from a list of words. -->
+  <div class="qa-cat-overlay" *ngIf="showCategorySheet" (click)="closeCategorySheet()">
+    <div class="qa-cat-sheet" (click)="$event.stopPropagation()">
+      <div class="qa-cat-head">
+        <div class="qa-cat-heading">
+          <span class="qa-pick-kicker">Filter</span>
+          <span class="qa-pick-title">Choose a category</span>
+        </div>
+        <button type="button" class="qa-pick-close" (click)="closeCategorySheet()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="qa-x-ic">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="qa-cat-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="qa-search-ic">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+        </svg>
+        <input type="text" [(ngModel)]="categorySheetQuery" placeholder="Search categories" />
+        <button type="button" class="qa-search-clear" *ngIf="categorySheetQuery" (click)="clearCategorySheetSearch()" aria-label="Clear search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="qa-cat-scroll">
+        <button type="button" class="qa-cat-all" [class.selected]="!categoryFilterActive" (click)="pickCategory('All Categories')">
+          <span class="qa-cat-all-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z" />
+            </svg>
+          </span>
+          <span class="qa-cat-all-text">
+            <span class="qa-cat-all-name">All Categories</span>
+            <span class="qa-cat-all-count">{{ allProducts.length }} products</span>
+          </span>
+          <span class="qa-cat-tick" *ngIf="!categoryFilterActive">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+        </button>
+
+        <div class="qa-cat-grid">
+          <button type="button" class="qa-cat-card" *ngFor="let cat of sheetCategories; trackBy: trackByCategoryId"
+                  [class.selected]="selectedCategory === cat.name" (click)="pickCategory(cat.name)">
+            <span class="qa-cat-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" [alt]="cat.name" loading="lazy" decoding="async" />
+              <span class="qa-cat-tick" *ngIf="selectedCategory === cat.name">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            </span>
+            <span class="qa-cat-name">{{ cat.name }}</span>
+            <span class="qa-cat-count">{{ categoryCount(cat.name) }}</span>
+          </button>
+        </div>
+
+        <div class="td-empty" *ngIf="sheetCategories.length === 0">No category by that name.</div>
+      </div>
+
+      <div class="qa-cat-foot">
+        <button type="button" class="qa-cat-clear" [disabled]="!categoryFilterActive" (click)="clearCategoryFilter()">
+          Clear filter
+        </button>
+        <button type="button" class="qa-cat-done" (click)="closeCategorySheet()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky footer: what the job comes to, and the two documents. -->
+  <footer class="qd-footer" *ngIf="quotation">
+    <div class="qd-footer-summary">
+      <span class="qd-footer-count" *ngIf="view !== 'final'">
+        {{ groups.length }} {{ groups.length === 1 ? 'area' : 'areas' }} ·
+        {{ draft.itemCount }} item{{ draft.itemCount === 1 ? '' : 's' }}
+      </span>
+      <span class="qd-footer-count" *ngIf="view === 'final'">
+        {{ draft.itemCount }} item{{ draft.itemCount === 1 ? '' : 's' }}
+        <ng-container *ngIf="draft.discount > 0"> · {{ draft.savedPercent }}% off</ng-container>
+      </span>
+      <!-- The total belongs to the priced screen. The summary side shows what
+           is going where, and nothing that adds up to money. -->
+      <span class="qd-footer-total" *ngIf="view === 'final'">₹{{ money(draft.total) }}</span>
+      <span class="qd-footer-total" *ngIf="view !== 'final'">{{ draft.lineCount }} product{{ draft.lineCount === 1 ? '' : 's' }}</span>
+    </div>
+    <div class="qd-footer-actions">
+      <button class="qd-back" (click)="back()">Back</button>
+
+      <!-- The area summary makes the sheet that goes to site — every area, what
+           is in it, and a picture of each fitting, with no money on it. -->
+      <button class="qd-pdf qa-list-pdf" *ngIf="view !== 'final'" [disabled]="!canBuild" (click)="createPdf()">
+        <svg class="qd-pdf-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        <span>{{ buildingKind === 'list' ? 'Creating…' : 'Create PDF' }}</span>
+      </button>
+
+      <!-- The priced one, twice: on Glaron's paper, and on nobody's. Same
+           figures, same layout — the second simply carries no mark, no name in
+           the footer and none in the file name, for a quotation that is going
+           to be forwarded by somebody else. -->
+      <button class="qd-pdf qa-plain-pdf" *ngIf="view === 'final'" [disabled]="!canBuild" (click)="generatePlainQuotationPdf()">
+        <svg class="qd-pdf-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+        </svg>
+        <span>{{ buildingKind === 'plain' ? 'Creating…' : 'Without Logo' }}</span>
+      </button>
+
+      <button class="qd-pdf" *ngIf="view === 'final'" [disabled]="!canBuild" (click)="generateQuotationPdf()">
+        <svg class="qd-pdf-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>{{ buildingKind === 'quote' ? 'Creating…' : 'With Logo' }}</span>
+      </button>
+    </div>
+  </footer>
+</ion-content>

@@ -70,7 +70,7 @@
             <div class="order-item-row" *ngFor="let item of order.items">
               <div class="oi-left">
                 <span class="oi-name">{{ item.name }}</span>
-                <span class="oi-variant" *ngIf="item.variant">{{ item.variant }}</span>
+                <span class="oi-variant" *ngIf="item.variant">{{ labelHead(item.variant) }}<span class="lc-swatch" *ngIf="labelColour(item.variant)" [style.background]="swatch(labelColour(item.variant))"></span>{{ labelColour(item.variant) }}</span>
               </div>
               <span class="oi-qty">Qty: {{ item.quantity }}</span>
             </div>

@@ -351,18 +351,36 @@
       <section class="section-head" *ngIf="activeTab === 'products'">
         <p class="section-sub">The full Glaron range — image, specification and every variant.</p>
 
-        <div class="catalog-search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-          <input type="text" class="search-field" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" placeholder="Search products" />
-          <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
-        </div>
-
-        <div class="category-select-wrapper">
-          <select [(ngModel)]="selectedCategory" class="cat-select-dropdown">
-            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-          </select>
-        </div>
       </section>
+      <!-- The fixed bar: the search field, then the funnel that opens the
+           categories. It stays on screen while the list scrolls under it, and
+           it heads a category opened from Home too, so the whole range is one
+           tap away from anywhere in the catalogue. It must stay a direct child
+           of the scrolling container or it will not stick. -->
+      <div class="catalog-sticky-bar" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
+        <div class="catalog-search-row">
+          <div class="catalog-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+            <input type="text" class="search-field" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" placeholder="Search products" />
+            <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
+          </div>
+
+          <!-- The funnel opens the categories; the cross beside it drops the one
+               that is on, the way the cross in the field drops what was typed. -->
+          <button type="button" class="catalog-filter-btn" [class.is-on]="categorySheetOpen"
+                  [class.has-filter]="hasCategoryFilter" (click)="openCategorySheet()"
+                  aria-label="Choose a category" title="Categories">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" class="filter-ic" aria-hidden="true">
+              <path d="M3 5h18M6 12h12M10 19h4" />
+            </svg>
+            <span class="filter-dot" *ngIf="hasCategoryFilter" aria-hidden="true"></span>
+          </button>
+
+          <button type="button" class="filter-clear-btn" *ngIf="hasCategoryFilter"
+                  (click)="clearCategory()" aria-label="Clear the category" title="Clear filter">&times;</button>
+        </div>
+      </div>
 
       <!-- PRODUCT CARDS — image, name, description, variants. Nothing else. -->
       <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
@@ -398,7 +416,7 @@
             </button>
           </div>
 
-          <div class="card-head-row">
+          <div class="card-head-row has-actions">
             <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
               <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product" decoding="async" />
             </div>
@@ -410,32 +428,74 @@
             </div>
           </div>
 
-          <div class="product-variants-body" *ngIf="product.variants?.length">
-            <span class="variants-header">{{ showPrices ? cardPriceVariantLabel : 'Variants' }}</span>
+          <div class="product-details-body" *ngIf="product.variants?.length">
+            <span class="specs-header">{{ showPrices ? cardPriceVariantLabel : 'Available options' }}</span>
 
-            <!-- With prices on, each variant gets its own row so the price sits
-                 beside the variant it belongs to; with prices hidden they read
-                 as plain specification chips. -->
-            <div class="variant-price-list" *ngIf="showPrices">
-              <div class="variant-price-row" *ngFor="let variant of product.variants; let vi = index; trackBy: trackByVariantIndex">
-                <span class="variant-price-label">{{ getVariantLabel(variant) }}</span>
+            <!-- Wattage reads as small tabs; the open one carries the price and
+                 the ⓘ that opens its size and the rest of the sheet. -->
+            <ng-container *ngIf="specTabs(product).length">
+              <div class="spec-tab-strip">
+                <div class="spec-tab-row">
+                  <button class="spec-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
+                          [class.is-open]="isSpecTabOpen(product, tab)"
+                          (click)="selectSpecTab(tab)">
+                    <span class="spec-tab-text">{{ tab.detail }}</span>
+                  </button>
+                </div>
+                <!-- The ⓘ rides at the end of the strip rather than inside the
+                     sheet, so the open option is never spelled out a second time. -->
+                <button type="button" class="spec-info-btn" [class.is-on]="isSpecSheetOpen(product)"
+                        (click)="toggleSpecSheet(product)"
+                        aria-label="Dimension and specifications" title="Dimension &amp; specs">i</button>
+              </div>
+
+              <div class="spec-open-panel is-tabbed" *ngIf="openSpecTab(product) as tab">
+                <!-- Everything the tab no longer prints: dimension, cut-out,
+                     body colour, packing. -->
+                <div class="spec-sheet" *ngIf="isSpecSheetOpen(product)">
+                  <div class="spec-sheet-line" *ngFor="let row of specRows(tab)">
+                    <span class="spec-sheet-key">{{ row.label }}</span>
+                    <span class="spec-sheet-val">{{ row.value }}</span>
+                  </div>
+                  <div class="spec-sheet-empty" *ngIf="specRows(tab).length === 0">Nothing else recorded on this option.</div>
+                </div>
+
+                <!-- Every shade this product is sold in, priced on its own line. -->
+                <div class="light-colour-row" *ngFor="let colour of productLightColours(product, tab.variant); trackBy: trackByColour">
+                  <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
+                  <span class="variant-price-value" *ngIf="showPrices">
+                    ₹{{ colourPrice(getVariantCardPrice(product, tab.variant, tab.index), product, colour, getVariantBasePrice(product, tab.variant), tab.variant) | number:'1.0-0' }}<small *ngIf="tab.variant.pricePerMtr">/mtr</small>
+                  </span>
+                </div>
+
+                <!-- No shades on this product: the price stands on its own. -->
+                <div class="light-colour-row no-name" *ngIf="!productLightColours(product, tab.variant).length && showPrices">
+                  <span class="variant-price-value">
+                    ₹{{ getVariantCardPrice(product, tab.variant, tab.index) | number:'1.0-0' }}<small *ngIf="tab.variant.pricePerMtr">/mtr</small>
+                  </span>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- No variants. A product sold in shades is still priced per shade
+               here — the light colours do not depend on there being a wattage
+               to hang them off. -->
+          <div class="product-details-body" *ngIf="!product.variants?.length && showPrices">
+            <span class="specs-header">{{ cardPriceLabel }}</span>
+
+            <div class="spec-open-panel" *ngIf="productLightColours(product).length; else singleBasePrice">
+              <div class="light-colour-row" *ngFor="let colour of productLightColours(product); trackBy: trackByColour">
+                <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
                 <span class="variant-price-value">
-                  ₹{{ getVariantCardPrice(product, variant, vi) | number:'1.0-0' }}<small *ngIf="variant.pricePerMtr">/mtr</small>
+                  ₹{{ colourPrice(getCardPrice(product), product, colour, product.price) | number:'1.0-0' }}
                 </span>
               </div>
             </div>
 
-            <div class="variants-inline-list" *ngIf="!showPrices">
-              <span class="variant-chip" *ngFor="let variant of product.variants; trackBy: trackByVariantIndex">
-                {{ getVariantLabel(variant) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- No variants: the product's own price. -->
-          <div class="product-variants-body" *ngIf="!product.variants?.length && showPrices">
-            <span class="variants-header">{{ cardPriceLabel }}</span>
-            <span class="product-single-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
+            <ng-template #singleBasePrice>
+              <span class="product-single-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
+            </ng-template>
           </div>
 
         </article>
@@ -492,6 +552,8 @@
               <span class="ce-date">{{ entry.date | date:'mediumDate' }}</span>
               <span class="ce-pct">{{ entry.percentage | number:'1.0-2' }}%</span>
             </div>
+            <!-- Who the business was for, as the admin recorded it. -->
+            <p class="ce-client" *ngIf="entry.clientName">{{ entry.clientName }}</p>
             <div class="ce-mid">
               <span class="ce-sales-label">Sales amount</span>
               <span class="ce-sales">₹{{ entry.salesAmount | number:'1.0-0' }}</span>
@@ -571,6 +633,38 @@
     </div>
 
     <!-- Description modal -->
+    <!-- The categories, in the same picture grid the Home browser uses, so a
+         category is chosen one way in this app and not two. -->
+    <div class="cat-sheet-overlay" *ngIf="categorySheetOpen" (click)="closeCategorySheet()">
+      <div class="cat-sheet" (click)="$event.stopPropagation()">
+        <div class="cat-sheet-head">
+          <h3 class="cat-sheet-title">Categories</h3>
+          <button type="button" class="cat-sheet-close" (click)="closeCategorySheet()" aria-label="Close">&times;</button>
+        </div>
+
+        <section class="category-grid">
+          <button class="category-grid-card" [class.is-on]="isCategoryOn('All Categories')"
+                  (click)="pickCategory('All Categories')">
+            <div class="cat-grid-media cat-grid-all">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cat-grid-all-ic" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+            </div>
+            <span class="cat-grid-name">All</span>
+          </button>
+
+          <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId"
+                  [class.is-on]="isCategoryOn(cat.name)" (click)="pickCategory(cat.name)">
+            <div class="cat-grid-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+            </div>
+            <span class="cat-grid-name">{{ cat.name }}</span>
+          </button>
+        </section>
+      </div>
+    </div>
+
     <div class="sheet-overlay" *ngIf="selectedDescProduct" (click)="closeDescModal()">
       <div class="sheet-card" (click)="$event.stopPropagation()">
         <div class="sheet-header">

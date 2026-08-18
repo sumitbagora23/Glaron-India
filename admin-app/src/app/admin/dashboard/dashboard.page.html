@@ -15,6 +15,14 @@
           <span class="btn-text-white">Add New Product</span>
         </button>
 
+        <!-- The shades every product is picked from, managed in full. -->
+        <button class="light-colours-btn" (click)="manageLightColours()">
+          <svg class="btn-plus-ink-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Add Light Colour</span>
+        </button>
+
         <!-- Category multi-select filter (next to Add Product) -->
         <div class="category-filter">
           <button class="cat-filter-btn" (click)="toggleCategoryFilter()" [class.active]="selectedCategories.length">
@@ -76,7 +84,7 @@
             </td>
 
             <!-- Category Cell -->
-            <td class="td-category">
+            <td class="td-category" data-label="Category">
               <div class="category-badge" [class.badge-empty]="!product.category">
                 <span class="badge-text">{{ product.category || '-' }}</span>
               </div>

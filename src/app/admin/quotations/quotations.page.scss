@@ -1,33 +1,10 @@
-/* Quotations — chooser, compare table and send list */
+/* Quotations — the request list and the compare table */
 
 .page-subtitle {
   margin: 4px 0 0;
   font-family: 'Outfit';
   font-size: 14px;
   color: #6B7280;
-}
-
-.title-with-back {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.back-to-menu-btn {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 6px;
-  color: #170338;
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  svg { width: 16px; height: 16px; }
-  &:hover { background: #F8FAFC; }
 }
 
 .count-chip {
@@ -43,126 +20,13 @@
   border-radius: 999px;
 }
 
-/* ============ Chooser ============ */
-.choice-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
+/* ============ The two quotation tables ============
+   The card, table and row buttons are shared — see "Admin list pages" in
+   global.scss. The list of requested products needs more room than the canvas
+   has, so the table keeps a floor width and .table-scroll-container takes the
+   sideways scroll; the page still scrolls down as one. */
 
-.choice-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  text-align: left;
-  padding: 24px;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  font-family: 'Outfit';
-  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    border-color: #170338;
-    box-shadow: 0px 8px 20px rgba(23, 3, 56, 0.10);
-  }
-}
-
-.choice-icon {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  margin-bottom: 4px;
-
-  svg { width: 22px; height: 22px; }
-
-  &.request { background: rgba(16, 185, 129, 0.14); color: #047857; }
-  &.compare { background: rgba(23, 3, 56, 0.07); color: #170338; }
-}
-
-.choice-title {
-  font-weight: 700;
-  font-size: 18px;
-  line-height: 24px;
-  color: #170338;
-}
-
-.choice-text {
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 21px;
-  color: #6B7280;
-}
-
-.choice-meta {
-  margin-top: 4px;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: #94A3B8;
-}
-
-/* ============ Compare table ============ */
-.table-section-card {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0px;
-  width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow-x: auto;
-  flex-shrink: 0;
-  margin-bottom: 16px;
-}
-
-.inventory-table {
-  width: 100%;
-  min-width: 720px;
-  border-collapse: collapse;
-  text-align: left;
-
-  thead tr {
-    height: 44px;
-    background: #F8F9FA;
-    border-bottom: 1px solid #E2E8F0;
-  }
-
-  th {
-    padding: 10px 16px;
-    font-family: 'Outfit';
-    font-weight: 700;
-    font-size: 12px;
-    line-height: 16px;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    color: #170338;
-  }
-
-  tbody tr {
-    border-bottom: 1px solid #E2E8F0;
-    transition: background-color 0.15s ease;
-
-    &:hover { background-color: rgba(248, 249, 250, 0.5) !important; }
-    &.last-row-border { border-bottom: none; }
-  }
-
-  td {
-    padding: 12px 16px;
-    vertical-align: middle;
-  }
-}
+.inventory-table { min-width: 720px; }
 
 .td-preview { width: 96px; }
 
@@ -189,6 +53,18 @@
   object-fit: cover;
   display: block;
 }
+
+/* What a PDF shows instead of a thumbnail — there is no page to draw here. */
+.quote-thumb-pdf {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  color: #DC2626;
+}
+
+/* The row actions are links now, not buttons — they open the file itself. */
+a.view-btn { text-decoration: none; }
 
 .customer-name {
   display: block;
@@ -223,70 +99,6 @@
   &:hover { color: #7E5700; text-decoration: underline; }
 }
 
-/* What a customer asked to be priced: the pictures, a count, and the first few
-   names. The full list opens in the preview overlay. */
-.th-items,
-.td-items { min-width: 300px; }
-
-.item-thumb-strip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-  cursor: pointer;
-}
-
-.item-thumb {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  border: 1px solid #E2E8F0;
-  border-radius: 6px;
-  background: #FFFFFF;
-  overflow: hidden;
-
-  img { width: 100%; height: 100%; object-fit: contain; display: block; }
-}
-
-.item-thumb-more {
-  flex-shrink: 0;
-  padding: 0 8px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 6px;
-  background: #F1F5F9;
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 12px;
-  color: #6B7280;
-}
-
-.items-count-chip {
-  display: inline-block;
-  margin-bottom: 3px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 11.5px;
-  letter-spacing: 0.3px;
-  color: #047857;
-  white-space: nowrap;
-}
-
-.items-summary {
-  display: block;
-  font-family: 'Outfit';
-  font-weight: 500;
-  font-size: 12.5px;
-  line-height: 18px;
-  color: #6B7280;
-}
-
 .th-time,
 .td-time { width: 140px; }
 
@@ -298,224 +110,52 @@
 }
 
 .th-actions,
-.td-actions { text-align: right; width: 190px; white-space: nowrap; }
+.td-actions { width: 190px; white-space: nowrap; }
 
 .row-icon { width: 14px; height: 14px; }
 
-.view-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  padding: 4px 8px;
-  margin-right: 4px;
-  cursor: pointer;
-  border-radius: 4px;
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  color: #170338;
-  transition: all 0.15s ease;
+@media (max-width: 900px) {
+  /* Rows are cards down here (global.scss), so the desktop floor width has to
+     go or every card would be 720px wide. */
+  .inventory-table { min-width: 0; }
 
-  &:hover { background: rgba(23, 3, 56, 0.07); }
-}
+  .th-actions,
+  .td-actions { width: auto; }
 
-.delete-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  color: #DC2626;
-
-  &:hover { background: rgba(220, 38, 38, 0.08); color: #991B1B; }
-}
-
-.delete-icon { width: 14px; height: 14px; }
-
-.td-empty {
-  padding: 32px 16px;
-  text-align: center;
-  font-family: 'Outfit';
-  font-size: 14px;
-  color: #94A3B8;
-}
-
-/* Reply on WhatsApp — a row action on both tables. */
-.wa-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  padding: 9px 16px;
-  background: #170338;
-  border-radius: 6px;
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 14px;
-  color: #FFFFFF;
-  text-decoration: none;
-  transition: background 0.15s ease;
-
-  &:hover { background: #2D145A; }
-
-  /* Sitting in a table cell beside View and Delete, not alone in a row. */
-  &.compact {
-    padding: 5px 10px;
-    margin-right: 4px;
-    font-size: 13px;
-    border-radius: 5px;
+  /* The uploaded quotation is a picture, not a thumbnail beside a name — it
+     takes the full width of the card. */
+  .inventory-table .td-preview {
+    float: none;
+    width: 100%;
+    margin: 0 0 6px;
   }
 }
 
-/* ============ Preview overlay ============ */
-.preview-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  background: rgba(23, 3, 56, 0.62);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-}
-
-.preview-card {
-  position: relative;
-  max-width: 100%;
+/* ---- The Areas column of the area-wise list ----
+   Two lines: the count, which is what the row is scanned for, and the names
+   under it, which is what makes one job recognisable from another. */
+.th-areas { width: 26%; }
+.td-areas {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.preview-close {
-  position: absolute;
-  top: -16px;
-  right: -10px;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: #FFFFFF;
-  border-radius: 50%;
-  font-size: 24px;
-  color: #170338;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-  z-index: 2;
-}
-
-.preview-img {
-  max-width: 100%;
-  max-height: 74vh;
-  border-radius: 10px;
-  background: #FFFFFF;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
-}
-
-/* The requested-list preview: the same overlay, holding rows instead of a
-   picture. Quantities only — the catalogue it came from has no prices. */
-.preview-items {
-  width: min(560px, 100%);
-  max-height: 74vh;
-  overflow-y: auto;
-  padding: 20px 22px;
-  background: #FFFFFF;
-  border-radius: 10px;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
-}
-
-.preview-items-head {
-  display: block;
-  margin-bottom: 12px;
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: #94A3B8;
-}
-
-.preview-item-row {
-  display: flex;
+  gap: 5px;
   align-items: flex-start;
-  gap: 14px;
-  padding: 10px 0;
-  border-bottom: 1px solid #E2E8F0;
-
-  &:last-child { border-bottom: none; }
 }
-
-.preview-item-thumb {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  border: 1px solid #E2E8F0;
-  border-radius: 6px;
-  background: #FFFFFF;
-  overflow: hidden;
-
-  img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  &.no-image { background: #F1F5F9; }
-}
-
-.preview-item-text { flex: 1; min-width: 0; }
-
-.preview-item-name {
-  display: block;
+.area-count-chip {
   font-family: 'Outfit';
   font-weight: 700;
-  font-size: 14px;
-  line-height: 20px;
-  color: #170338;
-}
-
-.preview-item-variant {
-  display: block;
-  font-family: 'Outfit';
-  font-weight: 500;
-  font-size: 12.5px;
-  line-height: 18px;
-  color: #6B7280;
-}
-
-.preview-item-sku {
-  display: block;
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: #94A3B8;
-}
-
-.preview-item-qty {
-  flex-shrink: 0;
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 14px;
+  font-size: 11.5px;
+  letter-spacing: .3px;
   color: #7E5700;
+  background: rgba(254, 179, 0, 0.14);
+  padding: 4px 10px;
+  border-radius: 999px;
   white-space: nowrap;
 }
-
-.preview-title {
+.area-names {
   font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 15px;
-  color: #FFFFFF;
-  text-align: center;
+  font-size: 12.5px;
+  color: #64748B;
+  line-height: 1.4;
 }
+

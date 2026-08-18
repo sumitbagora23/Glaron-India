@@ -84,27 +84,22 @@
   &:hover { background: #2D145A; }
 }
 
-/* Full-width white card (matches dealers table card) */
-.table-section-card {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  overflow: hidden;
-}
+/* The card itself is the console's shared list card — see "Admin list pages"
+   in global.scss. It never clips, so the strips inside it round their own
+   corners to match. */
 
 /* Toolbar row inside the card */
 .list-toolbar {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
+  width: 100%;
+  padding: 14px 20px;
   background: #F8F9FA;
   border-bottom: 1px solid #E2E8F0;
+  border-radius: 8px 8px 0 0;
   flex-wrap: wrap;
 
   .search-box {
@@ -173,13 +168,14 @@
 .dealer-rows {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .dealer-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
+  gap: 14px;
+  padding: 12px 20px;
   border-bottom: 1px solid #E2E8F0;
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -190,9 +186,9 @@
 
   .dealer-avatar {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     background: #EBDDFF;
     color: #170338;
     display: flex;
@@ -200,7 +196,7 @@
     justify-content: center;
     font-family: 'Outfit', sans-serif;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     text-transform: uppercase;
   }
 
@@ -214,14 +210,14 @@
     .dealer-name {
       font-family: 'Outfit', sans-serif;
       font-weight: 600;
-      font-size: 16px;
-      line-height: 24px;
-      color: #1C1B1B;
+      font-size: 14px;
+      line-height: 20px;
+      color: #170338;
     }
 
     .dealer-sub {
       font-family: 'Outfit', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       color: #49454E;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -243,30 +239,27 @@
 }
 
 .empty-state {
-  padding: 48px 24px;
+  width: 100%;
+  padding: 40px 20px;
   text-align: center;
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  color: #6B7280;
+  font-size: 14px;
+  color: #94A3B8;
 }
 
 /* Footer */
 .card-footer {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
+  width: 100%;
+  padding: 12px 20px;
   background: #F8F9FA;
   border-top: 1px solid #E2E8F0;
+  border-radius: 0 0 8px 8px;
   flex-wrap: wrap;
-
-  .summary-text {
-    font-family: 'Outfit', sans-serif;
-    font-weight: 400;
-    font-size: 16px;
-    color: #49454E;
-  }
 
   .footer-actions {
     display: flex;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +8,8 @@ import { OrderService, Order, OrderStage, OrderItemLine, normalizeStage } from '
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { DealerService, Dealer } from '../dealer.service';
 import { orderRefLabel } from '../order-ref';
+import { lightColourSwatch, splitLightColourLabel } from '../light-colours';
+import { LightColourService } from '../light-colour.service';
 
 interface StageDef {
   key: OrderStage;
@@ -37,6 +39,26 @@ interface CreateCartLine {
   ]
 })
 export class OrdersPage implements OnInit {
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
+  // A saved line keeps what was ordered as one string — "7W · 2ft · Cool
+  // White". These two split the shade off its end so the box of colour sits
+  // right before the shade, not in front of the wattage.
+  private lightColourNames = inject(LightColourService);
+
+  labelHead(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).head;
+  }
+
+  labelColour(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).colour;
+  }
+
   // Pipeline stages (data-driven)
   stages: StageDef[] = [
     { key: 'Order Received', label: 'ORDER RECEIVED', dotClass: 'dot-new' },

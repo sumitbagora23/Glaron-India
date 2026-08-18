@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/standalone';
-import { ProductService, ProductVariant } from '../product.service';
+import { Product, ProductService, ProductVariant } from '../product.service';
 import { CategoryService, Category } from '../category.service';
+import { LightColourService } from '../light-colour.service';
+import { NO_COLOUR, lightColourSwatch } from '../light-colours';
+import { buildSpecTabs } from '../product-spec-tabs';
 
 @Component({
   selector: 'app-product-form',
@@ -18,6 +21,13 @@ import { CategoryService, Category } from '../category.service';
   ]
 })
 export class ProductFormPage implements OnInit {
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
   productForm!: FormGroup;
   isEditMode = false;
   productId = '';
@@ -35,13 +45,44 @@ export class ProductFormPage implements OnInit {
   selectedCategories: string[] = [];
   categoryDropdownOpen = false;
 
+  // Multi-select light colours ("Warm White", "Cool White", ...). Held outside
+  // the reactive form like the categories above, for the same checkbox handling.
+  // Every catalogue card reads these back behind the wattage / dimension tabs.
+  selectedLightColours: string[] = [];
+  lightColourDropdownOpen = false;
+  // What each shade costs, keyed by colour name. An absolute price, not a
+  // surcharge. Blank means that shade is sold at the option's own price.
+  lightColourPrices: { [colour: string]: number } = {};
+
+  // Which target the picker is writing to: -1 is the product itself, anything
+  // else is that variant's index. A 7W sold in warm white alone, next to a 12W
+  // sold in three shades, is one product with one option overridden — so the
+  // picker carries a strip of tabs, one per option, above it.
+  lightColourTab = -1;
+  // Those tabs, labelled the way the dealer card labels them (the wattage, and
+  // whatever separates two options that read the same). Rebuilt whenever the
+  // variants below change, so a wattage typed in shows on its tab at once.
+  variantTabs: { index: number; label: string; detail: string }[] = [];
+
+  // Where a half-filled product waits while the admin is off on the Light
+  // Colours page. sessionStorage, so it lives exactly as long as the tab and
+  // never turns into a stale draft on the next visit.
+  private static readonly DRAFT_KEY = 'glaron_product_form_draft';
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private lightColourService: LightColourService
   ) {}
+
+  // The shades on offer, managed on the Light Colours page. A getter, not a
+  // copy: a colour added over there shows up here the moment we come back.
+  get lightColourOptions(): string[] {
+    return this.lightColourService.names;
+  }
 
   // Category options for the dropdown, managed in the Categories tab.
   get categories(): Category[] {
@@ -50,6 +91,8 @@ export class ProductFormPage implements OnInit {
 
   toggleCategoryDropdown() {
     this.categoryDropdownOpen = !this.categoryDropdownOpen;
+    // Only one panel open at a time — two expanded lists push the form around.
+    if (this.categoryDropdownOpen) this.lightColourDropdownOpen = false;
   }
 
   closeCategoryDropdown() {
@@ -75,6 +118,214 @@ export class ProductFormPage implements OnInit {
       : [...this.selectedCategories, name];
   }
 
+  // ---- Light colours ----
+  //
+  // Which shades this product can be ordered in. Optional: a product with no
+  // colours picked simply shows its price on the dealer card, unchanged.
+  //
+  // The picker writes to one target at a time — the product, or one of its
+  // options (see lightColourTab). An option holds a list of its own only once
+  // the admin actually changes something under its tab; until then it is sold
+  // in the product's shades, which is how every product saved before this
+  // existed still reads.
+  toggleLightColourDropdown() {
+    this.lightColourDropdownOpen = !this.lightColourDropdownOpen;
+    if (this.lightColourDropdownOpen) this.categoryDropdownOpen = false;
+  }
+
+  // The tabs above the picker, one per option, labelled like the dealer card.
+  private rebuildVariantTabs() {
+    const variants = this.variantsArray.getRawValue() as ProductVariant[];
+    this.variantTabs = buildSpecTabs({ id: 'form', variants } as Product)
+      .map(tab => ({ index: tab.index, label: tab.label, detail: tab.detail }));
+    // An option removed while its own tab was open must not leave the picker
+    // writing to an index that is now a different option, or gone.
+    if (this.lightColourTab >= variants.length) this.lightColourTab = -1;
+  }
+
+  selectLightColourTab(index: number) {
+    this.lightColourTab = index;
+    this.lightColourDropdownOpen = false;
+  }
+
+  private variantGroup(index: number): FormGroup | null {
+    return index >= 0 && index < this.variantsArray.length
+      ? this.variantsArray.at(index) as FormGroup
+      : null;
+  }
+
+  // The shades written against one option — empty while it follows the product.
+  private ownColours(index: number): string[] {
+    return (this.variantGroup(index)?.get('lightColours')?.value as string[]) || [];
+  }
+
+  private ownPrices(index: number): { [colour: string]: number } {
+    return (this.variantGroup(index)?.get('lightColourPrice')?.value as { [colour: string]: number }) || {};
+  }
+
+  private writeOwn(index: number, colours: string[], prices: { [colour: string]: number }) {
+    const group = this.variantGroup(index);
+    if (!group) return;
+    group.patchValue({ lightColours: colours, lightColourPrice: prices });
+    group.markAsDirty();
+  }
+
+  // True when this option carries shades of its own rather than the product's.
+  variantTabHasOwn(index: number): boolean {
+    return this.ownColours(index).length > 0;
+  }
+
+  // True while the open option is still sold in whatever the product is sold in.
+  get followsProduct(): boolean {
+    return this.lightColourTab >= 0 && this.ownColours(this.lightColourTab).length === 0;
+  }
+
+  // What the picker is showing: the product's list, or this option's own.
+  get activeLightColours(): string[] {
+    if (this.lightColourTab < 0) return this.selectedLightColours;
+    const own = this.ownColours(this.lightColourTab);
+    return own.length ? own : this.selectedLightColours;
+  }
+
+  private get activePrices(): { [colour: string]: number } {
+    return this.lightColourTab < 0 ? this.lightColourPrices : this.ownPrices(this.lightColourTab);
+  }
+
+  isLightColourSelected(name: string): boolean {
+    return this.activeLightColours.includes(name);
+  }
+
+  /**
+   * Write a list back to whatever the picker is open on.
+   *
+   * An option is given a list of its own at the moment it is first changed —
+   * the product's ticks are copied across, so what was on screen is what it
+   * keeps — and it is never given an empty one: an option with no shades left
+   * is an option sold in no shade at all, which is what NO_COLOUR records.
+   */
+  private setActive(colours: string[], prices: { [colour: string]: number }) {
+    if (this.lightColourTab < 0) {
+      this.selectedLightColours = colours;
+      this.lightColourPrices = prices;
+      return;
+    }
+    this.writeOwn(this.lightColourTab, colours.length ? colours : [NO_COLOUR], prices);
+  }
+
+  toggleLightColour(name: string) {
+    let colours = [...this.activeLightColours];
+    const prices = { ...this.activePrices };
+
+    if (colours.includes(name)) {
+      colours = colours.filter(c => c !== name);
+      // A dropped colour must not leave its price behind for the next pick.
+      delete prices[name];
+      this.setActive(colours, prices);
+      return;
+    }
+
+    // Picking a shade ends "no shade to choose" — the two together would put a
+    // "No Colour" tab next to a "Cool White" tab on the dealer card.
+    if (colours.includes(NO_COLOUR)) {
+      delete prices[NO_COLOUR];
+      colours = colours.filter(c => c !== NO_COLOUR);
+    }
+
+    this.setActive([...colours, name], prices);
+  }
+
+  // True once the picker has been cleared — what is open here has no shade to
+  // choose (a driver, a profile, an accessory), shown on the card as no shades
+  // at all rather than a row reading "No Colour".
+  get isNoColour(): boolean {
+    return this.activeLightColours.includes(NO_COLOUR);
+  }
+
+  // The picker's clear (×). "No Colour" is not offered as a tick in the list —
+  // it is not a shade — so clearing the picker is how a product, or one option
+  // of it, is marked as having none. Pressing it again undoes that: the product
+  // is left unset, an option goes back to the product's shades.
+  clearLightColours() {
+    if (this.isNoColour) {
+      if (this.lightColourTab < 0) {
+        this.selectedLightColours = [];
+        this.lightColourPrices = {};
+      } else {
+        this.writeOwn(this.lightColourTab, [], {});
+      }
+      return;
+    }
+    if (this.lightColourTab < 0) {
+      this.lightColourPrices = {};
+      this.selectedLightColours = [NO_COLOUR];
+    } else {
+      this.writeOwn(this.lightColourTab, [NO_COLOUR], {});
+    }
+    this.lightColourDropdownOpen = false;
+  }
+
+  // Hands the open option back to the product's shades.
+  followProductColours() {
+    if (this.lightColourTab < 0) return;
+    this.writeOwn(this.lightColourTab, [], {});
+    this.lightColourDropdownOpen = false;
+  }
+
+  // The value shown in the colour's price box ('' when it costs the same).
+  priceFor(colour: string): number | string {
+    const value = this.activePrices[colour];
+    return value ? value : '';
+  }
+
+  // What an empty box means under an option's tab: the product's own price for
+  // that shade still applies, so it is shown there rather than a bare 0.
+  pricePlaceholder(colour: string): string {
+    if (this.lightColourTab < 0) return '0';
+    const shared = this.lightColourPrices[colour];
+    return shared > 0 ? String(shared) : '0';
+  }
+
+  setLightColourPrice(colour: string, event: Event) {
+    const raw = (event.target as HTMLInputElement).value;
+    const value = Number(raw);
+    const prices = { ...this.activePrices };
+    if (!raw.trim() || !isFinite(value) || value <= 0) delete prices[colour];
+    else prices[colour] = value;
+    // Pricing a shade under an option's tab is a change to that option, so it
+    // takes the product's ticks as its own along with the price.
+    this.setActive([...this.activeLightColours], prices);
+  }
+
+  // Opens the Light Colours page, where the list itself is added to, renamed,
+  // reordered and deleted. The product being written is parked first and picked
+  // back up by restoreDraft() when that page hands control back — leaving the
+  // form would otherwise throw away everything typed so far.
+  manageLightColours() {
+    this.saveDraft();
+    this.router.navigate(['/admin/light-colours'], {
+      queryParams: { returnTo: this.router.url.split('?')[0] }
+    });
+  }
+
+  get lightColourButtonLabel(): string {
+    if (this.isNoColour) return 'No light colour';
+    const colours = this.activeLightColours;
+    if (colours.length === 0) return 'Select light colours';
+    if (colours.length <= 2) return colours.join(', ');
+    return colours.length + ' light colours selected';
+  }
+
+  // The line under the tab strip — which option the ticks below belong to, and
+  // whether it is carrying the product's shades or its own.
+  get lightColourTargetLabel(): string {
+    if (this.lightColourTab < 0) return 'Every option of this product, unless it is given its own below.';
+    const tab = this.variantTabs.find(t => t.index === this.lightColourTab);
+    const name = tab ? tab.detail : 'Option ' + (this.lightColourTab + 1);
+    return this.followsProduct
+      ? name + " — sold in the product's shades. Tick or untick one to give it its own."
+      : name + ' — sold in its own shades.';
+  }
+
   // Label shown on the dropdown button
   get categoryButtonLabel(): string {
     if (this.selectedCategories.length === 0) return 'Select categories';
@@ -97,6 +348,10 @@ export class ProductFormPage implements OnInit {
       variants: this.fb.array([])
     }, { validators: this.pricingValidator });
 
+    // The light colour tabs read the variants, so a wattage typed in below
+    // shows on its tab straight away.
+    this.variantsArray.valueChanges.subscribe(() => this.rebuildVariantTabs());
+
     // Check routing parameters for Edit vs Add Mode
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -106,6 +361,90 @@ export class ProductFormPage implements OnInit {
         this.loadProductDetails(id);
       }
     });
+
+    // Runs last, so a draft left behind by a trip to the Light Colours page
+    // wins over whatever was just loaded from the catalogue.
+    this.restoreDraft();
+  }
+
+  // The console runs on <ion-router-outlet>, which keeps this page alive while
+  // the Light Colours page sits on top of it — coming back does not re-run
+  // ngOnInit. This fires either way, so the draft is always picked back up (and
+  // always cleared, instead of waiting to re-fill some later blank form).
+  ionViewWillEnter() {
+    this.restoreDraft();
+  }
+
+  // ---- Draft, for the round trip to the Light Colours page ----
+  // Which product the draft belongs to, so an edit form never picks up a draft
+  // left by a different product (or by "New Product").
+  private draftKey(): string {
+    return this.isEditMode ? this.productId : 'new';
+  }
+
+  private saveDraft() {
+    try {
+      // getRawValue, not value: the base price control is disabled while the
+      // product has variants and would otherwise be dropped.
+      sessionStorage.setItem(ProductFormPage.DRAFT_KEY, JSON.stringify({
+        key: this.draftKey(),
+        values: this.productForm.getRawValue(),
+        categories: this.selectedCategories,
+        lightColours: this.selectedLightColours,
+        lightColourPrices: this.lightColourPrices,
+        image: this.imagePreview
+      }));
+    } catch (e) {
+      // A full sessionStorage (a large image) costs the draft, not the form.
+      console.warn('Could not hold the product draft:', e);
+    }
+  }
+
+  // Reads the draft back exactly once — leaving it behind would re-fill the
+  // form the next time this page is opened.
+  private restoreDraft() {
+    let draft: any;
+    try {
+      const raw = sessionStorage.getItem(ProductFormPage.DRAFT_KEY);
+      sessionStorage.removeItem(ProductFormPage.DRAFT_KEY);
+      if (!raw) return;
+      draft = JSON.parse(raw);
+    } catch (e) {
+      return;
+    }
+    if (!draft || draft.key !== this.draftKey()) return;
+
+    const values = draft.values || {};
+    this.productForm.patchValue({
+      name: values.name || '',
+      description: values.description || ''
+    });
+
+    // Variants first: adding them disables the base price, so patching the
+    // price before this point would be undone.
+    const available = this.lightColourOptions;
+    this.variantsArray.clear();
+    (values.variants || []).forEach((v: ProductVariant) => this.addVariant({
+      ...v,
+      // Same rule as the product's list below: a shade deleted while we were
+      // away does not come back on one option either.
+      lightColours: (v.lightColours || []).filter(c => c === NO_COLOUR || available.includes(c))
+    }));
+    const priceCtrl = this.productForm.get('price');
+    if (priceCtrl?.enabled) priceCtrl.setValue(values.price ?? null);
+
+    this.selectedCategories = draft.categories || [];
+    // A shade deleted while we were away must not come back on this product
+    // just because it was ticked before the trip. "No Colour" is never in the
+    // managed list and is kept regardless — it is not a shade, it is the record
+    // of having none.
+    this.selectedLightColours = (draft.lightColours || [])
+      .filter((c: string) => c === NO_COLOUR || available.includes(c));
+    this.lightColourPrices = draft.lightColourPrices || {};
+    this.imagePreview = draft.image || null;
+
+    // The typing that produced this draft was real: keep discard() asking.
+    this.productForm.markAsDirty();
   }
 
   get variantsArray(): FormArray {
@@ -145,16 +484,52 @@ export class ProductFormPage implements OnInit {
       colorSize: [variant?.colorSize || ''],
       packing: [variant?.packing || ''],
       price: [variant?.price || null],
-      pricePerMtr: [variant?.pricePerMtr || null]
+      pricePerMtr: [variant?.pricePerMtr || null],
+      // Not typed into the row below — written by the light colour picker
+      // above, under this option's own tab. Empty means this option is sold in
+      // whatever shades the product is sold in.
+      lightColours: [variant?.lightColours ? [...variant.lightColours] : []],
+      lightColourPrice: [variant?.lightColourPrice ? { ...variant.lightColourPrice } : {}]
     });
   }
 
   addVariant(variant?: ProductVariant) {
     this.variantsArray.push(this.createVariantGroup(variant));
+    this.syncBasePriceWithVariants();
+    this.rebuildVariantTabs();
   }
 
   removeVariant(index: number) {
     this.variantsArray.removeAt(index);
+    // Everything after the removed option shifts down a place; the picker has
+    // to follow it, or it would quietly start writing to its neighbour.
+    if (this.lightColourTab === index) this.lightColourTab = -1;
+    else if (this.lightColourTab > index) this.lightColourTab -= 1;
+    this.syncBasePriceWithVariants();
+    this.rebuildVariantTabs();
+  }
+
+  // True once the product carries variants — it is then priced per variant.
+  get hasVariants(): boolean {
+    return this.variantsArray.length > 0;
+  }
+
+  // A variant-priced product has no base price of its own. Blank the field and
+  // lock it while variants exist, so the panel never shows a leftover placeholder
+  // (the catalogue seed put 580 / 1850 on every product, variants or not). A
+  // disabled control is dropped from productForm.value, so the save writes 0.
+  private syncBasePriceWithVariants() {
+    const priceCtrl = this.productForm.get('price');
+    if (!priceCtrl) return;
+    if (this.hasVariants) {
+      if (priceCtrl.value !== null && priceCtrl.value !== '') {
+        priceCtrl.setValue(null, { emitEvent: false });
+      }
+      if (priceCtrl.enabled) priceCtrl.disable({ emitEvent: false });
+    } else if (priceCtrl.disabled) {
+      priceCtrl.enable({ emitEvent: false });
+    }
+    this.productForm.updateValueAndValidity({ emitEvent: false });
   }
 
   // Handle image file selection: read, downscale via canvas, store as data URL
@@ -239,6 +614,9 @@ export class ProductFormPage implements OnInit {
         this.selectedCategories = [];
       }
 
+      this.selectedLightColours = product.lightColours ? [...product.lightColours] : [];
+      this.lightColourPrices = { ...(product.lightColourPrice || {}) };
+
       this.imagePreview = product.image || null;
 
       this.variantsArray.clear();
@@ -271,10 +649,30 @@ export class ProductFormPage implements OnInit {
 
     this.isLoading = true;
     const formData = this.productForm.value;
-    // Filter out completely empty variants
-    const cleanedVariants = (formData.variants || []).filter((v: any) =>
-      v.model || v.wattage || v.type || v.dimension || v.cutout || v.bodyColour || v.colorSize || v.packing || v.price || v.pricePerMtr
-    );
+    // Filter out completely empty variants. Shades of its own count as content:
+    // an option can be nothing but "this one is warm white only".
+    const cleanedVariants = (formData.variants || [])
+      .filter((v: any) =>
+        v.model || v.wattage || v.type || v.dimension || v.cutout || v.bodyColour ||
+        v.colorSize || v.packing || v.price || v.pricePerMtr ||
+        (v.lightColours && v.lightColours.length)
+      )
+      // An option with no shades of its own is written without the fields at
+      // all, so it keeps following the product rather than storing an empty
+      // list — which would read as "sold in no shade".
+      .map((v: any) => {
+        const colours: string[] = (v.lightColours || []).filter(Boolean);
+        const priced: { [colour: string]: number } = {};
+        colours.forEach(colour => {
+          const value = (v.lightColourPrice || {})[colour];
+          if (value > 0) priced[colour] = value;
+        });
+        return {
+          ...v,
+          lightColours: colours.length ? colours : undefined,
+          lightColourPrice: Object.keys(priced).length ? priced : undefined
+        };
+      });
 
     // A new product's id doubles as its Firestore document id, so a repeat would
     // overwrite an existing product instead of adding one. Four random digits
@@ -293,6 +691,18 @@ export class ProductFormPage implements OnInit {
     const categories = [...this.selectedCategories];
     const categoryJoined = categories.join(', ');
 
+    // Left out of the document entirely when nothing is picked, so a product
+    // without light colours has no field rather than an empty list to render.
+    const lightColours = this.selectedLightColours.length ? [...this.selectedLightColours] : undefined;
+
+    // Only the colours still selected, and only the ones priced on their own.
+    const prices: { [colour: string]: number } = {};
+    this.selectedLightColours.forEach(colour => {
+      const value = this.lightColourPrices[colour];
+      if (value > 0) prices[colour] = value;
+    });
+    const lightColourPrice = Object.keys(prices).length ? prices : undefined;
+
     try {
       if (this.isEditMode) {
         const existing = this.productService.getProductById(this.productId);
@@ -304,6 +714,8 @@ export class ProductFormPage implements OnInit {
             price: formData.price || 0,
             category: categoryJoined,
             categories,
+            lightColours,
+            lightColourPrice,
             image: imageUrl,
             variants: cleanedVariants.length > 0 ? cleanedVariants : undefined
           });
@@ -316,6 +728,8 @@ export class ProductFormPage implements OnInit {
           price: formData.price || 0,
           category: categoryJoined,
           categories,
+          lightColours,
+          lightColourPrice,
           stock: 999,
           image: imageUrl,
           previewType: 'panel',

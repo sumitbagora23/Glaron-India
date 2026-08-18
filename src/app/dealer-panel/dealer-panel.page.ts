@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent } from '@ionic/angular/standalone';
@@ -6,6 +6,7 @@ import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
+import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch, splitLightColourLabel } from '../product-spec-tabs';
 import { DealerService, Dealer } from '../admin/dealer.service';
 import { INDIA_STATES_CITIES } from '../dealer-apply/india-locations';
 import { OrderService, Order } from '../admin/order.service';
@@ -24,10 +25,18 @@ import { SwUpdate } from '@angular/service-worker';
 import { DealerApprovalService } from '../dealer-approval.service';
 import { DealerAuthService } from '../dealer-auth.service';
 import { DealerPricePrefsService, DealerPriceMode } from '../dealer-price-prefs.service';
+import { LightColourService } from '../admin/light-colour.service';
 
 export interface OrderItem {
   product: Product;
   variant?: ProductVariant;
+  /**
+   * The light colour this line was ordered in, when the product is sold in
+   * more than one. A dealer orders 10 of the 7W in Cool White and 5 of the
+   * same 7W in Warm White, so the colour is part of what identifies the line
+   * — see variantKey(). Absent on products with no colours picked.
+   */
+  lightColour?: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -64,6 +73,27 @@ export interface CustomPriceGroup {
   ]
 })
 export class DealerPanelPage implements OnInit, OnDestroy {
+
+  // A saved line keeps what was ordered as one string — "7W · 2ft · Cool
+  // White". These two split the shade off its end so the box of colour sits
+  // right before the shade, not in front of the wattage.
+  private lightColourNames = inject(LightColourService);
+
+  labelHead(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).head;
+  }
+
+  labelColour(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).colour;
+  }
+
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
   selectedDealer: Dealer | null = null;
   private popStateHandler = () => this.handleDeviceBack();
   private routerSub?: Subscription;
@@ -137,6 +167,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   numpadTitle = '';
   private numpadProduct: Product | null = null;
   private numpadVariant: ProductVariant | undefined;
+  private numpadLightColour: string | undefined;
 
   // App version shown at the foot of the side menu.
   appVersion = APP_VERSION;
@@ -241,6 +272,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     selectCategoryHint: { en: 'Select a category to view its products.', hi: 'उत्पाद देखने के लिए एक श्रेणी चुनें।' },
     noCategories: { en: 'No categories yet. Please add categories in the admin panel.', hi: 'अभी तक कोई श्रेणी नहीं। कृपया एडमिन पैनल में श्रेणियाँ जोड़ें।' },
     categories: { en: 'Categories', hi: 'श्रेणियाँ' },
+    allCategories: { en: 'All', hi: 'सभी' },
     allProducts: { en: 'All Products', hi: 'सभी उत्पाद' },
     pricingSubhead: { en: 'Showing your specific contracted pricing.', hi: 'आपकी विशिष्ट अनुबंधित कीमतें दिखा रहा है।' },
     yourPricePerVariant: { en: 'YOUR PRICE PER VARIANT', hi: 'प्रति वैरिएंट आपकी कीमत' },
@@ -274,6 +306,9 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     whatsappInquiry: { en: 'Hi, I want to know more about this product.', hi: 'नमस्ते, मैं इस उत्पाद के बारे में और जानना चाहता हूँ।' },
     waProduct: { en: 'Product', hi: 'उत्पाद' },
     shareProduct: { en: 'Share product', hi: 'उत्पाद शेयर करें' },
+    lightColour: { en: 'Light colour', hi: 'लाइट कलर' },
+    availableOptions: { en: 'Available options', hi: 'उपलब्ध विकल्प' },
+    nothingElseRecorded: { en: 'Nothing else recorded on this option.', hi: 'इस विकल्प पर और कुछ दर्ज नहीं है।' },
     shareVariants: { en: 'Variants', hi: 'वैरिएंट' },
     shareDownloaded: { en: 'Image downloaded · details copied', hi: 'इमेज डाउनलोड हुई · विवरण कॉपी हुआ' },
     shareCopied: { en: 'Details copied', hi: 'विवरण कॉपी हुआ' },
@@ -463,6 +498,10 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.onCatalogEnter();
 
+    // This account's own footer details. Details already saved on the device
+    // are adopted here once: they were typed on this side of the app.
+    this.shareBusiness.useAccount('dealer', this.getLoggedMobile() || '', true);
+
     // A freshly-approved dealer who just signed in gets a one-time welcome toast
     // here (the login page already showed the "approval accepted" banner).
     const approvedLabel = this.approval.consumeApproval();
@@ -621,12 +660,17 @@ export class DealerPanelPage implements OnInit, OnDestroy {
       const product = this.productService.products.find(p => p.id === s.id);
       if (!product) continue;
       let variant: ProductVariant | undefined;
-      if (s.variantInfo && product.variants) {
-        variant = product.variants.find(v => this.getVariantLabel(v) === s.variantInfo);
+      // Prefer the plain descriptor. `variantInfo` may carry a " · Cool White"
+      // suffix, and a session written by an older build has no variantLabel at
+      // all — in that case variantInfo IS the plain descriptor.
+      const label = s.variantLabel || s.variantInfo;
+      if (label && product.variants) {
+        variant = product.variants.find(v => this.getVariantLabel(v) === label);
       }
       rebuilt.push({
         product,
         variant,
+        ...(s.lightColour ? { lightColour: s.lightColour } : {}),
         quantity: s.quantity,
         unitPrice: s.unitPrice,
         totalPrice: s.totalPrice
@@ -656,13 +700,60 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     return this.categoryService.categories;
   }
 
+  // ---- The fixed catalogue bar ----
+
+  // Which category the list is narrowed to, however it was reached: the
+  // Products tab's own filter, or a category opened from the Home grid.
+  get activeCategory(): string {
+    return this.activeTab === 'home' && this.homeCategory ? this.homeCategory : this.selectedCategory;
+  }
+
+  // The categories open in a sheet over the page, laid out as the Home
+  // browser lays them out, so the bar itself stays one line.
+  categorySheetOpen = false;
+
+  openCategorySheet() {
+    this.categorySheetOpen = true;
+  }
+
+  closeCategorySheet() {
+    this.categorySheetOpen = false;
+  }
+
+  // Whether there is a category to clear. "All Categories" is not a filter,
+  // it is the absence of one, so it shows no cross.
+  get hasCategoryFilter(): boolean {
+    return !this.isCategoryOn('All Categories');
+  }
+
+  // The filter's cross, the twin of the one in the search field.
+  clearCategory() {
+    this.pickCategory('All Categories');
+  }
+
+  isCategoryOn(name: string): boolean {
+    return this.activeCategory.trim().toLowerCase() === name.trim().toLowerCase();
+  }
+
+  // Every category is one tap away from anywhere in the catalogue: picking
+  // one lands on the single product list, narrowed to it. "All Categories"
+  // hands back the whole range, which is where a dealer who already knows the
+  // fitting starts.
+  pickCategory(name: string) {
+    this.categorySheetOpen = false;
+    this.selectedCategory = name;
+    this.homeCategory = null;
+    this.activeTab = 'products';
+    this.scrollTop();
+  }
+
   // Products shown in the current grid (Home>category, or the Products tab)
   get displayedProducts(): Product[] {
     if (this.activeTab === 'home' && this.homeCategory) {
       const target = this.homeCategory.trim().toLowerCase();
-      return this.products.filter(p =>
+      return this.searchIn(this.products.filter(p =>
         this.productCategories(p).some(c => c.toLowerCase() === target)
-      );
+      ));
     }
     return this.filteredProducts;
   }
@@ -808,15 +899,20 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     if (this.selectedCategory !== 'All Categories' && this.selectedCategory !== 'All') {
       list = list.filter(p => p.category.toLowerCase().includes(this.selectedCategory.toLowerCase()));
     }
-    if (this.searchQuery.trim()) {
-      const q = this.searchQuery.toLowerCase().trim();
-      list = list.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.id.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-      );
-    }
-    return list;
+    return this.searchIn(list);
+  }
+
+  // What the search field narrows a list to. Lifted out of the filter above so
+  // a category opened from Home is searched exactly the same way — the bar over
+  // it carries the same field.
+  private searchIn(list: Product[]): Product[] {
+    const q = this.searchQuery.toLowerCase().trim();
+    if (!q) return list;
+    return list.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.id.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+    );
   }
 
   // The logged-in mobile number is read from storage once and cached. It only
@@ -919,27 +1015,30 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   // Unique signature for a variant using every distinguishing field, so
   // variants that share a model/wattage (but differ in type, dimension,
   // colour, etc.) are still treated as separate cart lines.
-  private variantKey(variant?: ProductVariant): string {
-    if (!variant) return '';
+  private variantKey(variant?: ProductVariant, lightColour?: string): string {
+    if (!variant && !lightColour) return '';
     return [
-      variant.model,
-      variant.wattage,
-      variant.type,
-      variant.dimension,
-      variant.cutout,
-      variant.colorSize,
-      variant.bodyColour,
-      variant.packing,
-      variant.price,
-      variant.pricePerMtr
+      variant?.model,
+      variant?.wattage,
+      variant?.type,
+      variant?.dimension,
+      variant?.cutout,
+      variant?.colorSize,
+      variant?.bodyColour,
+      variant?.packing,
+      variant?.price,
+      variant?.pricePerMtr,
+      // The shade is part of the line's identity: the same 7W in Cool White
+      // and in Warm White are two lines on the order, not one.
+      lightColour || ''
     ].join('|');
   }
 
-  private findCartIndex(product: Product, variant?: ProductVariant): number {
-    const key = this.variantKey(variant);
+  private findCartIndex(product: Product, variant?: ProductVariant, lightColour?: string): number {
+    const key = this.variantKey(variant, lightColour);
     return this.orderItems.findIndex(item =>
       item.product.id === product.id &&
-      this.variantKey(item.variant) === key
+      this.variantKey(item.variant, item.lightColour) === key
     );
   }
 
@@ -948,13 +1047,98 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     return item ? item.quantity : 0;
   }
 
-  getVariantQty(product: Product, variant: ProductVariant): number {
-    const idx = this.findCartIndex(product, variant);
+  getVariantQty(product: Product, variant?: ProductVariant, lightColour?: string): number {
+    const idx = this.findCartIndex(product, variant, lightColour);
     return idx > -1 ? this.orderItems[idx].quantity : 0;
+  }
+
+  /**
+   * Everything on order for one spec tab, across all its shades.
+   *
+   * The wattage tab shows this so a dealer can see at a glance that the 7W has
+   * something in it without opening it and adding up the colours themselves.
+   */
+  specTabTotalQty(product: Product, variant: ProductVariant): number {
+    const colours = this.productLightColours(product, variant);
+    if (!colours.length) return this.getVariantQty(product, variant);
+    return colours.reduce((sum, c) => sum + this.getVariantQty(product, variant, c), 0);
   }
 
   // Build a label from whatever descriptors the variant has:
   // wattage, type, dimension, colour and (per-)meter.
+  // ---- Wattage / dimension tabs ----
+  // The two specs a fitting is chosen by read as small tabs across the card.
+  // Opening one shows the light colours this product is sold in, with the
+  // price of that option against each colour. A product whose variants carry
+  // no wattage and no dimension has no tabs — its price shows on its own.
+  private specTabState = new SpecTabState();
+  trackBySpecTab = this.specTabState.trackByKey;
+
+  specTabs(product: Product): SpecTab[] {
+    return this.specTabState.tabs(product);
+  }
+
+  openSpecTab(product: Product): SpecTab | null {
+    return this.specTabState.openTab(product);
+  }
+
+  isSpecTabOpen(product: Product, tab: SpecTab): boolean {
+    return this.specTabState.isOpen(product, tab);
+  }
+
+  selectSpecTab(tab: SpecTab) {
+    this.specTabState.toggle(tab);
+  }
+
+  /** The sheet behind the ⓘ: the size, the cut-out, the packing, everything
+   *  the tab itself no longer prints. */
+  specRows(tab: SpecTab): SpecDetail[] {
+    return specDetails(tab.variant);
+  }
+
+  isSpecSheetOpen(product: Product): boolean {
+    return this.specTabState.isSheetOpen(product);
+  }
+
+  toggleSpecSheet(product: Product) {
+    this.specTabState.toggleSheet(product);
+  }
+
+  // The light colours the admin picked, for this option or — with no option,
+  // or one that carries none of its own — for the product.
+  productLightColours(product: Product, variant?: ProductVariant): string[] {
+    return orderableLightColours(product, variant);
+  }
+
+  // Under the open wattage tab every shade is listed with its own stepper, so
+  // the quantity a dealer types is already against the colour they mean.
+  trackByColour = (_: number, colour: string) => colour;
+
+  // Only the name of the light is shown — no swatch, no colour temperature.
+
+  /**
+   * What an option costs in a given shade.
+   *
+   * A price set against a colour IS the price of that colour — it replaces the
+   * option's price rather than adding to it. What the admin typed is a *catalog*
+   * price though, so the dealer's own rate still has to come off it. Without that
+   * a shade priced by hand quietly showed full MRP while every other shade of
+   * the same product carried the discount.
+   *
+   * `base` is the option at the dealer's rate and `catalogBase` is the same option
+   * at catalog price, so the ratio between them is exactly that rate — a blanket
+   * discount, or a hand-typed line rate — and applying it to the colour keeps the
+   * same discount whichever shade is picked. In the MRP view the two are equal,
+   * the ratio is 1, and the colour shows its catalog price untouched.
+   */
+  colourPrice(base: number, product: Product, colour: string, catalogBase?: number, variant?: ProductVariant): number {
+    // The option's own price for the shade wins over the product's.
+    const own = lightColourCatalogPrice(product, colour, variant);
+    if (!own || own <= 0) return base;
+    if (!catalogBase || catalogBase <= 0 || !isFinite(base)) return own;
+    return Math.round(own * (base / catalogBase));
+  }
+
   getVariantLabel(variant: ProductVariant): string {
     const parts: string[] = [];
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
@@ -992,17 +1176,17 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   }
 
   // Plus icon on a variant row adds that variant directly to the cart
-  incrementVariant(product: Product, variant: ProductVariant) {
-    this.addToOrder(product, variant);
+  incrementVariant(product: Product, variant?: ProductVariant, lightColour?: string) {
+    this.addToOrder(product, variant, lightColour);
   }
 
   // Minus icon on a variant row removes one unit of that variant
-  decrementVariant(product: Product, variant: ProductVariant) {
-    this.removeOneFromCart(product, variant);
+  decrementVariant(product: Product, variant?: ProductVariant, lightColour?: string) {
+    this.removeOneFromCart(product, variant, lightColour);
   }
 
-  private removeOneFromCart(product: Product, variant?: ProductVariant) {
-    const idx = this.findCartIndex(product, variant);
+  private removeOneFromCart(product: Product, variant?: ProductVariant, lightColour?: string) {
+    const idx = this.findCartIndex(product, variant, lightColour);
     if (idx > -1) {
       const item = this.orderItems[idx];
       item.quantity -= 1;
@@ -1015,19 +1199,26 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     }
   }
 
-  addToOrder(product: Product, variant?: ProductVariant) {
+  addToOrder(product: Product, variant?: ProductVariant, lightColour?: string) {
     const qty = 1;
     let unitPrice: number;
+    // Kept alongside so a shade with its own price can be charged at the same
+    // rate this line already carries, rather than at catalog.
+    let catalogPrice: number;
     if (variant) {
       const index = product.variants ? product.variants.indexOf(variant) : -1;
+      catalogPrice = this.getVariantBasePrice(product, variant);
       unitPrice = index >= 0
         ? this.getVariantDealerPrice(product, variant, index)
-        : this.getDealerPrice(this.getVariantBasePrice(product, variant), product.id);
+        : this.getDealerPrice(catalogPrice, product.id);
     } else {
+      catalogPrice = product.price;
       unitPrice = this.getDealerPrice(product.price, product.id);
     }
+    // A shade the admin priced higher costs more in every basket it lands in.
+    if (lightColour) unitPrice = this.colourPrice(unitPrice, product, lightColour, catalogPrice, variant);
 
-    const existingIndex = this.findCartIndex(product, variant);
+    const existingIndex = this.findCartIndex(product, variant, lightColour);
 
     if (existingIndex > -1) {
       this.orderItems[existingIndex].quantity += qty;
@@ -1036,6 +1227,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
       this.orderItems.push({
         product,
         variant,
+        ...(lightColour ? { lightColour } : {}),
         quantity: qty,
         unitPrice,
         totalPrice: qty * unitPrice
@@ -1099,6 +1291,13 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     try { localStorage.setItem(this.TOUR_KEY, '1'); } catch (e) {}
   }
 
+  /** Variant descriptor with the shade appended, e.g. "7W · 100 mm · Cool White". */
+  private variantInfoWithColour(item: OrderItem): string {
+    const label = item.variant ? this.getVariantLabel(item.variant) : '';
+    if (!item.lightColour) return label;
+    return label ? `${label} · ${item.lightColour}` : item.lightColour;
+  }
+
   private saveCartSession() {
     const checkoutItems = this.orderItems.map(item => ({
       id: item.product.id,
@@ -1109,7 +1308,15 @@ export class DealerPanelPage implements OnInit, OnDestroy {
       unitPrice: item.unitPrice,
       mrp: item.product.price,
       totalPrice: item.totalPrice,
-      variantInfo: item.variant ? this.getVariantLabel(item.variant) : ''
+      // `variantInfo` is what the checkout page and the saved order line show,
+      // so the shade is folded into it — that is how "Cool White" reaches the
+      // order, the PDF and the admin's order view without those having to know
+      // about colours at all. `variantLabel` keeps the plain descriptor so
+      // reconcileCartFromSession can still match the variant back to the
+      // product; matching on variantInfo would fail once a colour is appended.
+      variantInfo: this.variantInfoWithColour(item),
+      variantLabel: item.variant ? this.getVariantLabel(item.variant) : '',
+      lightColour: item.lightColour || ''
     }));
 
     try {
@@ -1119,9 +1326,9 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   // Set an exact cart quantity for a product (or a specific variant). A qty of
   // 0 removes the line. Used by the quantity numpad.
-  private setCartQuantity(product: Product, variant: ProductVariant | undefined, quantity: number) {
+  private setCartQuantity(product: Product, variant: ProductVariant | undefined, quantity: number, lightColour?: string) {
     const qty = Math.max(0, Math.floor(quantity || 0));
-    const idx = this.findCartIndex(product, variant);
+    const idx = this.findCartIndex(product, variant, lightColour);
 
     if (qty <= 0) {
       if (idx > -1) this.orderItems.splice(idx, 1);
@@ -1130,30 +1337,48 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     }
 
     let unitPrice: number;
+    // Kept alongside so a shade with its own price can be charged at the same
+    // rate this line already carries, rather than at catalog.
+    let catalogPrice: number;
     if (variant) {
       const index = product.variants ? product.variants.indexOf(variant) : -1;
+      catalogPrice = this.getVariantBasePrice(product, variant);
       unitPrice = index >= 0
         ? this.getVariantDealerPrice(product, variant, index)
-        : this.getDealerPrice(this.getVariantBasePrice(product, variant), product.id);
+        : this.getDealerPrice(catalogPrice, product.id);
     } else {
+      catalogPrice = product.price;
       unitPrice = this.getDealerPrice(product.price, product.id);
     }
+    if (lightColour) unitPrice = this.colourPrice(unitPrice, product, lightColour, catalogPrice, variant);
 
     if (idx > -1) {
       this.orderItems[idx].quantity = qty;
       this.orderItems[idx].unitPrice = unitPrice;
       this.orderItems[idx].totalPrice = qty * unitPrice;
     } else {
-      this.orderItems.push({ product, variant, quantity: qty, unitPrice, totalPrice: qty * unitPrice });
+      this.orderItems.push({
+        product,
+        variant,
+        ...(lightColour ? { lightColour } : {}),
+        quantity: qty,
+        unitPrice,
+        totalPrice: qty * unitPrice
+      });
     }
     this.saveCartSession();
   }
 
   // ---- Quantity numpad ----
-  openNumpad(product: Product, variant?: ProductVariant) {
+  openNumpad(product: Product, variant?: ProductVariant, lightColour?: string) {
     this.numpadProduct = product;
     this.numpadVariant = variant;
-    const current = variant ? this.getVariantQty(product, variant) : this.getQty(product.id);
+    this.numpadLightColour = lightColour;
+    // A product with no options is still counted shade by shade, so the colour
+    // alone is enough to make this a line of its own rather than the base one.
+    const current = (variant || lightColour)
+      ? this.getVariantQty(product, variant, lightColour)
+      : this.getQty(product.id);
     this.numpadValue = current > 0 ? String(current) : '';
     const name = this.tn(product.name);
     if (variant) {
@@ -1164,6 +1389,8 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     } else {
       this.numpadTitle = name;
     }
+    // Which shade is being counted matters as much as which wattage.
+    if (lightColour) this.numpadTitle = `${this.numpadTitle} · ${this.tn(lightColour)}`;
     this.showNumpad = true;
   }
 
@@ -1191,7 +1418,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     if (this.numpadProduct) {
       const product = this.numpadProduct;
       const variant = this.numpadVariant;
-      this.setCartQuantity(product, variant, qty);
+      this.setCartQuantity(product, variant, qty, this.numpadLightColour);
       this.activity.log(
         qty > 0 ? 'cart-qty' : 'cart-remove',
         qty > 0
@@ -1207,6 +1434,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     this.showNumpad = false;
     this.numpadProduct = null;
     this.numpadVariant = undefined;
+    this.numpadLightColour = undefined;
     this.numpadValue = '';
     this.numpadTitle = '';
   }

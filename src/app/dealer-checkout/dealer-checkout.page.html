@@ -60,7 +60,7 @@
                   </button>
                 </div>
                 
-                <span class="item-variant-info" *ngIf="item.variantInfo">{{ item.variantInfo }}</span>
+                <span class="item-variant-info" *ngIf="item.variantInfo">{{ labelHead(item.variantInfo) }}<span class="lc-swatch" *ngIf="labelColour(item.variantInfo)" [style.background]="swatch(labelColour(item.variantInfo))"></span>{{ labelColour(item.variantInfo) }}</span>
                 <span class="item-sku-code">{{ item.sku }}</span>
 
                 <!-- Stepper + Price Line -->

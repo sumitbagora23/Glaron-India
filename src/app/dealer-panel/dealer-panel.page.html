@@ -640,19 +640,36 @@
           <p class="catalog-subheading">{{ t('pricingSubhead') }}</p>
         </div>
 
-        <div class="catalog-search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-          <input type="text" class="search-field" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" [placeholder]="t('searchProducts')" />
-          <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
-        </div>
-        <div class="filter-controls-row">
-          <div class="category-select-wrapper">
-            <select [(ngModel)]="selectedCategory" class="cat-select-dropdown">
-              <option *ngFor="let cat of categories" [value]="cat">{{ tn(cat) }}</option>
-            </select>
-          </div>
-        </div>
       </section>
+      <!-- The fixed bar: the search field, then the funnel that opens the
+           categories. It stays on screen while the list scrolls under it, and
+           it heads a category opened from Home too, so the whole range is one
+           tap away from anywhere in the catalogue. It must stay a direct child
+           of the scrolling container or it will not stick. -->
+      <div class="catalog-sticky-bar" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
+        <div class="catalog-search-row">
+          <div class="catalog-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+            <input type="text" class="search-field" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" [placeholder]="t('searchProducts')" />
+            <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
+          </div>
+
+          <!-- The funnel opens the categories; the cross beside it drops the one
+               that is on, the way the cross in the field drops what was typed. -->
+          <button type="button" class="catalog-filter-btn" [class.is-on]="categorySheetOpen"
+                  [class.has-filter]="hasCategoryFilter" (click)="openCategorySheet()"
+                  aria-label="Choose a category" title="Categories">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" class="filter-ic" aria-hidden="true">
+              <path d="M3 5h18M6 12h12M10 19h4" />
+            </svg>
+            <span class="filter-dot" *ngIf="hasCategoryFilter" aria-hidden="true"></span>
+          </button>
+
+          <button type="button" class="filter-clear-btn" *ngIf="hasCategoryFilter"
+                  (click)="clearCategory()" aria-label="Clear the category" title="Clear filter">&times;</button>
+        </div>
+      </div>
 
       <!-- Product Cards Grid -->
       <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
@@ -688,7 +705,7 @@
           </div>
 
           <!-- Top row: image on the left, name + description on the right -->
-          <div class="card-head-row">
+          <div class="card-head-row has-actions">
             <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
               <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" />
               <span *ngIf="!product.image" class="no-image-label">No Image</span>
@@ -701,44 +718,114 @@
             </div>
           </div>
 
-          <!-- Pricing / details section below -->
+          <!-- Options and prices — the same card body the sales panel and the
+               catalogue link carry, with a stepper added to every line so a
+               dealer orders from the card itself. -->
           <div class="product-details-body">
 
-            <!-- Product HAS variants: show each variant inline with its own stepper + price -->
-            <div class="variants-inline-list" *ngIf="product.variants?.length">
-              <span class="your-price-header" *ngIf="showPrices">{{ cardPriceVariantLabel }}</span>
-              <div class="variant-inline-row" *ngFor="let variant of product.variants; let vi = index; trackBy: trackByVariantIndex">
-                <span class="variant-inline-label">{{ getVariantLabel(variant) }}</span>
-                <div class="variant-controls-row">
-                  <div class="qty-stepper-box">
-                    <button class="qty-btn" (click)="decrementVariant(product, variant)">-</button>
-                    <button class="qty-number qty-number-btn" (click)="openNumpad(product, variant)">{{ getVariantQty(product, variant) }}</button>
-                    <button class="qty-btn" (click)="incrementVariant(product, variant)">+</button>
+            <!-- Product HAS options -->
+            <ng-container *ngIf="product.variants?.length">
+              <span class="specs-header">{{ showPrices ? cardPriceVariantLabel : t('availableOptions') }}</span>
+
+              <!-- Wattage reads as small tabs; the open one carries the shades,
+                   their prices and their steppers, and the ⓘ beside it opens
+                   the size, the cut-out and the rest of the sheet. -->
+              <ng-container *ngIf="specTabs(product).length">
+                <div class="spec-tab-strip">
+                  <div class="spec-tab-row">
+                    <button class="spec-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
+                            [class.is-open]="isSpecTabOpen(product, tab)"
+                            (click)="selectSpecTab(tab)">
+                      <span class="spec-tab-text">{{ tab.detail }}</span>
+                      <!-- What is already on order under this tab, so a dealer can
+                           see the 7W has something in it without opening it. -->
+                      <span class="spec-tab-qty" *ngIf="specTabTotalQty(product, tab.variant) > 0">{{ specTabTotalQty(product, tab.variant) }}</span>
+                    </button>
                   </div>
-                  <span class="variant-inline-price" *ngIf="showPrices">
-                    ₹{{ getVariantCardPrice(product, variant, vi) | number:'1.0-0' }}<small *ngIf="variant.pricePerMtr">/mtr</small>
-                  </span>
+                  <!-- The ⓘ rides at the end of the strip rather than inside the
+                       sheet, so the open option is never spelled out a second time. -->
+                  <button type="button" class="spec-info-btn" [class.is-on]="isSpecSheetOpen(product)"
+                          (click)="toggleSpecSheet(product)"
+                          aria-label="Dimension and specifications" title="Dimension &amp; specs">i</button>
                 </div>
-              </div>
-            </div>
 
-            <!-- Product has NO variants: base price + stepper -->
+                <div class="spec-open-panel is-tabbed" *ngIf="openSpecTab(product) as tab">
+                  <!-- Everything the tab no longer prints: dimension, cut-out,
+                       body colour, packing. -->
+                  <div class="spec-sheet" *ngIf="isSpecSheetOpen(product)">
+                    <div class="spec-sheet-line" *ngFor="let row of specRows(tab)">
+                      <span class="spec-sheet-key">{{ row.label }}</span>
+                      <span class="spec-sheet-val">{{ row.value }}</span>
+                    </div>
+                    <div class="spec-sheet-empty" *ngIf="specRows(tab).length === 0">{{ t('nothingElseRecorded') }}</div>
+                  </div>
+
+                  <!-- Every shade this option is sold in, priced and ordered on
+                       its own line, so the quantity is already against the
+                       colour it is meant for. -->
+                  <div class="light-colour-row" *ngFor="let colour of productLightColours(product, tab.variant); trackBy: trackByColour">
+                    <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ tn(colour) }}</span>
+                    <span class="variant-price-value" *ngIf="showPrices">
+                      ₹{{ colourPrice(getVariantCardPrice(product, tab.variant, tab.index), product, colour, getVariantBasePrice(product, tab.variant), tab.variant) | number:'1.0-0' }}<small *ngIf="tab.variant.pricePerMtr">/mtr</small>
+                    </span>
+                    <div class="qty-stepper-box compact">
+                      <button class="qty-btn" (click)="decrementVariant(product, tab.variant, colour)">-</button>
+                      <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant, colour)">{{ getVariantQty(product, tab.variant, colour) }}</button>
+                      <button class="qty-btn" (click)="incrementVariant(product, tab.variant, colour)">+</button>
+                    </div>
+                  </div>
+
+                  <!-- No shades on this product: the option is ordered as it is. -->
+                  <div class="light-colour-row no-name" *ngIf="!productLightColours(product, tab.variant).length">
+                    <span class="variant-price-value" *ngIf="showPrices">
+                      ₹{{ getVariantCardPrice(product, tab.variant, tab.index) | number:'1.0-0' }}<small *ngIf="tab.variant.pricePerMtr">/mtr</small>
+                    </span>
+                    <div class="qty-stepper-box compact">
+                      <button class="qty-btn" (click)="decrementVariant(product, tab.variant)">-</button>
+                      <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant)">{{ getVariantQty(product, tab.variant) }}</button>
+                      <button class="qty-btn" (click)="incrementVariant(product, tab.variant)">+</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+            </ng-container>
+
+            <!-- Product has NO options at all. One sold in shades still takes a
+                 quantity per shade, exactly as an option does above. -->
             <ng-container *ngIf="!product.variants?.length">
-              <div class="pricing-block" *ngIf="showPrices">
-                <span class="your-price-header">{{ cardPriceLabel }}</span>
-                <div class="price-val-row">
-                  <span class="dealer-rupee-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
+              <span class="specs-header">{{ showPrices ? cardPriceLabel : t('availableOptions') }}</span>
+
+              <div class="spec-open-panel" *ngIf="productLightColours(product).length; else singleBaseLine">
+                <div class="light-colour-row" *ngFor="let colour of productLightColours(product); trackBy: trackByColour">
+                  <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ tn(colour) }}</span>
+                  <span class="variant-price-value" *ngIf="showPrices">
+                    ₹{{ colourPrice(getCardPrice(product), product, colour, product.price) | number:'1.0-0' }}
+                  </span>
+                  <div class="qty-stepper-box compact">
+                    <button class="qty-btn" (click)="decrementVariant(product, undefined, colour)">-</button>
+                    <button class="qty-number qty-number-btn" (click)="openNumpad(product, undefined, colour)">{{ getVariantQty(product, undefined, colour) }}</button>
+                    <button class="qty-btn" (click)="incrementVariant(product, undefined, colour)">+</button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Quantity Stepper — plus adds directly to cart -->
-              <div class="cart-action-row">
-                <div class="qty-stepper-box">
-                  <button class="qty-btn" (click)="decrementQty(product)">-</button>
-                  <button class="qty-number qty-number-btn" (click)="openNumpad(product)">{{ getQty(product.id) }}</button>
-                  <button class="qty-btn" (click)="incrementQty(product)">+</button>
+              <!-- No shades either: the price stands on its own, with the one
+                   stepper that buys the product itself. -->
+              <ng-template #singleBaseLine>
+                <div class="pricing-block" *ngIf="showPrices">
+                  <div class="price-val-row">
+                    <span class="dealer-rupee-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
+                  </div>
                 </div>
-              </div>
+
+                <div class="cart-action-row">
+                  <div class="qty-stepper-box">
+                    <button class="qty-btn" (click)="decrementQty(product)">-</button>
+                    <button class="qty-number qty-number-btn" (click)="openNumpad(product)">{{ getQty(product.id) }}</button>
+                    <button class="qty-btn" (click)="incrementQty(product)">+</button>
+                  </div>
+                </div>
+              </ng-template>
             </ng-container>
 
           </div>
@@ -795,7 +882,7 @@
               <div class="order-item-row" *ngFor="let item of order.items">
                 <div class="oi-left">
                   <span class="oi-name">{{ tn(item.name) }}</span>
-                  <span class="oi-variant" *ngIf="item.variant && item.variant !== item.name">{{ item.variant }}</span>
+                  <span class="oi-variant" *ngIf="item.variant && item.variant !== item.name">{{ labelHead(item.variant) }}<span class="lc-swatch" *ngIf="labelColour(item.variant)" [style.background]="swatch(labelColour(item.variant))"></span>{{ labelColour(item.variant) }}</span>
                 </div>
                 <span class="oi-qty">{{ t('qty') }} {{ item.quantity }}</span>
               </div>
@@ -860,6 +947,38 @@
     </nav>
 
     <!-- Variants Modal Sheet -->
+    <!-- The categories, in the same picture grid the Home browser uses, so a
+         category is chosen one way in this app and not two. -->
+    <div class="cat-sheet-overlay" *ngIf="categorySheetOpen" (click)="closeCategorySheet()">
+      <div class="cat-sheet" (click)="$event.stopPropagation()">
+        <div class="cat-sheet-head">
+          <h3 class="cat-sheet-title">{{ t('categories') }}</h3>
+          <button type="button" class="cat-sheet-close" (click)="closeCategorySheet()" aria-label="Close">&times;</button>
+        </div>
+
+        <section class="category-grid">
+          <button class="category-grid-card" [class.is-on]="isCategoryOn('All Categories')"
+                  (click)="pickCategory('All Categories')">
+            <div class="cat-grid-media cat-grid-all">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cat-grid-all-ic" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+            </div>
+            <span class="cat-grid-name">{{ t('allCategories') }}</span>
+          </button>
+
+          <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId"
+                  [class.is-on]="isCategoryOn(cat.name)" (click)="pickCategory(cat.name)">
+            <div class="cat-grid-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+            </div>
+            <span class="cat-grid-name">{{ tn(cat.name) }}</span>
+          </button>
+        </section>
+      </div>
+    </div>
+
     <div class="variants-modal-overlay" *ngIf="selectedVariantProduct" (click)="closeVariantsModal()">
       <div class="variants-sheet" (click)="$event.stopPropagation()">
         <div class="sheet-header">

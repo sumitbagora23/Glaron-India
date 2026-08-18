@@ -1,8 +1,16 @@
 {
   "$schema": "../node_modules/@angular/service-worker/config/schema.json",
   "index": "/index.html",
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**",
+    "!/quotation-image/**",
+    "!/notification-image/**"
+  ],
   "appData": {
-    "version": "1.0.28"
+    "version": "1.0.79"
   },
   "assetGroups": [
     {

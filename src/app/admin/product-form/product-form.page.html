@@ -126,6 +126,105 @@
                 </div>
               </div>
 
+              <!-- Light Colour field (multi-select) -->
+              <div class="input-form-group">
+                <div class="lc-label-row">
+                  <label class="input-field-label">Light Colour <span class="optional-tag">(Optional)</span></label>
+                  <!-- The list itself: add, rename, reorder, delete. This
+                       product is held while the admin is over there. -->
+                  <button type="button" class="lc-manage-btn" (click)="manageLightColours()">
+                    <svg class="lc-manage-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add Light Colour</span>
+                  </button>
+                </div>
+
+                <!-- One tab per option of this product, so a 7W sold in warm
+                     white alone can say so without touching the 12W beside it.
+                     "Whole product" is what every option follows until it is
+                     given shades of its own. -->
+                <div class="lc-tab-row" *ngIf="variantTabs.length">
+                  <button type="button" class="lc-tab"
+                          [class.is-open]="lightColourTab === -1"
+                          (click)="selectLightColourTab(-1)">Whole product</button>
+                  <button type="button" class="lc-tab" *ngFor="let tab of variantTabs"
+                          [class.is-open]="lightColourTab === tab.index"
+                          [class.has-own]="variantTabHasOwn(tab.index)"
+                          [title]="tab.detail"
+                          (click)="selectLightColourTab(tab.index)">
+                    <span class="lc-tab-text">{{ tab.label }}</span>
+                    <!-- The dot marks the options that carry their own shades. -->
+                    <span class="lc-tab-dot" *ngIf="variantTabHasOwn(tab.index)"></span>
+                  </button>
+                </div>
+                <span class="lc-target-line" *ngIf="variantTabs.length">{{ lightColourTargetLabel }}</span>
+
+                <div class="multi-cat-dropdown">
+                  <button type="button" class="multi-cat-toggle field-input-box"
+                          (click)="toggleLightColourDropdown()">
+                    <span class="multi-cat-label" [class.placeholder]="selectedLightColours.length === 0">{{ lightColourButtonLabel }}</span>
+                    <svg class="multi-cat-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <div class="multi-cat-panel" *ngIf="lightColourDropdownOpen" (wheel)="onCategoryWheel($event)">
+                    <!-- The clear (×). Products with no shade to choose — drivers,
+                         profiles, accessories — are marked by clearing the picker,
+                         not by ticking anything: "No Colour" is not a shade. -->
+                    <button type="button" class="lc-clear-option" (click)="clearLightColours()">
+                      <svg class="lc-clear-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span *ngIf="lightColourTab < 0">Clear — this product has no light colour</span>
+                      <span *ngIf="lightColourTab >= 0">Clear — this option has no light colour</span>
+                    </button>
+
+                    <label class="multi-cat-option" *ngFor="let lc of lightColourOptions">
+                      <input type="checkbox" [checked]="isLightColourSelected(lc)" (change)="toggleLightColour(lc)" />
+                      <span class="lc-option-text"><span class="lc-swatch" [style.background]="swatch(lc)"></span>{{ lc }}</span>
+                    </label>
+                    <div class="multi-cat-empty" *ngIf="lightColourOptions.length === 0">
+                      No light colours yet. Add them with the button above.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cleared: nothing to price, just a way back out of it. -->
+                <div class="lc-selected-list" *ngIf="isNoColour">
+                  <div class="lc-selected-row">
+                    <span class="lc-selected-name" *ngIf="lightColourTab < 0">No light colour on this product</span>
+                    <span class="lc-selected-name" *ngIf="lightColourTab >= 0">No light colour on this option</span>
+                    <button type="button" class="chip-remove" (click)="clearLightColours()" aria-label="Undo">&times;</button>
+                  </div>
+                </div>
+
+                <!-- Picked colours, each with an optional extra of its own.
+                     Under an option's tab these are that option's shades — and
+                     until it is given its own, the product's, shown as they
+                     will be sold. -->
+                <div class="lc-selected-list" *ngIf="activeLightColours.length && !isNoColour">
+                  <div class="lc-selected-row" *ngFor="let c of activeLightColours">
+                    <span class="lc-selected-name"><span class="lc-swatch" [style.background]="swatch(c)"></span>{{ c }}</span>
+                    <div class="lc-extra-box">
+                      <span class="lc-extra-sign">Rs.</span>
+                      <input type="number" min="0" class="lc-extra-input" [placeholder]="pricePlaceholder(c)"
+                             [value]="priceFor(c)" (input)="setLightColourPrice(c, $event)" />
+                    </div>
+                    <button type="button" class="chip-remove" (click)="toggleLightColour(c)" aria-label="Remove">&times;</button>
+                  </div>
+                </div>
+
+                <!-- The way back: this option is sold in the product's shades
+                     again, and stops carrying a list of its own. -->
+                <button type="button" class="lc-follow-btn"
+                        *ngIf="lightColourTab >= 0 && !followsProduct"
+                        (click)="followProductColours()">Use the product's shades on this option</button>
+
+                <span class="input-hint-text">Pick every shade this product is sold in — they show on the product card behind each wattage / dimension tab. Sold differently option by option? Open that option's tab above and pick there; it then carries its own shades, and the rest of the product is untouched. Fill the box only when a shade is priced differently, and enter its full price, not a difference. Leave it blank and that shade is sold at the option's own price — under an option's tab, at the product's price for that shade. If the product, or one option of it, has no shade to choose — a driver, a profile, an accessory — use the clear (×) at the top of the list. Not in the list? "Add Light Colour" opens the full list, and brings you back here with this product as you left it.</span>
+              </div>
+
             </div>
           </section>
           
@@ -205,7 +304,8 @@
                     [class.border-error]="(productForm.get('price')?.touched && productForm.get('price')?.invalid) || (submitted && pricingMissing)"
                   />
                 </div>
-                <span class="input-hint-text">Optional — leave blank if you set prices in the variants below.</span>
+                <span class="input-hint-text" *ngIf="!hasVariants">Optional — leave blank if you set prices in the variants below.</span>
+                <span class="input-hint-text" *ngIf="hasVariants">Not used — this product is priced by its variants below.</span>
                 <!-- Error validation -->
                 <div class="validation-error-msg" *ngIf="productForm.get('price')?.touched && productForm.get('price')?.errors?.['min']">
                   Price must be greater than 0.

@@ -105,6 +105,7 @@
 
     <!-- Activity table -->
     <section class="table-section-card">
+      <div class="table-scroll-container">
       <table class="inventory-table compact">
         <thead>
           <tr>
@@ -134,16 +135,16 @@
             </td>
 
             <!-- What they did -->
-            <td class="td-what">
+            <td class="td-what" data-label="Activity">
               <span class="what-label">{{ log.label }}</span>
               <span class="what-device" *ngIf="log.device">{{ log.device }}</span>
             </td>
 
             <!-- Structured details -->
-            <td class="td-detail">
+            <td class="td-detail" data-label="Details">
               <div class="detail-tags">
                 <span class="tag tag-sku" *ngIf="log.sku">{{ log.sku }}</span>
-                <span class="tag" *ngIf="log.variant">{{ log.variant }}</span>
+                <span class="tag" *ngIf="log.variant">{{ labelHead(log.variant) }}<span class="lc-swatch" *ngIf="labelColour(log.variant)" [style.background]="swatch(labelColour(log.variant))"></span>{{ labelColour(log.variant) }}</span>
                 <span class="tag" *ngIf="log.category && !log.sku">{{ log.category }}</span>
                 <span class="tag tag-order" *ngIf="log.orderId">{{ orderRef(log.orderId) }}</span>
                 <span class="tag tag-qty" *ngIf="log.qty">Qty {{ log.qty }}</span>
@@ -154,24 +155,26 @@
             </td>
 
             <!-- Section -->
-            <td class="td-section">
+            <td class="td-section" data-label="Type">
               <span class="section-pill" [ngClass]="sectionClass(log.section)">{{ sectionLabel(log.section) }}</span>
             </td>
 
             <!-- When -->
-            <td class="td-time">
+            <td class="td-time" data-label="When">
               <span class="time-text" [title]="exactTime(log.at)">{{ timeAgo(log.at) }}</span>
               <span class="time-exact">{{ exactTime(log.at) }}</span>
             </td>
 
             <!-- Actions -->
             <td class="td-actions">
-              <button class="delete-btn" (click)="removeLog(log, $event)" title="Remove this entry">
-                <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span class="delete-btn-text">Remove</span>
-              </button>
+              <div class="actions-group">
+                <button class="delete-btn" (click)="removeLog(log, $event)" title="Remove this entry">
+                  <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span class="delete-btn-text">Remove</span>
+                </button>
+              </div>
             </td>
           </tr>
 
@@ -188,6 +191,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </section>
 
   </main>

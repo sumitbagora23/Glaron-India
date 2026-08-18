@@ -144,8 +144,9 @@ export interface NotificationTarget {
 export const DEALER_NOTIFICATION_TARGETS: NotificationTarget[] = [
   { key: 'home', label: 'Home', url: '/dealer/catalog?tab=home' },
   { key: 'products', label: 'Products', url: '/dealer/catalog?tab=products' },
-  { key: 'orders', label: 'Orders', url: '/dealer/catalog?tab=orders' },
-  { key: 'profile', label: 'Profile', url: '/dealer/catalog?tab=profile' },
+  // The Orders page is its own route, so a tap lands on it directly rather
+  // than asking the catalogue to switch tabs after it boots.
+  { key: 'orders', label: 'Orders', url: '/dealer/orders' },
 ];
 
 // The agent PWA's tabs. It has no orders or profile screen, and a commission
@@ -185,7 +186,6 @@ const TARGET_ALIASES: Record<string, string> = {
   category: 'home', categories: 'home', catalog: 'home', catalogue: 'home',
   products: 'products', product: 'products', allproducts: 'products', items: 'products', shop: 'products',
   orders: 'orders', order: 'orders', myorders: 'orders', myorder: 'orders', purchases: 'orders',
-  profile: 'profile', myprofile: 'profile', account: 'profile', dealerprofile: 'profile',
   commission: 'commission', commissions: 'commission', earning: 'commission',
   earnings: 'commission', payout: 'commission', payouts: 'commission', ledger: 'commission',
 };

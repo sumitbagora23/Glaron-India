@@ -443,6 +443,14 @@
   &.border-error {
     border-color: #EF4444;
   }
+
+  // Locked for variant-priced products: greyed out so it reads as "not
+  // applicable" rather than an empty field waiting for a value.
+  &:disabled {
+    color: #9CA3AF;
+    background: #F3F4F6;
+    cursor: not-allowed;
+  }
 }
 
 /* -------------------------------------------------------------
@@ -850,4 +858,218 @@
   font-weight: 600;
   padding: 10px 12px;
   border-radius: 8px;
+}
+
+/* ---- Light colour picker ----
+   The same multi-select as the categories above, plus a dot that shows the
+   shade itself — "warm white" reads far quicker as a colour than as words. */
+.lc-option-text {
+  min-width: 0;
+}
+
+/* The field's label shares its line with the way out to the Light Colours
+   page, so adding a missing shade is one click from where it is missed. */
+.lc-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lc-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+  color: #170338;
+  white-space: nowrap;
+
+  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+}
+
+.lc-manage-icon {
+  width: 14px;
+  height: 14px;
+  color: #170338;
+}
+
+/* ---- The option tabs above the picker ----
+   The same strip the dealer card carries, so what the admin ticks under "7W"
+   here is what a dealer sees under the 7W tab there. The dot marks an option
+   that has been given shades of its own; the rest follow the product. */
+.lc-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 6px;
+}
+
+.lc-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 17px;
+  color: #64748B;
+  white-space: nowrap;
+  max-width: 100%;
+
+  &:hover { background: #F8FAFC; border-color: #CBD5E1; color: #170338; }
+
+  &.is-open {
+    background: #2D1B4E;
+    border-color: #2D1B4E;
+    color: #FFFFFF;
+  }
+}
+
+.lc-tab-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lc-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7C3AED;
+  flex-shrink: 0;
+
+  .lc-tab.is-open & { background: #C4B5FD; }
+}
+
+/* Which option the ticks below belong to, and whether it is carrying the
+   product's shades or its own. */
+.lc-target-line {
+  display: block;
+  margin-bottom: 8px;
+  font-family: 'Outfit';
+  font-size: 12px;
+  line-height: 16px;
+  color: #64748B;
+}
+
+/* The way back out of an option's own shades. */
+.lc-follow-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 17px;
+  color: #64748B;
+
+  &:hover { background: #F8F9FA; border-color: #CBD5E1; color: #170338; }
+}
+
+/* The clear row that opens the list — it sits above the ticks and is ruled off
+   from them, because it is not one more shade to pick but the way to say there
+   is no shade at all. */
+.lc-clear-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #E2E8F0;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+  color: #64748B;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover { background: #F8FAFC; color: #170338; }
+}
+
+.lc-clear-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Each picked colour on its own line, with the box for the extra it costs. */
+.lc-selected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lc-selected-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(45, 27, 78, 0.05);
+  border: 1px solid rgba(45, 27, 78, 0.14);
+  border-radius: 10px;
+}
+
+.lc-selected-name {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #2D1B4E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lc-extra-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.lc-extra-sign {
+  font-family: 'Outfit';
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  white-space: nowrap;
+}
+
+.lc-extra-input {
+  width: 64px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1C1B1B;
 }

@@ -25,6 +25,7 @@ export class AgentCommissionPage implements OnInit {
   // the sales amount. Storing both is deliberate — see AgentCommissionService.
   form = {
     date: this.today(),
+    clientName: '',
     salesAmount: null as number | null,
     percentage: null as number | null,
     commissionAmount: null as number | null,
@@ -133,6 +134,7 @@ export class AgentCommissionPage implements OnInit {
     this.editingId = entry.id;
     this.form = {
       date: entry.date,
+      clientName: entry.clientName || '',
       salesAmount: entry.salesAmount || null,
       percentage: entry.percentage || null,
       commissionAmount: entry.commissionAmount || null,
@@ -140,7 +142,7 @@ export class AgentCommissionPage implements OnInit {
     };
     this.error = '';
     this.savedMessage = '';
-    // The composer sits below the ledger — bring it into view.
+    // The composer sits above the ledger — bring it back into view.
     setTimeout(() => document.getElementById('commission-composer')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
 
@@ -153,6 +155,7 @@ export class AgentCommissionPage implements OnInit {
   private resetForm() {
     this.form = {
       date: this.today(),
+      clientName: '',
       salesAmount: null,
       percentage: null,
       commissionAmount: null,
@@ -188,6 +191,7 @@ export class AgentCommissionPage implements OnInit {
 
     const payload = {
       date: this.form.date,
+      clientName: this.form.clientName,
       salesAmount: sales,
       percentage: pct || AgentCommissionService.percentageFrom(sales, amount),
       commissionAmount: amount || AgentCommissionService.commissionFrom(sales, pct),

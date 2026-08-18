@@ -62,76 +62,116 @@
         </section>
       </ng-container>
 
-      <!-- PRODUCTS TAB head: search + category filter (title is in the bar) -->
-      <section class="catalog-title-banner" *ngIf="activeTab === 'products'">
+      <!-- PRODUCTS TAB head: search + category filter (title is in the bar).
+           The same head serves the catalogue when it is opened from inside an
+           area — it is the identical browse, it just fills a room. -->
+      <section class="catalog-title-banner" *ngIf="activeTab === 'products' || (activeTab === 'area' && areaStep === 'browse')">
         <div class="title-text-group">
-          <p class="catalog-subheading">Every piece in the Glaron India collection, in one place.</p>
+          <p class="catalog-subheading" *ngIf="activeTab === 'products'">Every piece in the Glaron India collection, in one place.</p>
+          <p class="catalog-subheading" *ngIf="activeTab === 'area'">
+            Everything you add here goes into <strong>{{ activeArea?.name }}</strong>.
+          </p>
         </div>
 
-        <div class="catalog-search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-          <input type="text" class="search-field" [(ngModel)]="searchQuery" placeholder="Search the full range" />
-          <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
-        </div>
-
-        <div class="filter-controls-row">
-          <div class="category-select-wrapper">
-            <select [(ngModel)]="selectedCategory" class="cat-select-dropdown">
-              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-            </select>
-          </div>
-        </div>
       </section>
+      <!-- The fixed bar: the search field, then the funnel that opens the
+           categories. It stays on screen while the list scrolls under it, and
+           it heads a category opened from Home too, so the whole range is one
+           tap away from anywhere in the catalogue. It must stay a direct child
+           of the scrolling container or it will not stick. -->
+      <div class="catalog-sticky-bar" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory) || (activeTab === 'area' && areaStep === 'browse')">
+        <div class="catalog-search-row">
+          <div class="catalog-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+            <input type="text" class="search-field" [(ngModel)]="searchQuery" placeholder="Search the full range" />
+            <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear">&times;</button>
+          </div>
 
-      <!-- COMPARE QUOTATION TAB: send in a quote you already hold -->
-      <section class="compare-panel" *ngIf="quotationsAllowed && activeTab === 'compare'">
-
-        <div class="catalog-hero compare-hero">
-          <span class="hero-eyebrow">Compare Quotation</span>
-          <h1 class="hero-title">Holding a quote?<br />Let us better it.</h1>
-          <p class="hero-sub">Send us the quotation you already have. We price the same list against the Glaron range and come back to you.</p>
-        </div>
-
-        <!-- Sent state -->
-        <div class="quote-done" *ngIf="quoteSent">
-          <span class="done-tick">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          <!-- The funnel opens the categories; the cross beside it drops the one
+               that is on, the way the cross in the field drops what was typed. -->
+          <button type="button" class="catalog-filter-btn" [class.is-on]="categorySheetOpen"
+                  [class.has-filter]="hasCategoryFilter" (click)="openCategorySheet()"
+                  aria-label="Choose a category" title="Categories">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" class="filter-ic" aria-hidden="true">
+              <path d="M3 5h18M6 12h12M10 19h4" />
             </svg>
-          </span>
-          <h2 class="done-title">Got it — thank you.</h2>
-          <p class="done-text">Your quotation is with the Glaron India team. Someone will call you on the number you left.</p>
-          <button class="quote-ghost-btn" (click)="sendAnotherQuote()">Send another quotation</button>
-        </div>
-
-        <!-- Form -->
-        <form class="quote-form" *ngIf="!quoteSent" (ngSubmit)="submitQuote()">
-
-          <!-- Upload -->
-          <label class="quote-drop" [class.filled]="quoteImage">
-            <input type="file" accept="image/*" class="quote-file-input" (change)="onQuoteSelected($event)" />
-
-            <ng-container *ngIf="!quoteImage">
-              <span class="drop-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.9A5 5 0 1115.9 6H16a5 5 0 011 9.9M9 15l3-3m0 0l3 3m-3-3v9" />
-                </svg>
-              </span>
-              <span class="drop-title">{{ quoteReading ? 'Reading your file…' : 'Upload your quotation' }}</span>
-              <span class="drop-sub">A photo or a screenshot — JPG or PNG</span>
-            </ng-container>
-
-            <ng-container *ngIf="quoteImage">
-              <img [src]="quoteImage" class="quote-preview-img" alt="Your quotation" />
-              <span class="drop-change">Tap to change</span>
-            </ng-container>
-          </label>
-
-          <button type="button" class="quote-remove-btn" *ngIf="quoteImage" (click)="removeQuoteImage()">
-            Remove file
+            <span class="filter-dot" *ngIf="hasCategoryFilter" aria-hidden="true"></span>
           </button>
 
-          <!-- Who to call back -->
+          <button type="button" class="filter-clear-btn" *ngIf="hasCategoryFilter"
+                  (click)="clearCategory()" aria-label="Clear the category" title="Clear filter">&times;</button>
+        </div>
+      </div>
+
+      <!-- COMPARE QUOTATION TAB: send in a quote you already hold.
+           Three screens, one job each: attach the file, leave a number, done. -->
+      <section class="compare-panel" *ngIf="quotationsAllowed && activeTab === 'compare'">
+
+        <!-- STEP 1 — the card that explains it, and the upload -->
+        <ng-container *ngIf="compareStep === 'upload'">
+
+          <!-- Plain words, in the order someone actually needs them: what this
+               does, what it costs, and the three steps to it. -->
+          <div class="catalog-hero compare-hero">
+            <span class="hero-eyebrow">Compare Quotation</span>
+            <h1 class="hero-title">Send us a price.<br />We will beat it.</h1>
+            <p class="hero-sub">
+              Got a quotation from another company? Send it here. We check the same
+              items at Glaron rates and call you back with our price. Free, and you
+              are under no obligation.
+            </p>
+
+            <ol class="compare-steps">
+              <li><span class="step-num">1</span><span class="step-text">Attach the quotation — a PDF or a photo of it</span></li>
+              <li><span class="step-num">2</span><span class="step-text">Leave your name and mobile number</span></li>
+              <li><span class="step-num">3</span><span class="step-text">We call you back with our best rate</span></li>
+            </ol>
+          </div>
+
+          <div class="quote-form">
+            <label class="quote-drop" [class.filled]="quoteImage">
+              <input type="file" accept="application/pdf,image/*" class="quote-file-input" (change)="onQuoteSelected($event)" />
+
+              <ng-container *ngIf="!quoteImage">
+                <span class="drop-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.9A5 5 0 1115.9 6H16a5 5 0 011 9.9M9 15l3-3m0 0l3 3m-3-3v9" />
+                  </svg>
+                </span>
+                <span class="drop-title">{{ quoteReading ? 'Reading your file…' : 'Attach the quotation' }}</span>
+                <span class="drop-sub">PDF, photo or screenshot</span>
+              </ng-container>
+
+              <ng-container *ngIf="quoteImage">
+                <img [src]="quoteImage" class="quote-preview-img" alt="Your quotation" />
+                <span class="drop-change">Tap to change</span>
+              </ng-container>
+            </label>
+
+            <p class="quote-filenote" *ngIf="quoteImage && quotePageCount > 0">
+              PDF read — {{ quotePageCount }} {{ quotePageCount === 1 ? 'page' : 'pages' }} attached.
+            </p>
+
+            <button type="button" class="quote-remove-btn" *ngIf="quoteImage" (click)="removeQuoteImage()">
+              Remove file
+            </button>
+
+            <p class="quote-error" *ngIf="quoteError">{{ quoteError }}</p>
+
+            <button type="button" class="quote-submit-btn" [disabled]="quoteReading" (click)="openCompareDetails()">
+              {{ quoteReading ? 'Reading your file…' : 'Continue' }}
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- STEP 2 — its own screen, holding nothing but the two fields -->
+        <form class="quote-form focus-page" *ngIf="compareStep === 'form'" (ngSubmit)="submitQuote()">
+          <div class="request-intro">
+            <h3 class="request-title">Where should we call you?</h3>
+            <p class="request-sub">We will look at your quotation and ring you back with the Glaron price.</p>
+          </div>
+
           <div class="quote-field">
             <label class="quote-label" for="quote-name">Your name</label>
             <input id="quote-name" type="text" class="quote-input" [(ngModel)]="quoteName" name="quoteName"
@@ -146,19 +186,30 @@
 
           <p class="quote-error" *ngIf="quoteError">{{ quoteError }}</p>
 
-          <button type="submit" class="quote-submit-btn" [disabled]="quoteSending || quoteReading">
-            {{ quoteSending ? 'Sending…' : 'Submit for comparison' }}
-          </button>
+          <button type="submit" class="quote-submit-btn" [disabled]="quoteSending">Submit for comparison</button>
 
           <p class="quote-privacy">Your details are used only to reply to this quotation.</p>
         </form>
+
+        <!-- STEP 3 — the confirmation, also a screen of its own -->
+        <div class="quote-done focus-page" *ngIf="compareStep === 'done'">
+          <span class="done-tick">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <h2 class="done-title">Got it — thank you.</h2>
+          <p class="done-text">Your quotation is with the Glaron India team. Someone will call you on the number you left.</p>
+          <button class="quote-ghost-btn" (click)="sendAnotherQuote()">Send another quotation</button>
+        </div>
 
       </section>
 
       <!-- Product cards. Anything here can go on a quotation list, but nothing
            on this page carries a price — a visitor has no rate, so they pick
            quantities and Glaron prices the list afterwards. -->
-      <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
+      <section class="product-cards-grid"
+               *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory) || (activeTab === 'area' && areaStep === 'browse')">
 
         <div class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">
           <div class="card-head-row">
@@ -175,17 +226,18 @@
 
               <!-- A product with no variants is added as itself. Only on an
                    office link: a dealer's customer has nothing to send. -->
-              <div class="add-line" *ngIf="quotationsAllowed && !product.variants?.length">
+              <div class="add-line" *ngIf="canAddProducts && !product.variants?.length">
                 <button class="add-pill" *ngIf="qtyInCart(product) === 0" (click)="addToCart(product)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
                   </svg>
                   <span>Add to list</span>
                 </button>
-                <div class="qty-stepper" *ngIf="qtyInCart(product) > 0">
-                  <button class="step-btn" (click)="removeOneFromCart(product)" aria-label="Remove one">&minus;</button>
-                  <span class="step-val">{{ qtyInCart(product) }}</span>
-                  <button class="step-btn" (click)="addToCart(product)" aria-label="Add one">+</button>
+                <div class="qty-stepper-box" *ngIf="qtyInCart(product) > 0">
+                  <button class="qty-btn" (click)="removeOneFromCart(product)" aria-label="Remove one">&minus;</button>
+                  <!-- Tap the number to type an exact quantity, same as the app. -->
+                  <button class="qty-number qty-number-btn" (click)="openNumpad(product)" aria-label="Type a quantity">{{ qtyInCart(product) }}</button>
+                  <button class="qty-btn" (click)="addToCart(product)" aria-label="Add one">+</button>
                 </div>
               </div>
             </div>
@@ -195,23 +247,73 @@
                and no price — the quantity is the only number on the page. -->
           <div class="product-details-body" *ngIf="product.variants?.length">
             <span class="specs-header">Available options</span>
-            <div class="variants-inline-list">
-              <div class="variant-inline-row" *ngFor="let variant of product.variants; trackBy: trackByVariantIndex">
-                <span class="variant-inline-label">{{ getVariantLabel(variant) }}</span>
 
-                <button class="add-pill compact" *ngIf="quotationsAllowed && qtyInCart(product, variant) === 0" (click)="addToCart(product, variant)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                  </svg>
-                  <span>Add</span>
-                </button>
-                <div class="qty-stepper compact" *ngIf="quotationsAllowed && qtyInCart(product, variant) > 0">
-                  <button class="step-btn" (click)="removeOneFromCart(product, variant)" aria-label="Remove one">&minus;</button>
-                  <span class="step-val">{{ qtyInCart(product, variant) }}</span>
-                  <button class="step-btn" (click)="addToCart(product, variant)" aria-label="Add one">+</button>
+            <!-- Wattage reads as small tabs. The open one takes the quantity,
+                 and the ⓘ beside it opens the size and the rest of the sheet. -->
+            <ng-container *ngIf="specTabs(product).length">
+              <div class="spec-tab-strip">
+                <div class="spec-tab-row">
+                  <button class="spec-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
+                          [class.is-open]="isSpecTabOpen(product, tab)"
+                          (click)="selectSpecTab(tab)">
+                    <span class="spec-tab-text">{{ tab.detail }}</span>
+                    <span class="spec-tab-qty" *ngIf="specTabTotalQty(product, tab.variant) > 0">{{ specTabTotalQty(product, tab.variant) }}</span>
+                  </button>
+                </div>
+                <!-- The ⓘ rides at the end of the strip rather than inside the
+                     sheet, so the open option is never spelled out a second time. -->
+                <button type="button" class="spec-info-btn" [class.is-on]="isSpecSheetOpen(product)"
+                        (click)="toggleSpecSheet(product)"
+                        aria-label="Dimension and specifications" title="Dimension &amp; specs">i</button>
+              </div>
+
+              <div class="spec-open-panel is-tabbed" *ngIf="openSpecTab(product) as tab">
+                <!-- Everything the tab no longer prints: dimension, cut-out,
+                     body colour, packing. -->
+                <div class="spec-sheet" *ngIf="isSpecSheetOpen(product)">
+                  <div class="spec-sheet-line" *ngFor="let row of specRows(tab)">
+                    <span class="spec-sheet-key">{{ row.label }}</span>
+                    <span class="spec-sheet-val">{{ row.value }}</span>
+                  </div>
+                  <div class="spec-sheet-empty" *ngIf="specRows(tab).length === 0">Nothing else recorded on this option.</div>
+                </div>
+
+                <!-- Every shade takes its own quantity, so one option can be
+                     asked for in warm white and cool white at the same time. -->
+                <div class="light-colour-row" *ngFor="let colour of productLightColours(product, tab.variant); trackBy: trackByColour">
+                  <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
+
+                  <ng-container *ngIf="canAddProducts">
+                    <button class="add-pill compact" *ngIf="qtyInCart(product, tab.variant, colour) === 0" (click)="addToCart(product, tab.variant, colour)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                      </svg>
+                      <span>Add</span>
+                    </button>
+                    <div class="qty-stepper-box compact" *ngIf="qtyInCart(product, tab.variant, colour) > 0">
+                      <button class="qty-btn" (click)="removeOneFromCart(product, tab.variant, colour)" aria-label="Remove one">&minus;</button>
+                      <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant, colour)" aria-label="Type a quantity">{{ qtyInCart(product, tab.variant, colour) }}</button>
+                      <button class="qty-btn" (click)="addToCart(product, tab.variant, colour)" aria-label="Add one">+</button>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <!-- No shades on this product: the option is asked for as it is. -->
+                <div class="light-colour-row no-name" *ngIf="canAddProducts && !productLightColours(product, tab.variant).length">
+                  <button class="add-pill compact" *ngIf="qtyInCart(product, tab.variant) === 0" (click)="addToCart(product, tab.variant)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                    <span>Add</span>
+                  </button>
+                  <div class="qty-stepper-box compact" *ngIf="qtyInCart(product, tab.variant) > 0">
+                    <button class="qty-btn" (click)="removeOneFromCart(product, tab.variant)" aria-label="Remove one">&minus;</button>
+                    <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant)" aria-label="Type a quantity">{{ qtyInCart(product, tab.variant) }}</button>
+                    <button class="qty-btn" (click)="addToCart(product, tab.variant)" aria-label="Add one">+</button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ng-container>
           </div>
         </div>
 
@@ -220,14 +322,97 @@
         </div>
       </section>
 
+      <!-- ============ AREAS ============
+           The area-wise link's own tab. A job is thought about room by room —
+           kitchen, lobby, bedroom — so the list is built that way and the
+           quotation comes back reading the same way. Still no price anywhere:
+           this is the office's link, and a visitor has no rate. -->
+      <section class="area-panel" *ngIf="areaAllowed && activeTab === 'area'">
+
+        <!-- STEP 1 — name the areas, and see them all -->
+        <ng-container *ngIf="areaStep === 'list'">
+          <div class="cart-head">
+            <h2 class="catalog-heading">Your areas</h2>
+            <p class="catalog-subheading">
+              Name each space of your job, then fill it with the lights you want.
+              We quote it back area by area.
+            </p>
+          </div>
+
+          <div class="area-add-row">
+            <input type="text" class="area-input" [(ngModel)]="newAreaName" name="newAreaName"
+                   placeholder="Area name — Kitchen, Lobby, Bedroom…" maxlength="40"
+                   (keyup.enter)="addArea()" />
+            <button type="button" class="area-add-btn" (click)="addArea()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="add-ic">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+              </svg>
+              <span>Add area</span>
+            </button>
+          </div>
+
+          <p class="quote-error" *ngIf="areaError">{{ areaError }}</p>
+
+          <div class="area-empty" *ngIf="areas.length === 0">
+            <span class="cart-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10" />
+              </svg>
+            </span>
+            <h2 class="cart-empty-title">No areas yet</h2>
+            <p class="cart-empty-text">
+              Start with one — "Kitchen", say — and add the lights that belong in it.
+              Add as many areas as your job has.
+            </p>
+          </div>
+
+          <div class="area-list" *ngIf="areas.length > 0">
+            <button class="area-row" *ngFor="let area of areas; trackBy: trackByAreaId" (click)="openArea(area)">
+              <span class="area-row-mark">{{ area.name.charAt(0).toUpperCase() }}</span>
+              <span class="area-row-text">
+                <span class="area-row-name">{{ area.name }}</span>
+                <span class="area-row-count">
+                  {{ area.items.length }} {{ area.items.length === 1 ? 'product' : 'products' }}
+                  <ng-container *ngIf="area.items.length"> · {{ pieceCountIn(area) }} {{ pieceCountIn(area) === 1 ? 'piece' : 'pieces' }}</ng-container>
+                </span>
+              </span>
+              <span class="area-row-del" (click)="removeArea(area, $event)" aria-label="Remove area">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="area-row-chev">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Where the picked products actually live. This tab names rooms and
+               fills them; the List tab is where the job is read over and sent. -->
+          <p class="area-hint" *ngIf="areaPieceCount > 0">
+            {{ areaPieceCount }} {{ areaPieceCount === 1 ? 'piece' : 'pieces' }} picked so far —
+            open the <strong>List</strong> tab to look them over and ask for a quotation.
+          </p>
+        </ng-container>
+      </section>
+
+      <!-- The bar that closes the catalogue when it was opened to fill a room. -->
+      <div class="area-browse-bar" *ngIf="areaAllowed && activeTab === 'area' && areaStep === 'browse'">
+        <span class="area-browse-text">
+          <strong>{{ activeArea?.name }}</strong> ·
+          {{ activeArea?.items?.length || 0 }} {{ (activeArea?.items?.length || 0) === 1 ? 'product' : 'products' }}
+        </span>
+        <button class="area-browse-done" (click)="finishBrowsing()">Done</button>
+      </div>
+
       <!-- ============ QUOTATION LIST (the cart) ============
            Everything picked, in one place, with the request form at the foot of
            it. No line total and no basket total: there is no price on this page
            to total up. -->
       <section class="cart-panel" *ngIf="quotationsAllowed && activeTab === 'cart'">
 
-        <!-- Sent state — the last word the visitor sees. -->
-        <div class="quote-done" *ngIf="reqSent">
+        <!-- Sent state — a screen of its own, and the last word the visitor sees. -->
+        <div class="quote-done focus-page" *ngIf="cartStep === 'done'">
           <span class="done-tick">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -241,29 +426,106 @@
           <button class="quote-ghost-btn" (click)="startNewList()">Start a new list</button>
         </div>
 
-        <ng-container *ngIf="!reqSent">
+        <!-- The two callback fields, on their own page. -->
+        <form class="quote-form focus-page" *ngIf="cartStep === 'form'" (ngSubmit)="submitQuoteRequest()">
+          <div class="request-intro">
+            <h3 class="request-title">Where should we send it?</h3>
+            <!-- Says back what is about to be sent, which on an area link is
+                 whichever halves were actually filled: the rooms, the loose
+                 list, or both. -->
+            <p class="request-sub">
+              Leave your name and mobile number and we will call you back with the
+              price for {{ sendSummary }}.
+            </p>
+          </div>
 
-          <!-- Empty list -->
-          <div class="cart-empty" *ngIf="cart.length === 0">
+          <div class="quote-field">
+            <label class="quote-label" for="req-name">Your name</label>
+            <input id="req-name" type="text" class="quote-input" [(ngModel)]="reqName" name="reqName"
+                   placeholder="Full name" autocomplete="name" maxlength="60" />
+          </div>
+
+          <div class="quote-field">
+            <label class="quote-label" for="req-mobile">Mobile number</label>
+            <input id="req-mobile" type="tel" inputmode="numeric" class="quote-input" [(ngModel)]="reqMobile"
+                   name="reqMobile" placeholder="10-digit number" autocomplete="tel" maxlength="15" />
+          </div>
+
+          <p class="quote-error" *ngIf="reqError">{{ reqError }}</p>
+
+          <button type="submit" class="quote-submit-btn" [disabled]="reqSending">Submit request</button>
+
+          <p class="quote-privacy">Your details are used only to reply to this quotation.</p>
+        </form>
+
+        <!-- ---- The list, whichever way it was built ----
+             On an area link this tab is the whole review, and it has two halves
+             because the link has two ways in: the rooms named on the Areas tab,
+             and anything picked straight off the Products tab, which is a plain
+             catalogue list like any other. Either half alone is a complete
+             quotation; both together go over as one request. -->
+        <ng-container *ngIf="cartStep === 'list'">
+
+          <!-- Nothing anywhere. The way out named here is the one that link offers. -->
+          <div class="cart-empty" *ngIf="!hasSomethingToSend">
             <span class="cart-empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <svg *ngIf="areaAllowed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10" />
+              </svg>
+              <svg *ngIf="!areaAllowed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H19M16 22a1 1 0 100-2 1 1 0 000 2zM9 22a1 1 0 100-2 1 1 0 000 2z" />
               </svg>
             </span>
-            <h2 class="cart-empty-title">Your list is empty</h2>
-            <p class="cart-empty-text">
+            <h2 class="cart-empty-title">{{ areaAllowed ? 'Nothing picked yet' : 'Your list is empty' }}</h2>
+            <p class="cart-empty-text" *ngIf="areaAllowed">
+              Name a space of your job on the Areas tab and fill it, or just add
+              what you want priced from the Products tab. Both show up here.
+            </p>
+            <p class="cart-empty-text" *ngIf="!areaAllowed">
               Add the pieces you want priced and send them across as one quotation
               request.
             </p>
-            <button class="quote-ghost-btn" (click)="showProducts()">Browse the range</button>
+            <button class="quote-ghost-btn" *ngIf="areaAllowed" (click)="showAreas()">Go to my areas</button>
+            <button class="quote-ghost-btn" *ngIf="!areaAllowed" (click)="showProducts()">Browse the range</button>
           </div>
 
-          <ng-container *ngIf="cart.length > 0">
+          <!-- Half one: the rooms. Tap one to read and correct what is in it. -->
+          <ng-container *ngIf="areaAllowed && filledAreas.length > 0">
             <div class="cart-head">
               <h2 class="catalog-heading">Your quotation list</h2>
               <p class="catalog-subheading">
+                {{ filledAreas.length }} {{ filledAreas.length === 1 ? 'area' : 'areas' }} ·
+                {{ areaPieceCount }} {{ areaPieceCount === 1 ? 'piece' : 'pieces' }}. Tap an area to see what is in it.
+              </p>
+            </div>
+
+            <div class="area-list">
+              <button class="area-row" *ngFor="let area of filledAreas; trackBy: trackByAreaId" (click)="openListArea(area)">
+                <span class="area-row-mark">{{ area.name.charAt(0).toUpperCase() }}</span>
+                <span class="area-row-text">
+                  <span class="area-row-name">{{ area.name }}</span>
+                  <span class="area-row-count">
+                    {{ area.items.length }} {{ area.items.length === 1 ? 'product' : 'products' }} ·
+                    {{ pieceCountIn(area) }} {{ pieceCountIn(area) === 1 ? 'piece' : 'pieces' }}
+                  </span>
+                </span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="area-row-chev">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Half two: everything picked without a room, listed and stepped the
+               ordinary way. On an office link, and on an area link where no room
+               was ever named, this is the whole quotation and is titled as such
+               — it is only "other" when there are rooms for it to be other than. -->
+          <ng-container *ngIf="cart.length > 0">
+            <div class="cart-head">
+              <h2 class="catalog-heading">{{ hasRooms ? 'Other items' : 'Your quotation list' }}</h2>
+              <p class="catalog-subheading">
                 {{ cart.length }} {{ cart.length === 1 ? 'product' : 'products' }} ·
-                {{ cartCount }} {{ cartCount === 1 ? 'piece' : 'pieces' }}
+                {{ cartCount }} {{ cartCount === 1 ? 'piece' : 'pieces' }}<span *ngIf="hasRooms">, not in any area</span>
               </p>
             </div>
 
@@ -283,65 +545,85 @@
                     </button>
                   </div>
 
-                  <span class="cart-variant" *ngIf="item.variant">{{ item.variant }}</span>
+                  <span class="cart-variant" *ngIf="item.variant">{{ labelHead(item.variant) }}<span class="lc-swatch" *ngIf="labelColour(item.variant)" [style.background]="swatch(labelColour(item.variant))"></span>{{ labelColour(item.variant) }}</span>
                   <span class="cart-sku">{{ item.productId }}</span>
 
-                  <div class="qty-stepper cart-stepper">
-                    <button class="step-btn" (click)="decrementLine(i)" aria-label="Remove one">&minus;</button>
-                    <span class="step-val">{{ item.quantity }}</span>
-                    <button class="step-btn" (click)="incrementLine(i)" aria-label="Add one">+</button>
+                  <div class="qty-stepper-box cart-stepper">
+                    <button class="qty-btn" (click)="decrementLine(i)" aria-label="Remove one">&minus;</button>
+                    <button class="qty-number qty-number-btn" (click)="openNumpadForLine(i)" aria-label="Type a quantity">{{ item.quantity }}</button>
+                    <button class="qty-btn" (click)="incrementLine(i)" aria-label="Add one">+</button>
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- The one button at the foot of the list, and the two fields it
-                 opens. Nothing is sent until a name and a number are in. -->
-            <div class="request-block">
-              <button class="quote-submit-btn" *ngIf="!askDetails" (click)="openQuoteRequest()">
-                Request Quotation
-              </button>
-              <p class="quote-privacy" *ngIf="!askDetails">
-                Prices are not shown here — send the list and we will quote it for you.
-              </p>
-
-              <form class="quote-form" *ngIf="askDetails" (ngSubmit)="submitQuoteRequest()">
-                <div class="request-intro">
-                  <h3 class="request-title">Where should we send it?</h3>
-                  <p class="request-sub">Leave your name and mobile number and we will call you back with the price.</p>
-                </div>
-
-                <div class="quote-field">
-                  <label class="quote-label" for="req-name">Your name</label>
-                  <input id="req-name" type="text" class="quote-input" [(ngModel)]="reqName" name="reqName"
-                         placeholder="Full name" autocomplete="name" maxlength="60" />
-                </div>
-
-                <div class="quote-field">
-                  <label class="quote-label" for="req-mobile">Mobile number</label>
-                  <input id="req-mobile" type="tel" inputmode="numeric" class="quote-input" [(ngModel)]="reqMobile"
-                         name="reqMobile" placeholder="10-digit number" autocomplete="tel" maxlength="15" />
-                </div>
-
-                <p class="quote-error" *ngIf="reqError">{{ reqError }}</p>
-
-                <button type="submit" class="quote-submit-btn" [disabled]="reqSending">
-                  {{ reqSending ? 'Sending…' : 'Submit request' }}
-                </button>
-
-                <p class="quote-privacy">Your details are used only to reply to this quotation.</p>
-              </form>
-            </div>
           </ng-container>
 
+          <!-- One button under both halves, because both go in one request. It
+               opens the callback fields on their own page — nothing is sent here. -->
+          <div class="request-block" *ngIf="hasSomethingToSend">
+            <button class="quote-submit-btn" (click)="openQuoteRequest()">
+              Request Quotation
+            </button>
+            <p class="quote-error" *ngIf="reqError">{{ reqError }}</p>
+            <p class="quote-privacy">
+              Prices are not shown here — send it and we will quote it for you<span *ngIf="hasRooms">, area by area</span>.
+            </p>
+          </div>
+
+        </ng-container>
+
+        <!-- One area, opened from the list above: what is in it, and the
+             quantities corrected. Reading and fixing happen here; the Areas tab
+             only builds. -->
+        <ng-container *ngIf="areaAllowed && cartStep === 'area' && listArea as area">
+          <div class="cart-head">
+            <h2 class="catalog-heading">{{ area.name }}</h2>
+            <p class="catalog-subheading">
+              {{ area.items.length }} {{ area.items.length === 1 ? 'product' : 'products' }} ·
+              {{ pieceCountIn(area) }} {{ pieceCountIn(area) === 1 ? 'piece' : 'pieces' }}
+            </p>
+          </div>
+
+          <div class="cart-list">
+            <div class="cart-row" *ngFor="let item of area.items; let i = index; trackBy: trackByCartKey">
+              <div class="cart-thumb" [class.no-image]="!item.image">
+                <img *ngIf="item.image" [src]="item.image" (error)="onImgError($event)" alt="" decoding="async" />
+              </div>
+
+              <div class="cart-info">
+                <div class="cart-title-row">
+                  <h4 class="cart-name">{{ item.name }}</h4>
+                  <button class="cart-remove" (click)="removeAreaLine(i)" aria-label="Remove from this area">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+
+                <span class="cart-variant" *ngIf="item.variant">{{ labelHead(item.variant) }}<span class="lc-swatch" *ngIf="labelColour(item.variant)" [style.background]="swatch(labelColour(item.variant))"></span>{{ labelColour(item.variant) }}</span>
+                <span class="cart-sku">{{ item.productId }}</span>
+
+                <div class="qty-stepper-box cart-stepper">
+                  <button class="qty-btn" (click)="decrementAreaLine(i)" aria-label="Remove one">&minus;</button>
+                  <button class="qty-number qty-number-btn" (click)="openNumpadForAreaLine(i)" aria-label="Type a quantity">{{ item.quantity }}</button>
+                  <button class="qty-btn" (click)="incrementAreaLine(i)" aria-label="Add one">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="request-block">
+            <button class="quote-ghost-btn" (click)="topBarBack()">Back to my list</button>
+          </div>
         </ng-container>
       </section>
 
     </main>
 
     <!-- Bottom navigation. Browse only on a dealer's link; the office's adds
-         the quotation list and the compare tab. -->
-    <nav class="bottom-nav-bar">
+         the quotation list and the compare tab. It steps out of the way on the
+         form and confirmation pages — those are one screen, one job. -->
+    <nav class="bottom-nav-bar" *ngIf="!isFocusStep">
       <div class="nav-tab-group" [attr.data-active]="tabIndex" [attr.data-count]="tabCount">
         <span class="nav-indicator" aria-hidden="true"></span>
 
@@ -359,12 +641,22 @@
           <span class="tab-label">Products</span>
         </button>
 
+        <button class="nav-tab-item" *ngIf="areaAllowed" [class.active]="activeTab === 'area'" (click)="showAreas()">
+          <span class="tab-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10M9 21v-6h6v6"/>
+            </svg>
+            <span class="tab-badge" *ngIf="areaPieceCount > 0">{{ areaPieceCount }}</span>
+          </span>
+          <span class="tab-label">Areas</span>
+        </button>
+
         <button class="nav-tab-item" *ngIf="quotationsAllowed" [class.active]="activeTab === 'cart'" (click)="showCart()">
           <span class="tab-icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H19M16 22a1 1 0 100-2 1 1 0 000 2zM9 22a1 1 0 100-2 1 1 0 000 2z"/>
             </svg>
-            <span class="tab-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+            <span class="tab-badge" *ngIf="listBadge > 0">{{ listBadge }}</span>
           </span>
           <span class="tab-label">List</span>
         </button>
@@ -384,6 +676,83 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
       </svg>
       <span>{{ addedFlash }}</span>
+    </div>
+
+    <!-- Quantity keypad — the same bottom sheet the installed app uses, so a
+         long quantity is typed once instead of tapped twenty times. -->
+    <!-- The categories, in the same picture grid the Home browser uses, so a
+         category is chosen one way in this app and not two. -->
+    <div class="cat-sheet-overlay" *ngIf="categorySheetOpen" (click)="closeCategorySheet()">
+      <div class="cat-sheet" (click)="$event.stopPropagation()">
+        <div class="cat-sheet-head">
+          <h3 class="cat-sheet-title">Categories</h3>
+          <button type="button" class="cat-sheet-close" (click)="closeCategorySheet()" aria-label="Close">&times;</button>
+        </div>
+
+        <section class="category-grid">
+          <button class="category-grid-card" [class.is-on]="isCategoryOn('All Categories')"
+                  (click)="pickCategory('All Categories')">
+            <div class="cat-grid-media cat-grid-all">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cat-grid-all-ic" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+            </div>
+            <span class="cat-grid-name">All</span>
+          </button>
+
+          <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId"
+                  [class.is-on]="isCategoryOn(cat.name)" (click)="pickCategory(cat.name)">
+            <div class="cat-grid-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+            </div>
+            <span class="cat-grid-name">{{ cat.name }}</span>
+          </button>
+        </section>
+      </div>
+    </div>
+
+    <div class="numpad-overlay" *ngIf="showNumpad" (click)="closeNumpad()">
+      <div class="numpad-sheet" (click)="$event.stopPropagation()">
+        <div class="numpad-header">
+          <div class="numpad-heading">
+            <span class="numpad-kicker">Quantity</span>
+            <span class="numpad-title" *ngIf="numpadTitle">{{ numpadTitle }}</span>
+          </div>
+          <button class="numpad-close" (click)="closeNumpad()" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="numpad-display">
+          <span class="numpad-value">{{ numpadDisplay }}</span>
+        </div>
+
+        <div class="numpad-grid">
+          <button type="button" class="numpad-key" (click)="numpadPress('1')">1</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('2')">2</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('3')">3</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('4')">4</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('5')">5</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('6')">6</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('7')">7</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('8')">8</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('9')">9</button>
+          <button type="button" class="numpad-key numpad-key-alt" (click)="numpadClear()">C</button>
+          <button type="button" class="numpad-key" (click)="numpadPress('0')">0</button>
+          <button type="button" class="numpad-key numpad-key-alt" (click)="numpadBackspace()" aria-label="Backspace">⌫</button>
+        </div>
+
+        <button type="button" class="numpad-confirm" (click)="numpadConfirm()">Done</button>
+      </div>
+    </div>
+
+    <!-- Sending. It covers the whole screen on purpose: a quotation goes off
+         once, and nothing here may be tapped a second time while it does. -->
+    <div class="sending-overlay" *ngIf="reqSending || quoteSending">
+      <div class="sending-card">
+        <span class="sending-spinner" aria-hidden="true"></span>
+        <h3 class="sending-title">{{ reqSending ? 'Sending your list…' : 'Sending your quotation…' }}</h3>
+        <p class="sending-text">This takes a moment. Please stay on this screen.</p>
+      </div>
     </div>
 
     <!-- Image lightbox -->

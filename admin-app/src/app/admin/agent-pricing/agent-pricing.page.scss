@@ -476,3 +476,45 @@
   font-weight: 500;
   color: #170338;
 }
+
+/* Whether a line is pinned to a typed amount or still tracking the catalog at
+   the blanket discount — the difference decides what gets saved. */
+.rate-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ECFDF5;
+  color: #047857;
+  font-family: 'Outfit';
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.rate-tag-fixed {
+  background: #FFF7ED;
+  color: #B45309;
+}
+
+.follow-catalog-btn {
+  margin-left: auto;
+  padding: 6px 10px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-family: 'Outfit';
+  font-size: 11px;
+  font-weight: 500;
+  color: #49454E;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #170338;
+    color: #170338;
+  }
+}

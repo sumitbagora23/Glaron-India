@@ -48,7 +48,7 @@
           <tr *ngFor="let banner of banners; let i = index; let last = last; trackBy: trackByIndex" [class.last-row-border]="last">
 
             <!-- Position Cell -->
-            <td class="td-order">
+            <td class="td-order" data-label="Order">
               <span class="order-badge">{{ i + 1 }}</span>
             </td>
 

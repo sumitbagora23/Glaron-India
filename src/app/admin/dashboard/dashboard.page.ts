@@ -121,6 +121,14 @@ export class DashboardPage implements OnInit {
     this.router.navigate(['/admin/products/new']);
   }
 
+  // The Light Colours page — the shades every product's Light Colour picker
+  // offers, added to and edited there. "Done" comes back to this list.
+  manageLightColours() {
+    this.router.navigate(['/admin/light-colours'], {
+      queryParams: { returnTo: '/admin/dashboard' }
+    });
+  }
+
   editProduct(product: Product) {
     this.router.navigate(['/admin/products/edit', product.id]);
   }

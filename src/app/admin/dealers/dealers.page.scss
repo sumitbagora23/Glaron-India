@@ -1,14 +1,19 @@
-/* Dealer Pricing & Management Page SCSS */
+/* Dealer Management page
+
+   The table card, the table itself, the row buttons, the status pill and the
+   mobile card treatment are the console's shared list styling — see "Admin
+   list pages" in global.scss. Only the dealer columns are described here. */
 
 .page-subtitle {
   margin: 4px 0px 0px;
   font-family: 'Outfit';
-  font-style: normal;
   font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 14px;
+  line-height: 20px;
   color: #49454E;
 }
+
+.margin-bottom-sm { margin-bottom: 8px; }
 
 .header-buttons {
   display: flex;
@@ -17,424 +22,7 @@
   gap: 12px;
 }
 
-.export-csv-btn {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 8px 24px;
-  width: 131.92px;
-  height: 42px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  background: #FFFFFF;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #F8F9FA;
-    border-color: #CBD5E1;
-  }
-}
-
-.add-dealer-btn {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 9px 24px;
-  width: 129.17px;
-  height: 42px;
-  background: #170338;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #2D145A;
-  }
-}
-
-.btn-text-dark {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 24px;
-  color: #170338;
-}
-
-.btn-text-white {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 24px;
-  color: #FFFFFF;
-}
-
-/* -------------------------------------------------------------
- * Topbar Profile Extensions (Admin User Operations info)
- * ------------------------------------------------------------- */
-.profile-details-wrapper {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  height: 48px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
-
-  &:hover {
-    background-color: #F3F4F6;
-  }
-}
-
-.profile-text-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.user-name {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 24px;
-  color: #170338;
-}
-
-.user-role {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  color: #49454E;
-}
-
-.border-gold {
-  border: 2px solid #FFDEAC !important;
-}
-
-/* -------------------------------------------------------------
- * Dealers Table Layout
- * ------------------------------------------------------------- */
-.table-section-card {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 0px;
-  width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.table-scroll-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.dealers-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  min-width: 800px;
-
-  thead tr {
-    height: 80.5px;
-    background: #F8F9FA;
-    border-bottom: 1px solid #E2E8F0;
-  }
-
-  th {
-    padding: 28px 24px 28.5px;
-    font-family: 'Outfit';
-    font-style: normal;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 24px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: #170338;
-  }
-
-  tbody tr {
-    height: 89px;
-    border-bottom: 1px solid #E2E8F0;
-    transition: background-color 0.15s ease;
-
-    &:hover {
-      background-color: rgba(248, 249, 250, 0.5);
-    }
-
-    &.last-row-border {
-      border-bottom: none;
-    }
-  }
-
-  td {
-    padding: 16px 24px;
-    vertical-align: middle;
-  }
-}
-
-/* Row Specific Columns */
-.th-name, .td-name { width: 25%; }
-.th-location, .td-location { width: 20%; }
-.th-status, .td-status { width: 18%; }
-.th-phone, .td-phone { width: 17%; }
-.th-actions, .td-actions { width: 20%; }
-
-/* Dealer Initial Circle Badge */
-.dealer-profile-wrap {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-}
-
-.initial-circle-badge {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  height: 32px;
-  background: #EBDDFF;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.circle-text {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 24px;
-  text-align: center;
-  color: #170338;
-}
-
-.dealer-fullname {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  color: #1C1B1B;
-}
-
-.location-text {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  color: #49454E;
-}
-
-/* Status Badge styling */
-.status-badge {
-  box-sizing: border-box;
-  display: inline-flex;
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 2px 12px;
-  height: 28px;
-  border-radius: 12px;
-  align-items: center;
-  white-space: nowrap;
-
-  &.badge-active {
-    background: rgba(16, 185, 129, 0.1);
-    
-    .status-badge-text {
-      color: #10B981;
-    }
-  }
-
-  &.badge-pending {
-    background: rgba(255, 180, 0, 0.1);
-    
-    .status-badge-text {
-      color: #FFB400;
-    }
-  }
-}
-
-.status-badge-text {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-}
-
-/* Phone styling */
-.phone-text {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  color: #1C1B1B;
-}
-
-.multiplier-tag {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
-  color: #49454E;
-  margin-left: 4px;
-
-  &.custom {
-    color: #7E5700;
-    font-weight: 600;
-  }
-}
-
-/* Set Pricing button action */
-.td-actions {
-  text-align: left;
-}
-
-.pricing-action-btn {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  padding: 8px 0px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-radius: 4px;
-  color: #7E5700;
-
-  &:hover {
-    color: #614300;
-    text-shadow: 0px 0px 1px rgba(126, 87, 0, 0.1);
-  }
-}
-
-.slider-svg-icon {
-  width: 16px;
-  height: 16px;
-  color: #7E5700;
-}
-
-.pricing-btn-text {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  text-align: center;
-  color: #7E5700;
-  white-space: nowrap;
-}
-
-.td-empty {
-  text-align: center;
-  padding: 40px !important;
-  font-family: 'Outfit';
-  font-size: 16px;
-  color: #6B7280;
-}
-
-/* -------------------------------------------------------------
- * Table Pagination Footer
- * ------------------------------------------------------------- */
-.table-pagination-footer {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  width: 100%;
-  height: 57px;
-  background: #F8F9FA;
-  border-top: 1px solid #E2E8F0;
-}
-
-.summary-text {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  color: #49454E;
-}
-
-.pagination-arrows {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.arrow-nav-btn {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #1C1B1B;
-  transition: all 0.15s ease;
-
-  &:hover:not(:disabled) {
-    background: #F3F4F6;
-    border-color: #CBD5E1;
-  }
-
-  &:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-}
-
-.arrow-nav-icon {
-  width: 14px;
-  height: 14px;
-}
-
-/* Adjustments for custom dashboard margins layout */
-.margin-bottom-sm {
-  margin-bottom: 8px;
-}
-
-@media (max-width: 1100px) {
-  .table-section-card {
-    width: 100%;
-  }
-  .table-pagination-footer {
-    width: 100%;
-  }
-}
-
-
-
-/* -------------------------------------------------------------
- * Status filter (header) + status dropdown + delete button
- * ------------------------------------------------------------- */
+/* Status filter in the page header */
 .status-filter-box {
   box-sizing: border-box;
   display: flex;
@@ -442,10 +30,10 @@
   align-items: center;
   padding: 8px 12px;
   gap: 8px;
-  height: 42px;
+  height: 40px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
 
   &:hover { border-color: #CBD5E1; }
@@ -468,110 +56,91 @@
   }
 }
 
-/* Status dropdown pill in the table */
-.status-select-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px 4px 12px;
-  border-radius: 999px;
-  border: 1px solid transparent;
+/* -------------------------------------------------------------
+ * Columns
+ *
+ * Six columns need more room than a narrow canvas gives them, so the table
+ * keeps a floor width and .table-scroll-container takes the sideways scroll —
+ * the page still scrolls down as one.
+ * ------------------------------------------------------------- */
+.inventory-table { min-width: 980px; }
 
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+.th-name, .td-name { width: 24%; }
+.th-phone, .td-phone { width: 15%; }
+.th-email, .td-email { width: 18%; }
+.th-location, .td-location { width: 18%; }
+.th-status, .td-status { width: 13%; }
+.th-actions, .td-actions { width: 300px; }
 
-  .dealer-status-select {
-    border: none;
-    background: transparent;
-    outline: none;
-    cursor: pointer;
-    font-family: 'Outfit';
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  &.status-active {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.25);
-    .status-dot { background: #10B981; }
-    .dealer-status-select { color: #0F9B72; }
-  }
-
-  &.status-inactive {
-    background: rgba(148, 163, 184, 0.14);
-    border-color: rgba(148, 163, 184, 0.3);
-    .status-dot { background: #94A3B8; }
-    .dealer-status-select { color: #64748B; }
-  }
-}
-
-/* Actions group: Custom Rate + Delete */
-.dealer-actions-group {
-  display: inline-flex;
+.dealer-profile-wrap {
+  display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.dealer-delete-btn {
-  display: inline-flex;
-  flex-direction: row;
+.initial-circle-badge {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  padding: 8px 0px;
-  cursor: pointer;
-  color: #DC2626;
-  transition: all 0.15s ease;
+  width: 32px;
+  height: 32px;
+  background: #EBDDFF;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
 
-  &:hover { color: #991B1B; }
+.circle-text {
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  color: #170338;
+}
 
-  .delete-svg-icon {
-    width: 16px;
-    height: 16px;
-  }
+.dealer-name-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-  .delete-btn-text {
-    font-family: 'Outfit';
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 24px;
-  }
+.dealer-fullname {
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #170338;
+}
+
+.phone-text {
+  font-family: 'Outfit';
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #1C1B1B;
+}
+
+.email-text {
+  font-family: 'Outfit';
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  color: #6366F1;
+  word-break: break-word;
+}
+
+.location-text {
+  font-family: 'Outfit';
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 20px;
+  color: #49454E;
 }
 
 /* Set / reset a dealer's sign-in password. Dealers log in with mobile +
-   password, so this is the only reset path available to them. */
-.dealer-password-btn {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  padding: 8px 0px;
-  cursor: pointer;
-  color: #4F46E5;
-  transition: all 0.15s ease;
-
-  &:hover { color: #3730A3; }
-
-  .password-svg-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .password-btn-text {
-    font-family: 'Outfit';
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 24px;
-  }
-}
+   password, so this is the only reset path available to them — the button uses
+   the shared row-action styling, this only names the column it sits in. */
 
 /* Flag on the mobile-number cell for dealers who can't sign in yet. */
 .no-password-tag {
@@ -586,4 +155,21 @@
   font-size: 11px;
   line-height: 18px;
   white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  /* Rows are cards down here (global.scss) — the desktop floor width has to go
+     or every card would be 880px wide. */
+  .inventory-table { min-width: 0; }
+
+  .header-buttons { width: 100%; }
+  .status-filter-box { flex: 1; }
+
+  .th-actions, .td-actions { width: auto; }
+
+  .td-name {
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #F1F5F9;
+  }
 }

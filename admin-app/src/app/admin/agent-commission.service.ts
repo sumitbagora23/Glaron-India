@@ -24,6 +24,8 @@ export interface CommissionEntry {
   agentMobile: string;
   /** ISO date (YYYY-MM-DD) of the business this commission is for. */
   date: string;
+  /** Who the business was for. Shown to the agent beside the entry. */
+  clientName?: string;
   salesAmount: number;
   percentage: number;
   commissionAmount: number;
@@ -216,6 +218,7 @@ export class AgentCommissionService {
     agentId: string;
     agentMobile: string;
     date: string;
+    clientName?: string;
     salesAmount: number;
     percentage: number;
     commissionAmount: number;
@@ -227,6 +230,7 @@ export class AgentCommissionService {
       agentId: data.agentId,
       agentMobile: data.agentMobile || '',
       date: data.date,
+      clientName: (data.clientName || '').trim(),
       salesAmount: data.salesAmount || 0,
       percentage: data.percentage || 0,
       commissionAmount: data.commissionAmount || 0,
@@ -255,6 +259,7 @@ export class AgentCommissionService {
    */
   updateEntry(id: string, data: {
     date: string;
+    clientName?: string;
     salesAmount: number;
     percentage: number;
     commissionAmount: number;
@@ -266,6 +271,7 @@ export class AgentCommissionService {
     const updated: CommissionEntry = {
       ...existing,
       date: data.date,
+      clientName: (data.clientName || '').trim(),
       salesAmount: data.salesAmount || 0,
       percentage: data.percentage || 0,
       commissionAmount: data.commissionAmount || 0,

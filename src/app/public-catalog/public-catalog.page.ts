@@ -6,9 +6,11 @@ import { ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { SwUpdate } from '@angular/service-worker';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
+import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourSwatch, splitLightColourLabel } from '../product-spec-tabs';
 import { CategoryService, Category } from '../admin/category.service';
-import { QuotationService, QuotationItem } from '../admin/quotation.service';
+import { QuotationService, QuotationItem, QuotationArea } from '../admin/quotation.service';
 import { CatalogShareService } from '../catalog-share.service';
+import { LightColourService } from '../admin/light-colour.service';
 
 /** One line a visitor has put on their list. */
 export interface PublicCartItem {
@@ -20,6 +22,15 @@ export interface PublicCartItem {
   /** Variant descriptor, blank for a product that has none. */
   variant: string;
   quantity: number;
+}
+
+/** One space of the visitor's job, with what they want lighting it. */
+export interface PublicArea {
+  /** Local id, so two areas named the same are still two areas. */
+  id: string;
+  /** Whatever they typed: "Kitchen", "Master Bedroom", "Shop Front". */
+  name: string;
+  items: PublicCartItem[];
 }
 
 /**
@@ -54,15 +65,65 @@ export interface PublicCartItem {
   imports: [CommonModule, FormsModule, IonContent]
 })
 export class PublicCatalogPage implements OnInit, OnDestroy {
+
+  // A saved line keeps what was ordered as one string — "7W · 2ft · Cool
+  // White". These two split the shade off its end so the box of colour sits
+  // right before the shade, not in front of the wattage.
+  private lightColourNames = inject(LightColourService);
+
+  labelHead(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).head;
+  }
+
+  labelColour(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).colour;
+  }
+
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
   @ViewChild(IonContent) private content?: IonContent;
 
   private swUpdate = inject(SwUpdate);
 
   // Four destinations: browse by category, the whole range, the list you have
   // built and want priced, or a quotation you already hold and want bettered.
-  activeTab: 'home' | 'products' | 'cart' | 'compare' = 'home';
+  activeTab: 'home' | 'products' | 'cart' | 'compare' | 'area' = 'home';
   // Set while a single category is being viewed from the Home tab.
   homeCategory: string | null = null;
+
+  /**
+   * Where inside the quotation tabs the visitor is.
+   *
+   * Asking for a price is three separate screens, not one long scroll: the
+   * list, then the two callback fields on their own page, then the confirmation
+   * on its own page. On a phone a form that unfolds under a list is half read
+   * and half missed — a screen that holds nothing but the two fields is not.
+   */
+  /**
+   * Where inside the List tab the visitor is.
+   *
+   * On an area-wise link this tab is the whole review: the areas, one area's
+   * products when it is opened, then the two callback fields and the
+   * confirmation. On every other link it is what it always was.
+   */
+  cartStep: 'list' | 'area' | 'form' | 'done' = 'list';
+  compareStep: 'upload' | 'form' | 'done' = 'upload';
+
+  /**
+   * Where inside the Areas tab the visitor is.
+   *
+   * Two screens, and the tab does one job: name the areas, and fill them.
+   * Nothing is reviewed or sent from here — what has been picked is read in the
+   * List tab, which is where the request goes off from. Browsing happens inside
+   * an area rather than beside it, so a product tapped there can only land in
+   * the room that is open.
+   */
+  areaStep: 'list' | 'browse' = 'list';
 
   searchQuery = '';
   selectedCategory = 'All Categories';
@@ -80,29 +141,51 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   // ---- Compare Quotation tab ----
   /** The uploaded quote, as a JPEG data URL. */
   quoteImage: string | null = null;
+  /** Name of the file that was picked, shown under the preview. */
+  quoteFileName = '';
+  /** How many PDF pages were turned into that image (0 for a photo). */
+  quotePageCount = 0;
   quoteName = '';
   quoteMobile = '';
   quoteError = '';
   quoteReading = false;
   quoteSending = false;
-  quoteSent = false;
 
   // ---- Quotation list (the cart) ----
   /** What the visitor has picked. Quantities only — never a price. */
   cart: PublicCartItem[] = [];
-  /** Set once the "Request Quotation" button reveals the callback details. */
-  askDetails = false;
   reqName = '';
   reqMobile = '';
   reqError = '';
   reqSending = false;
-  reqSent = false;
   /** Short flash under the top bar when something is added, so a tap has a reply. */
   addedFlash = '';
   private addedFlashTimer: any = null;
 
+  // ---- Quantity keypad ----
+  // The same bottom-sheet keypad the installed app uses. Twelve taps on a
+  // stepper to reach 12 pieces is how a list gets abandoned; tapping the
+  // number and typing it is how the app has always done it, so the shared
+  // catalogue does it the same way.
+  showNumpad = false;
+  numpadValue = '';
+  numpadTitle = '';
+  /** The line the keypad is editing — an existing one, or one not on the list yet. */
+  private numpadLine: Omit<PublicCartItem, 'quantity'> | null = null;
+
+  // ---- Areas (the area-wise link only) ----
+  /** The rooms the visitor has named, each with what goes in it. */
+  areas: PublicArea[] = [];
+  /** Which one is being filled. Everything added while it is set goes into it. */
+  activeAreaId: string | null = null;
+  /** Which one is open for reading in the List tab. A different question. */
+  listAreaId: string | null = null;
+  newAreaName = '';
+  areaError = '';
+
   /** Survives a reload, so a half-built list is not lost by closing the tab. */
   private readonly CART_KEY = 'glaron_catalogue_quote_list';
+  private readonly AREAS_KEY = 'glaron_catalogue_area_list';
 
   // ---- Keeping the link current ----
   /** A newer build is downloaded and waiting for a safe moment to be applied. */
@@ -132,6 +215,50 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return this.catalogShare.isOfficeRef(this.ref);
   }
 
+  /**
+   * Whether this link asks for the list area by area.
+   *
+   * Only the area-wise link shared from the console does. It can do everything
+   * the plain office link can — the flat list, the compare tab — and adds the
+   * Areas tab on top, which is the whole difference between the two.
+   */
+  get areaAllowed(): boolean {
+    return this.catalogShare.isAreaRef(this.ref);
+  }
+
+  /**
+   * Whether the product cards may be added from where the visitor is standing.
+   *
+   * Everywhere on both links, with one exception: on the area-wise link the
+   * Areas tab is a room browser, so it adds only once a room is actually open.
+   * The Products and Home tabs there add the ordinary way — see fillingArea.
+   */
+  get canAddProducts(): boolean {
+    if (!this.quotationsAllowed) return false;
+    if (!this.areaAllowed) return true;
+    if (this.activeTab === 'products' || this.activeTab === 'home') return true;
+    return this.activeTab === 'area' && this.areaStep === 'browse' && !!this.activeArea;
+  }
+
+  /**
+   * The room being filled right now, or null when nothing is — which is every
+   * tab but Areas, on either kind of link.
+   *
+   * This is what makes the area link's Products tab behave like a plain
+   * catalogue: a light picked there belongs to no room, so it goes on the flat
+   * list exactly as it would on an office link and is sent as an ordinary
+   * quotation. Rooms are what the Areas tab is for, and a visitor who never
+   * opens that tab never has to think about them.
+   */
+  private get fillingArea(): PublicArea | null {
+    return this.activeTab === 'area' ? this.activeArea : null;
+  }
+
+  /** Name of the room being filled, for the toast. Empty off the Areas tab. */
+  get areaTargetName(): string {
+    return this.fillingArea?.name || '';
+  }
+
   ngOnInit() {
     this.ref = this.route.snapshot.paramMap.get('ref') || '';
     // The link is shared as "Glaron India Catalogue"; the page it opens says so
@@ -140,6 +267,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     // A list saved on an office link must not reappear on a dealer's, where
     // there is nowhere to send it and nothing to show it in.
     if (this.quotationsAllowed) this.loadCart();
+    if (this.areaAllowed) this.loadAreas();
     this.startAutoUpdate();
   }
 
@@ -205,7 +333,8 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
    */
   private applyUpdateWhenSafe() {
     if (!this.updateReady) return;
-    if (this.askDetails || this.reqSending || this.quoteSending || this.quoteReading) return;
+    if (this.cartStep === 'form' || this.compareStep === 'form') return;
+    if (this.reqSending || this.quoteSending || this.quoteReading) return;
     // An uploaded quotation only lives in the page — a reload would lose the
     // file they picked and they would have to find it again.
     if (this.quoteImage) return;
@@ -245,6 +374,55 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return this.categoryService.categories;
   }
 
+  // ---- The fixed catalogue bar ----
+
+  // Which category the list is narrowed to, however it was reached: the
+  // Products tab's own filter, or a category opened from the Home grid.
+  get activeCategory(): string {
+    return this.activeTab === 'home' && this.homeCategory ? this.homeCategory : this.selectedCategory;
+  }
+
+  // The categories open in a sheet over the page, laid out as the Home
+  // browser lays them out, so the bar itself stays one line.
+  categorySheetOpen = false;
+
+  openCategorySheet() {
+    this.categorySheetOpen = true;
+  }
+
+  closeCategorySheet() {
+    this.categorySheetOpen = false;
+  }
+
+  // Whether there is a category to clear. "All Categories" is not a filter,
+  // it is the absence of one, so it shows no cross.
+  get hasCategoryFilter(): boolean {
+    return !this.isCategoryOn('All Categories');
+  }
+
+  // The filter's cross, the twin of the one in the search field.
+  clearCategory() {
+    this.pickCategory('All Categories');
+  }
+
+  isCategoryOn(name: string): boolean {
+    return this.activeCategory.trim().toLowerCase() === name.trim().toLowerCase();
+  }
+
+  // Every category is one tap away from anywhere in the catalogue: picking
+  // one lands on the single product list, narrowed to it. "All Categories"
+  // hands back the whole range, which is where a dealer who already knows the
+  // fitting starts.
+  pickCategory(name: string) {
+    this.categorySheetOpen = false;
+    this.selectedCategory = name;
+    this.homeCategory = null;
+    // Filling an area browses this same list; picking a category there must
+    // narrow it, not walk away from the area being filled.
+    if (!(this.activeTab === 'area' && this.areaStep === 'browse')) this.activeTab = 'products';
+    this.scrollTop();
+  }
+
   get categories(): string[] {
     return ['All Categories', ...this.categoryService.categories.map(c => c.name)];
   }
@@ -261,23 +439,28 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       const target = this.selectedCategory.toLowerCase();
       list = list.filter(p => p.category.toLowerCase().includes(target));
     }
+    return this.searchIn(list);
+  }
+
+  // What the search field narrows a list to. Lifted out of the filter above so
+  // a category opened from Home is searched exactly the same way — the bar over
+  // it carries the same field.
+  private searchIn(list: Product[]): Product[] {
     const q = this.searchQuery.trim().toLowerCase();
-    if (q) {
-      list = list.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.id.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-      );
-    }
-    return list;
+    if (!q) return list;
+    return list.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.id.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+    );
   }
 
   get displayedProducts(): Product[] {
     if (this.activeTab === 'home' && this.homeCategory) {
       const target = this.homeCategory.trim().toLowerCase();
-      return this.products.filter(p =>
+      return this.searchIn(this.products.filter(p =>
         this.productCategories(p).some(c => c.toLowerCase() === target)
-      );
+      ));
     }
     return this.filteredProducts;
   }
@@ -286,13 +469,15 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   get tabIndex(): number {
     if (this.activeTab === 'products') return 1;
-    if (this.activeTab === 'cart') return 2;
-    if (this.activeTab === 'compare') return 3;
+    if (this.activeTab === 'area') return 2;
+    if (this.activeTab === 'cart') return this.areaAllowed ? 3 : 2;
+    if (this.activeTab === 'compare') return this.areaAllowed ? 4 : 3;
     return 0;
   }
 
-  /** Two destinations on a dealer's link, four on the office's. */
+  /** Two on a dealer's link, four on the office's, five on the area-wise one. */
   get tabCount(): number {
+    if (this.areaAllowed) return 5;
     return this.quotationsAllowed ? 4 : 2;
   }
 
@@ -302,9 +487,34 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return this.activeTab === 'home' && !this.homeCategory;
   }
 
+  /**
+   * True on the form and confirmation screens.
+   *
+   * They are pages in their own right: the tab bar goes away, so the only
+   * things on screen are the fields being asked for and the way back.
+   */
+  get isFocusStep(): boolean {
+    if (this.activeTab === 'cart') return this.cartStep === 'form' || this.cartStep === 'done';
+    if (this.activeTab === 'compare') return this.compareStep !== 'upload';
+    return false;
+  }
+
   get topBarTitle(): string {
-    if (this.activeTab === 'compare') return 'Compare Quotation';
-    if (this.activeTab === 'cart') return 'Your Quotation List';
+    if (this.activeTab === 'area') {
+      if (this.areaStep === 'browse') return `Add to ${this.activeArea?.name || 'Area'}`;
+      return 'Your Areas';
+    }
+    if (this.activeTab === 'cart') {
+      if (this.cartStep === 'form') return 'Your Details';
+      if (this.cartStep === 'done') return 'Request Sent';
+      if (this.cartStep === 'area') return this.listArea?.name || 'Area';
+      return this.areaAllowed ? 'Your Quotation List' : 'Your Quotation List';
+    }
+    if (this.activeTab === 'compare') {
+      if (this.compareStep === 'form') return 'Your Details';
+      if (this.compareStep === 'done') return 'Quotation Sent';
+      return 'Compare Quotation';
+    }
     if (this.activeTab === 'home' && this.homeCategory) return this.homeCategory;
     return 'All Products';
   }
@@ -335,12 +545,61 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.scrollTop();
   }
 
+  showAreas() {
+    if (!this.areaAllowed) return;
+    this.activeTab = 'area';
+    this.homeCategory = null;
+    // Coming back to the tab always lands on the list of areas, never inside
+    // whichever room happened to be open last time.
+    this.areaStep = 'list';
+    this.scrollTop();
+  }
+
   openCategory(name: string) {
     this.homeCategory = name;
     this.scrollTop();
   }
 
   topBarBack() {
+    // Inside a request, back means one screen back through it — never straight
+    // out of the tab, which would look like the list had been thrown away.
+    if (this.activeTab === 'cart' && this.cartStep === 'form') {
+      this.cartStep = 'list';
+      this.reqError = '';
+      this.scrollTop();
+      return;
+    }
+    // One area, opened for reading — back is the list of them.
+    if (this.activeTab === 'cart' && this.cartStep === 'area') {
+      this.cartStep = 'list';
+      this.listAreaId = null;
+      this.scrollTop();
+      return;
+    }
+    if (this.activeTab === 'cart' && this.cartStep === 'done') {
+      this.startNewList();
+      return;
+    }
+    if (this.activeTab === 'compare' && this.compareStep === 'form') {
+      this.compareStep = 'upload';
+      this.quoteError = '';
+      this.scrollTop();
+      return;
+    }
+    if (this.activeTab === 'compare' && this.compareStep === 'done') {
+      this.sendAnotherQuote();
+      return;
+    }
+
+    // Inside the Areas tab, back means: stop filling this room, and go back to
+    // the rooms.
+    if (this.activeTab === 'area' && this.areaStep === 'browse') {
+      this.activeAreaId = null;
+      this.areaStep = 'list';
+      this.scrollTop();
+      return;
+    }
+
     if (this.homeCategory) {
       this.homeCategory = null;
     } else {
@@ -377,6 +636,52 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   // Same label the panels build: whatever descriptors the variant carries,
   // minus anything to do with price.
+  // ---- Wattage / dimension tabs ----
+  // The two specs a fitting is chosen by read as small tabs across the card.
+  // Opening one shows the light colours this product is sold in. A product
+  // whose variants carry no wattage and no dimension has no tabs at all.
+  private specTabState = new SpecTabState();
+  trackBySpecTab = this.specTabState.trackByKey;
+
+  specTabs(product: Product): SpecTab[] {
+    return this.specTabState.tabs(product);
+  }
+
+  openSpecTab(product: Product): SpecTab | null {
+    return this.specTabState.openTab(product);
+  }
+
+  isSpecTabOpen(product: Product, tab: SpecTab): boolean {
+    return this.specTabState.isOpen(product, tab);
+  }
+
+  selectSpecTab(tab: SpecTab) {
+    this.specTabState.toggle(tab);
+  }
+
+  /** The ⓘ sheet of the open option: dimension, cut-out and the rest. */
+  specRows(tab: SpecTab): SpecDetail[] {
+    return specDetails(tab.variant);
+  }
+
+  isSpecSheetOpen(product: Product): boolean {
+    return this.specTabState.isSheetOpen(product);
+  }
+
+  toggleSpecSheet(product: Product) {
+    this.specTabState.toggleSheet(product);
+  }
+
+  trackByColour = (_: number, colour: string) => colour;
+
+  // The light colours the admin picked, for this option or — with no option,
+  // or one that carries none of its own — for the product.
+  productLightColours(product: Product, variant?: ProductVariant): string[] {
+    return orderableLightColours(product, variant);
+  }
+
+  // Only the name of the light is shown — no swatch, no colour temperature.
+
   getVariantLabel(variant: ProductVariant): string {
     const parts: string[] = [];
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
@@ -423,30 +728,73 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return this.cart.reduce((sum, item) => sum + item.quantity, 0);
   }
 
-  private cartKey(product: Product, variant?: ProductVariant): string {
-    return product.id + '::' + (variant ? this.getVariantLabel(variant) : '');
+  /**
+   * What the List tab's badge counts: everything picked, wherever it was put.
+   * On an area link that is the rooms plus whatever was added straight off the
+   * Products tab, because both sit on that tab and both get sent.
+   */
+  get listBadge(): number {
+    return this.areaAllowed ? this.areaPieceCount + this.cartCount : this.cartCount;
+  }
+
+  // The shade is part of the key, so 7W warm white and 7W cool white are two
+  // lines on the list. Appended only when there IS a shade, which leaves keys
+  // already saved on a visitor's device matching what they were.
+  private cartKey(product: Product, variant?: ProductVariant, lightColour?: string): string {
+    const base = product.id + '::' + (variant ? this.getVariantLabel(variant) : '');
+    return lightColour ? base + '::' + lightColour : base;
+  }
+
+  /** What the request reads: the option, then the shade asked for. */
+  private lineLabel(variant?: ProductVariant, lightColour?: string): string {
+    const label = variant ? this.getVariantLabel(variant) : '';
+    if (!lightColour) return label;
+    return label ? label + ' · ' + lightColour : lightColour;
+  }
+
+  /**
+   * The list a product tapped right now belongs to.
+   *
+   * With an area open it is that area's own list, so the same product card
+   * behaves the same way whichever tab it was reached from — it just lands
+   * somewhere else. Everywhere else it is the flat quotation list.
+   */
+  private get activeItems(): PublicCartItem[] {
+    const area = this.fillingArea;
+    return area ? area.items : this.cart;
   }
 
   /** How many of this exact line are already on the list (0 if none). */
-  qtyInCart(product: Product, variant?: ProductVariant): number {
-    const key = this.cartKey(product, variant);
-    return this.cart.find(item => item.key === key)?.quantity || 0;
+  qtyInCart(product: Product, variant?: ProductVariant, lightColour?: string): number {
+    const key = this.cartKey(product, variant, lightColour);
+    return this.activeItems.find(item => item.key === key)?.quantity || 0;
+  }
+
+  /**
+   * Everything asked for against one wattage tab, across all its shades — what
+   * the tab's badge shows, so a closed tab still says it has something in it.
+   */
+  specTabTotalQty(product: Product, variant: ProductVariant): number {
+    const colours = this.productLightColours(product, variant);
+    if (!colours.length) return this.qtyInCart(product, variant);
+    return colours.reduce((sum, c) => sum + this.qtyInCart(product, variant, c), 0);
   }
 
   /** Put one more of this line on the list, or start it at one. */
-  addToCart(product: Product, variant?: ProductVariant) {
+  addToCart(product: Product, variant?: ProductVariant, lightColour?: string) {
     if (!this.quotationsAllowed) return;
-    const key = this.cartKey(product, variant);
-    const existing = this.cart.find(item => item.key === key);
+    const key = this.cartKey(product, variant, lightColour);
+    const list = this.activeItems;
+    const existing = list.find(item => item.key === key);
     if (existing) {
       existing.quantity += 1;
     } else {
-      this.cart.push({
+      list.push({
         key,
         productId: product.id,
         name: product.name,
         image: product.image,
-        variant: variant ? this.getVariantLabel(variant) : '',
+        variant: this.lineLabel(variant, lightColour),
         quantity: 1
       });
     }
@@ -455,13 +803,14 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /** Step a line down, dropping it off the list at zero. */
-  removeOneFromCart(product: Product, variant?: ProductVariant) {
-    const index = this.cart.findIndex(item => item.key === this.cartKey(product, variant));
+  removeOneFromCart(product: Product, variant?: ProductVariant, lightColour?: string) {
+    const list = this.activeItems;
+    const index = list.findIndex(item => item.key === this.cartKey(product, variant, lightColour));
     if (index === -1) return;
-    if (this.cart[index].quantity > 1) {
-      this.cart[index].quantity -= 1;
+    if (list[index].quantity > 1) {
+      list[index].quantity -= 1;
     } else {
-      this.cart.splice(index, 1);
+      list.splice(index, 1);
     }
     this.saveCart();
   }
@@ -489,9 +838,103 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return item.key;
   }
 
+  // ---- Quantity keypad ----
+
+  /** Set an exact quantity on a line, dropping it off the list at zero. */
+  private setLineQuantity(line: Omit<PublicCartItem, 'quantity'>, quantity: number) {
+    const qty = Math.max(0, Math.floor(quantity || 0));
+    const list = this.numpadItems || this.activeItems;
+    const index = list.findIndex(item => item.key === line.key);
+
+    if (qty <= 0) {
+      if (index > -1) list.splice(index, 1);
+    } else if (index > -1) {
+      list[index].quantity = qty;
+    } else {
+      list.push({ ...line, quantity: qty });
+    }
+    this.saveCart();
+  }
+
+  /**
+   * The list the keypad is editing.
+   *
+   * Fixed when the sheet opens rather than read when Done is tapped: the row
+   * that was tapped is the row that must change, whatever the page is showing
+   * by then.
+   */
+  private numpadItems: PublicCartItem[] | null = null;
+
+  /** Tapping the quantity on a product, variant or shade row. */
+  openNumpad(product: Product, variant?: ProductVariant, lightColour?: string) {
+    if (!this.quotationsAllowed) return;
+    this.numpadItems = this.activeItems;
+    const label = this.lineLabel(variant, lightColour);
+    this.numpadLine = {
+      key: this.cartKey(product, variant, lightColour),
+      productId: product.id,
+      name: product.name,
+      image: product.image,
+      variant: label
+    };
+    this.numpadTitle = label && label !== product.name ? `${product.name} · ${label}` : product.name;
+    const current = this.qtyInCart(product, variant, lightColour);
+    this.numpadValue = current > 0 ? String(current) : '';
+    this.showNumpad = true;
+  }
+
+  /** Tapping the quantity on a row of the list itself, or of an area's list. */
+  openNumpadForLine(index: number, list: PublicCartItem[] = this.cart) {
+    const item = list[index];
+    if (!item) return;
+    this.numpadItems = list;
+    const { quantity, ...line } = item;
+    this.numpadLine = line;
+    this.numpadTitle = item.variant ? `${item.name} · ${item.variant}` : item.name;
+    this.numpadValue = String(quantity);
+    this.showNumpad = true;
+  }
+
+  /** The number currently on the keypad display. */
+  get numpadDisplay(): string {
+    return this.numpadValue || '0';
+  }
+
+  numpadPress(digit: string) {
+    if (this.numpadValue.length >= 4) return; // cap at 9999
+    if (this.numpadValue === '0') this.numpadValue = '';
+    this.numpadValue += digit;
+  }
+
+  numpadBackspace() {
+    this.numpadValue = this.numpadValue.slice(0, -1);
+  }
+
+  numpadClear() {
+    this.numpadValue = '';
+  }
+
+  numpadConfirm() {
+    const qty = parseInt(this.numpadValue || '0', 10) || 0;
+    if (this.numpadLine) this.setLineQuantity(this.numpadLine, qty);
+    this.closeNumpad();
+  }
+
+  closeNumpad() {
+    this.showNumpad = false;
+    this.numpadLine = null;
+    this.numpadItems = null;
+    this.numpadValue = '';
+    this.numpadTitle = '';
+  }
+
   /** A brief "added" line, so tapping + on a long page visibly does something. */
   private flashAdded(name: string) {
-    this.addedFlash = `${name} added to your list`;
+    // Filling a room, say which one — the visitor has several in mind and the
+    // wrong one is an easy mistake. Off the Areas tab no room is involved, and
+    // the plain wording is the honest one.
+    const room = this.areaTargetName;
+    this.addedFlash = room ? `${name} added to ${room}` : `${name} added to your list`;
     if (this.addedFlashTimer) clearTimeout(this.addedFlashTimer);
     this.addedFlashTimer = setTimeout(() => (this.addedFlash = ''), 1800);
   }
@@ -499,6 +942,9 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   private saveCart() {
     try {
       localStorage.setItem(this.CART_KEY, JSON.stringify(this.cart));
+      // One save for both, because a product tapped on a card goes into
+      // whichever of the two the page is currently filling.
+      if (this.areaAllowed) localStorage.setItem(this.AREAS_KEY, JSON.stringify(this.areas));
     } catch (e) {}
   }
 
@@ -513,19 +959,232 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     } catch (e) {}
   }
 
-  // ---- Requesting a quotation for that list ----
+  // ---- Areas ----
 
-  /** The bottom button: reveal the two fields needed to call the visitor back. */
-  openQuoteRequest() {
-    this.askDetails = true;
-    this.reqError = '';
+  private loadAreas() {
+    try {
+      const stored = localStorage.getItem(this.AREAS_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return;
+      this.areas = parsed
+        .filter(a => a && a.id && a.name)
+        .map(a => ({
+          id: String(a.id),
+          name: String(a.name),
+          items: Array.isArray(a.items) ? a.items.filter((i: any) => i && i.key && i.quantity > 0) : []
+        }));
+    } catch (e) {}
   }
 
+  /** The area currently open, if any. */
+  get activeArea(): PublicArea | null {
+    if (!this.activeAreaId) return null;
+    return this.areas.find(a => a.id === this.activeAreaId) || null;
+  }
+
+  /** Every piece across every area — what the tab badge counts. */
+  get areaPieceCount(): number {
+    return this.areas.reduce(
+      (sum, area) => sum + area.items.reduce((n, item) => n + item.quantity, 0), 0
+    );
+  }
+
+  /**
+   * What lines picked outside any room are called once they travel inside an
+   * area quotation. Named, not blank, so the console shows a heading rather
+   * than an unlabelled block of products.
+   */
+  private readonly LOOSE_GROUP_NAME = 'Other Items';
+
+  /** Areas that actually have something in them: what can be sent. */
+  get filledAreas(): PublicArea[] {
+    return this.areas.filter(a => a.items.length > 0);
+  }
+
+  pieceCountIn(area: PublicArea): number {
+    return area.items.reduce((n, item) => n + item.quantity, 0);
+  }
+
+  /** Name a new area. Adding an area that already exists just opens it. */
+  addArea() {
+    const name = this.newAreaName.trim();
+    if (!name) {
+      this.areaError = 'Type the name of the area first — Kitchen, Lobby, Bedroom…';
+      return;
+    }
+    this.areaError = '';
+
+    const existing = this.areas.find(a => a.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      this.newAreaName = '';
+      this.openArea(existing);
+      return;
+    }
+
+    const area: PublicArea = { id: this.newAreaId(), name, items: [] };
+    this.areas = [...this.areas, area];
+    this.newAreaName = '';
+    this.saveCart();
+    // Straight into it: naming a room and then having to find it in a list is
+    // one tap too many when the next thing wanted is always to fill it.
+    this.openArea(area);
+  }
+
+  private newAreaId(): string {
+    return 'a' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+  }
+
+  /**
+   * Open an area, which on this tab means one thing: start filling it.
+   *
+   * There is no reading screen here on purpose. What has been picked belongs in
+   * the List tab with everything else that has been picked — this tab is for
+   * naming rooms and putting lights in them.
+   */
+  openArea(area: PublicArea) {
+    this.activeAreaId = area.id;
+    this.areaStep = 'browse';
+    this.searchQuery = '';
+    this.scrollTop();
+  }
+
+  /** Done adding — back to the rooms. */
+  finishBrowsing() {
+    this.activeAreaId = null;
+    this.areaStep = 'list';
+    this.scrollTop();
+  }
+
+  /** Open an area in the List tab, to read what is in it. */
+  openListArea(area: PublicArea) {
+    this.listAreaId = area.id;
+    this.cartStep = 'area';
+    this.scrollTop();
+  }
+
+  /** The area open for reading, if any. */
+  get listArea(): PublicArea | null {
+    if (!this.listAreaId) return null;
+    return this.areas.find(a => a.id === this.listAreaId) || null;
+  }
+
+  removeArea(area: PublicArea, event?: Event) {
+    event?.stopPropagation();
+    const count = this.pieceCountIn(area);
+    if (count > 0 && !confirm(`Remove ${area.name} and the ${count} ${count === 1 ? 'piece' : 'pieces'} in it?`)) return;
+    this.areas = this.areas.filter(a => a.id !== area.id);
+    if (this.activeAreaId === area.id) {
+      this.activeAreaId = null;
+      this.areaStep = 'list';
+    }
+    if (this.listAreaId === area.id) {
+      this.listAreaId = null;
+      this.cartStep = 'list';
+    }
+    this.saveCart();
+  }
+
+  /**
+   * Steppers on a row of an area, which are only ever on the List tab — that is
+   * where an area is read and corrected.
+   */
+  incrementAreaLine(index: number) {
+    const area = this.listArea;
+    if (!area) return;
+    area.items[index].quantity += 1;
+    this.saveCart();
+  }
+
+  decrementAreaLine(index: number) {
+    const area = this.listArea;
+    if (!area) return;
+    if (area.items[index].quantity > 1) area.items[index].quantity -= 1;
+    else area.items.splice(index, 1);
+    this.saveCart();
+  }
+
+  removeAreaLine(index: number) {
+    const area = this.listArea;
+    if (!area) return;
+    area.items.splice(index, 1);
+    this.saveCart();
+  }
+
+  /** Tap the number on a row inside an area to type an exact quantity. */
+  openNumpadForAreaLine(index: number) {
+    const area = this.listArea;
+    if (area) this.openNumpadForLine(index, area.items);
+  }
+
+  trackByAreaId(_index: number, area: PublicArea): string {
+    return area.id;
+  }
+
+  // ---- Requesting a quotation for that list ----
+
+  /**
+   * Whether any room has been named and filled. What splits the List tab in
+   * two: with no rooms the flat list is simply the quotation and is titled that
+   * way, and the visitor is never shown the word "area" at all.
+   */
+  get hasRooms(): boolean {
+    return this.areaAllowed && this.filledAreas.length > 0;
+  }
+
+  /** Anything at all to send: rooms with something in them, loose lines, or both. */
+  get hasSomethingToSend(): boolean {
+    return this.cart.length > 0 || (this.areaAllowed && this.filledAreas.length > 0);
+  }
+
+  /**
+   * What the callback form says is being priced, in the visitor's own terms:
+   * the rooms they named, the products they picked loose, or both. Written out
+   * rather than a count of "items" so what arrives matches what they built.
+   */
+  get sendSummary(): string {
+    const rooms = this.areaAllowed ? this.filledAreas.length : 0;
+    const products = this.cart.length;
+    const roomText = rooms
+      ? `all ${rooms} ${rooms === 1 ? 'area' : 'areas'}`
+      : '';
+    const productText = products
+      ? `the ${products} ${products === 1 ? 'product' : 'products'} on your list`
+      : '';
+    if (roomText && productText) return `${roomText} and ${productText}`;
+    return roomText || productText;
+  }
+
+  /** The bottom button: open the callback details on their own screen. */
+  openQuoteRequest() {
+    if (!this.hasSomethingToSend) {
+      this.reqError = this.areaAllowed
+        ? 'Add a few products first — to an area, or straight off the Products tab.'
+        : '';
+      return;
+    }
+    this.cartStep = 'form';
+    this.reqError = '';
+    this.scrollTop();
+  }
+
+  /**
+   * Send the list.
+   *
+   * One button and one form for both kinds of link — what differs is only what
+   * is being sent: a flat list of products, or that same list already split by
+   * area. The two callback fields, the validation and the confirmation screen
+   * are the same either way, because to the person filling them in it is the
+   * same act.
+   */
   async submitQuoteRequest() {
     if (this.reqSending) return;
     this.reqError = '';
 
-    if (!this.cart.length) {
+    const filled = this.areaAllowed ? this.filledAreas : [];
+    const loose = this.cart;
+
+    if (!filled.length && !loose.length) {
       this.reqError = 'Your list is empty — add a few products first.';
       return;
     }
@@ -539,24 +1198,44 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       return;
     }
 
-    const items: QuotationItem[] = this.cart.map(item => ({
+    // The service drops any image that is the picture rather than a path to it.
+    const asItem = (item: PublicCartItem): QuotationItem => ({
       name: item.name,
       quantity: item.quantity,
       ...(item.variant ? { variant: item.variant } : {}),
       ...(item.productId ? { sku: item.productId } : {}),
-      // The service drops anything that is the picture rather than a path to it.
       ...(item.image ? { image: item.image } : {})
-    }));
+    });
 
     this.reqSending = true;
     try {
-      await this.quotationService.submitRequest(this.reqName.trim(), mobile, items, this.ref);
-      this.reqSent = true;
-      // The list has been sent, so it is no longer theirs to edit — clearing it
-      // is also what stops a second tap sending the same request twice.
+      if (filled.length) {
+        // Room-by-room, which is what the area link exists for. Loose lines ride
+        // along as one more group rather than a second document: a quotation
+        // carrying both `items` and `areas` would be listed twice in the console
+        // — once under Requests, once under Areas — and priced in one of them.
+        const payload: QuotationArea[] = filled.map(area => ({
+          name: area.name,
+          items: area.items.map(asItem)
+        }));
+        if (loose.length) {
+          payload.push({ name: this.LOOSE_GROUP_NAME, items: loose.map(asItem) });
+        }
+        await this.quotationService.submitAreaRequest(this.reqName.trim(), mobile, payload, this.ref);
+      } else {
+        // Nothing was put in a room, so there is nothing room-wise to say. Even
+        // on an area link this goes over as an ordinary catalogue request and
+        // is read in the console beside every other one.
+        await this.quotationService.submitRequest(this.reqName.trim(), mobile, loose.map(asItem), this.ref);
+      }
+      this.areas = [];
+      this.activeAreaId = null;
+      this.listAreaId = null;
       this.cart = [];
+      // Sent, so it is no longer theirs to edit — clearing it is also what stops
+      // a second tap sending the same request twice.
       this.saveCart();
-      this.askDetails = false;
+      this.cartStep = 'done';
       this.scrollTop();
     } catch (e) {
       console.warn('Quotation request notice:', (e as any)?.message || e);
@@ -567,10 +1246,15 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   /** Back to browsing, with the sent state cleared so a new list can be built. */
   startNewList() {
-    this.reqSent = false;
+    this.cartStep = 'list';
+    this.listAreaId = null;
+    this.areaStep = 'list';
+    this.activeAreaId = null;
+    this.newAreaName = '';
     this.reqName = '';
     this.reqMobile = '';
     this.reqError = '';
+    this.areaError = '';
     this.showHome();
     // Leaving the confirmation is the first safe moment to take a version that
     // arrived while they were filling the form in.
@@ -580,78 +1264,239 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   // ---- Compare Quotation ----
 
   /**
-   * Read the picked quotation and downscale it to a data URL.
+   * Take whatever the visitor picked and turn it into one image.
    *
-   * A quotation is a page of small print, so it keeps far more resolution than a
-   * banner would — but it still has to fit inside a single Firestore document
-   * (there is no Storage bucket in this project), hence the step down through
-   * lower JPEG qualities until it does.
+   * Most quotations arrive as a PDF, not a photo — that is simply how a supplier
+   * sends one — so a PDF is accepted and drawn into an image here, page by page,
+   * rather than being refused with "please send a screenshot". Everything
+   * downstream (the admin's viewer, the Firestore document) then handles one
+   * kind of thing: a picture.
    */
   onQuoteSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files && input.files[0];
     input.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      this.quoteError = 'Please choose a photo or screenshot of the quotation.';
+
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    if (!isPdf && !file.type.startsWith('image/')) {
+      this.quoteError = 'Please choose a PDF, a photo or a screenshot of the quotation.';
       return;
     }
+
     this.quoteError = '';
     this.quoteReading = true;
+    this.quotePageCount = 0;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        // Generous bounds: text has to stay readable when the admin opens it.
-        const maxSide = 1600;
-        let width = img.width, height = img.height;
-        if (width > maxSide || height > maxSide) {
-          const scale = Math.min(maxSide / width, maxSide / height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          // JPEG has no alpha channel: a transparent PNG would encode as black.
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-        }
-
-        // A Firestore document caps out at 1 MB, so leave clear headroom.
-        const budget = 700_000;
-        let dataUrl = '';
-        for (const quality of [0.82, 0.72, 0.62, 0.5, 0.4]) {
-          dataUrl = canvas.toDataURL('image/jpeg', quality);
-          if (dataUrl.length <= budget) break;
-        }
-        this.quoteReading = false;
-        if (dataUrl.length > budget) {
-          this.quoteError = 'That file is too large. Please send a smaller photo.';
-          return;
-        }
-        this.quoteImage = dataUrl;
-      };
-      img.onerror = () => {
-        this.quoteReading = false;
-        this.quoteError = 'That file could not be read. Please try another one.';
-      };
-      img.src = reader.result as string;
-    };
-    reader.onerror = () => {
+    const done = (dataUrl: string, pages: number) => {
       this.quoteReading = false;
-      this.quoteError = 'That file could not be read. Please try another one.';
+      this.quoteImage = dataUrl;
+      this.quoteFileName = file.name || '';
+      this.quotePageCount = pages;
     };
-    reader.readAsDataURL(file);
+    const failed = (message: string) => {
+      this.quoteReading = false;
+      this.quoteError = message;
+    };
+
+    if (isPdf) {
+      this.readPdf(file).then(r => done(r.dataUrl, r.pages)).catch(e => {
+        console.warn('Quotation PDF notice:', (e as any)?.message || e);
+        failed('That PDF could not be read. Please send a photo of it instead.');
+      });
+      return;
+    }
+
+    this.readImage(file).then(dataUrl => done(dataUrl, 0)).catch(e => {
+      console.warn('Quotation image notice:', (e as any)?.message || e);
+      failed(typeof e === 'string' ? e : 'That file could not be read. Please try another one.');
+    });
+  }
+
+  /**
+   * A photo or screenshot, downscaled to a data URL.
+   *
+   * A quotation is a page of small print, so it keeps far more resolution than a
+   * banner would — but it still has to fit inside a single Firestore document
+   * (there is no Storage bucket in this project), hence the step down through
+   * lower JPEG qualities until it does.
+   */
+  private readImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // Generous bounds: text has to stay readable when the admin opens it.
+          const maxSide = 1600;
+          let width = img.width, height = img.height;
+          if (width > maxSide || height > maxSide) {
+            const scale = Math.min(maxSide / width, maxSide / height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // JPEG has no alpha channel: a transparent PNG would encode as black.
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+          }
+          const dataUrl = this.canvasToJpeg(canvas);
+          if (!dataUrl) {
+            reject('That file is too large. Please send a smaller photo.');
+            return;
+          }
+          resolve(dataUrl);
+        };
+        img.onerror = () => reject('That file could not be read. Please try another one.');
+        img.src = reader.result as string;
+      };
+      reader.onerror = () => reject('That file could not be read. Please try another one.');
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /** How many pages of a PDF quotation are carried across. */
+  private readonly MAX_PDF_PAGES = 4;
+
+  /**
+   * Draw a PDF quotation into a single tall image.
+   *
+   * Its pages are stacked one under another so the admin opens one picture and
+   * scrolls it, exactly as they would a photo — nothing downstream has to learn
+   * what a PDF is. Long documents are cut off at a few pages: the rates are on
+   * the first page or two, and everything here has to survive a 1 MB Firestore
+   * document.
+   */
+  private async readPdf(file: File): Promise<{ dataUrl: string; pages: number }> {
+    const pdfjs = await this.loadPdfJs();
+    const data = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjs.getDocument({ data }).promise;
+
+    try {
+      const pageCount = Math.min(doc.numPages, this.MAX_PDF_PAGES);
+      const pages: HTMLCanvasElement[] = [];
+
+      for (let n = 1; n <= pageCount; n++) {
+        const page = await doc.getPage(n);
+        const base = page.getViewport({ scale: 1 });
+        // Render wide enough that small print survives, without going silly on
+        // an already-large page.
+        const scale = Math.max(0.8, Math.min(1600 / base.width, 2.2));
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas unavailable');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        await page.render({ canvas, canvasContext: ctx, viewport, background: '#ffffff' }).promise;
+        pages.push(canvas);
+      }
+
+      if (!pages.length) throw new Error('Empty PDF');
+
+      // Stack the pages into one sheet, with a hairline between them so it is
+      // obvious where one page ends.
+      const gap = 12;
+      const width = Math.max(...pages.map(c => c.width));
+      const height = pages.reduce((sum, c) => sum + c.height, 0) + gap * (pages.length - 1);
+
+      const sheet = document.createElement('canvas');
+      sheet.width = width;
+      sheet.height = height;
+      const sctx = sheet.getContext('2d');
+      if (!sctx) throw new Error('Canvas unavailable');
+      sctx.fillStyle = '#ffffff';
+      sctx.fillRect(0, 0, width, height);
+
+      let y = 0;
+      for (const page of pages) {
+        sctx.drawImage(page, Math.round((width - page.width) / 2), y);
+        y += page.height;
+        if (y < height) {
+          sctx.fillStyle = '#d8d8dd';
+          sctx.fillRect(0, y + gap / 2 - 1, width, 2);
+          y += gap;
+        }
+      }
+
+      const dataUrl = this.canvasToJpeg(sheet);
+      if (!dataUrl) throw new Error('Too large');
+      return { dataUrl, pages: pageCount };
+    } finally {
+      doc.destroy?.();
+    }
+  }
+
+  /** pdf.js, pulled in only when a PDF is actually picked. */
+  private async loadPdfJs(): Promise<any> {
+    // @ts-ignore — pdf.js ships ESM only; the bundler resolves this, TS's
+    // node10 resolution in this project does not.
+    const pdfjs: any = await import('pdfjs-dist/build/pdf.mjs');
+    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+      // Against the document base, not the current URL: this page is opened at
+      // /q-glaron, /catalogue/q-glaron and a few other shapes, and a relative
+      // worker path would go looking under whichever one it happened to be.
+      pdfjs.GlobalWorkerOptions.workerSrc = new URL('assets/pdf.worker.min.mjs', document.baseURI).href;
+    }
+    return pdfjs;
+  }
+
+  /**
+   * Encode a canvas as a JPEG that fits inside a Firestore document.
+   *
+   * Quality comes down first, and only then the size — a slightly soft page of
+   * text is still readable, a half-size one is not. Empty string if even that
+   * is not enough.
+   */
+  private canvasToJpeg(canvas: HTMLCanvasElement): string {
+    // A Firestore document caps out at 1 MB, so leave clear headroom.
+    const budget = 700_000;
+    let current = canvas;
+
+    for (let attempt = 0; attempt < 4; attempt++) {
+      for (const quality of [0.82, 0.72, 0.62, 0.5, 0.4]) {
+        const dataUrl = current.toDataURL('image/jpeg', quality);
+        if (dataUrl.length <= budget) return dataUrl;
+      }
+      // Still over: shrink and try the whole ladder again.
+      const next = document.createElement('canvas');
+      next.width = Math.max(1, Math.round(current.width * 0.75));
+      next.height = Math.max(1, Math.round(current.height * 0.75));
+      const ctx = next.getContext('2d');
+      if (!ctx) break;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, next.width, next.height);
+      ctx.drawImage(current, 0, 0, next.width, next.height);
+      current = next;
+    }
+    return '';
   }
 
   removeQuoteImage() {
     this.quoteImage = null;
+    this.quoteFileName = '';
+    this.quotePageCount = 0;
     this.quoteError = '';
+  }
+
+  /** The upload screen's button: on to the two callback fields. */
+  openCompareDetails() {
+    if (!this.quoteImage) {
+      this.quoteError = 'Please attach the quotation first.';
+      return;
+    }
+    this.quoteError = '';
+    this.compareStep = 'form';
+    this.scrollTop();
   }
 
   // Indian mobile numbers, however they were typed (spaces, +91, leading 0).
@@ -668,6 +1513,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
     if (!this.quoteImage) {
       this.quoteError = 'Please attach the quotation first.';
+      this.compareStep = 'upload';
       return;
     }
     if (this.quoteName.trim().length < 2) {
@@ -683,7 +1529,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.quoteSending = true;
     try {
       await this.quotationService.submit(this.quoteName.trim(), mobile, this.quoteImage, this.ref);
-      this.quoteSent = true;
+      this.compareStep = 'done';
       this.scrollTop();
     } catch (e) {
       console.warn('Quotation submit notice:', (e as any)?.message || e);
@@ -694,8 +1540,10 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   /** Reset the form so the same visitor can send a second quotation. */
   sendAnotherQuote() {
-    this.quoteSent = false;
+    this.compareStep = 'upload';
     this.quoteImage = null;
+    this.quoteFileName = '';
+    this.quotePageCount = 0;
     this.quoteName = '';
     this.quoteMobile = '';
     this.quoteError = '';

@@ -1,26 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/standalone';
-import { QuotationService, CustomerQuotation, QuotationItem } from '../quotation.service';
-import { ProductService } from '../product.service';
+import { QuotationService, CustomerQuotation } from '../quotation.service';
 
 /**
- * Quotations — its own sidebar tab.
+ * Quotations — two sidebar tabs sharing one page.
  *
- * The tab opens on a chooser with two jobs on it:
- *   • Requested Quotations — lists customers built themselves in the public
+ *   • Request Quotation — lists customers built themselves in the public
  *     catalogue and asked to be priced. That page shows no prices at all, so
  *     this is how a customer asks what something costs.
  *   • Compare Quotation — quotes customers have uploaded from the same link,
  *     with the name and mobile they left, so the admin can price against them.
  *
- * Replying is a row action on both, not a screen of its own: the customer is
- * already in front of you when you are reading what they sent, so the WhatsApp
- * button lives on their row.
- *
- * Both are views of this one page rather than separate routes: the chooser is
- * the landing screen and picking one swaps the body, so there is nowhere to get
- * lost and the sidebar tab stays highlighted throughout.
+ * Each is its own route and its own sidebar entry, so either is one click from
+ * anywhere. Which list the page shows comes from the route's `view` data, and
+ * the component is otherwise the same for both.
  */
 @Component({
   selector: 'app-admin-quotations',
@@ -30,22 +25,22 @@ import { ProductService } from '../product.service';
   imports: [CommonModule, IonContent]
 })
 export class QuotationsPage implements OnInit {
-  view: 'menu' | 'requests' | 'compare' = 'menu';
-
-  /** Full-size preview of a customer's uploaded quote. */
-  previewImage: string | null = null;
-  previewTitle = '';
-
-  /** The picked lines of a requested quotation, opened in the same overlay. */
-  previewItems: QuotationItem[] | null = null;
+  view: 'requests' | 'areas' | 'compare' = 'requests';
 
   constructor(
     private quotationService: QuotationService,
-    private productService: ProductService
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.quotationService.start();
+    // Which of the two lists this tab is. Set from the route so the sidebar
+    // entry, the URL and the heading can never disagree.
+    this.route.data.subscribe(data => {
+      const view = data['view'];
+      this.view = view === 'compare' ? 'compare' : view === 'areas' ? 'areas' : 'requests';
+    });
   }
 
   // Live feed from Firestore, newest first.
@@ -63,93 +58,112 @@ export class QuotationsPage implements OnInit {
     return this.quotations.filter(q => !!q.image);
   }
 
-  /** How many pieces a request adds up to. Quantities only — never money. */
-  totalPieces(q: CustomerQuotation): number {
-    return (q.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+  /** Jobs sent in from the area-wise link, already split by room. */
+  get areaRequests(): CustomerQuotation[] {
+    return this.quotations.filter(q => q.areas && q.areas.length);
   }
 
-  /** One-line summary of a request, trimmed so a 30-line list fits in a cell. */
-  itemsSummary(q: CustomerQuotation): string {
-    const items = q.items || [];
-    const head = items.slice(0, 3).map(i => `${i.name} ×${i.quantity}`).join(', ');
-    return items.length > 3 ? `${head} +${items.length - 3} more` : head;
+  /** How many areas a request carries, for the row. */
+  areaCount(q: CustomerQuotation): number {
+    return q.areas?.length || 0;
+  }
+
+  /** Every piece across every area of that request. */
+  areaPieces(q: CustomerQuotation): number {
+    return (q.areas || []).reduce(
+      (sum, area) => sum + (area.items || []).reduce((n, item) => n + (item.quantity || 0), 0), 0
+    );
+  }
+
+  /** The first few area names, so a row says what the job is at a glance. */
+  areaNames(q: CustomerQuotation): string {
+    const names = (q.areas || []).map(a => a.name).filter(Boolean);
+    if (names.length <= 3) return names.join(', ');
+    return names.slice(0, 3).join(', ') + ` +${names.length - 3} more`;
+  }
+
+  /** Open an area-wise request, where it gets priced area by area. */
+  openAreaQuotation(q: CustomerQuotation) {
+    this.router.navigate(['/admin/quotations/areas', q.id]);
   }
 
   /**
-   * The product picture for a requested line.
+   * Open a request in full, where it gets priced.
    *
-   * The catalogue only sends a path, and only when it is small enough to carry,
-   * so the live catalogue is asked first: it always holds the current image,
-   * including the inline ones too large to have travelled on the request. What
-   * the customer sent is the fallback, for a product since removed.
+   * The lines used to open in an overlay here, which could only be read. The
+   * page they open on now is where the quotation is actually made: MRP on every
+   * line, more products added, a discount, and the PDF that goes back.
    */
-  itemImage(item: QuotationItem): string {
-    if (!item) return '';
-    const product = item.sku
-      ? this.productService.products.find(p => p.id === item.sku)
-      : undefined;
-    return product?.image || item.image || '';
+  openQuotation(q: CustomerQuotation) {
+    this.router.navigate(['/admin/quotations/requests', q.id]);
   }
 
-  /** The first few pictures on a request, for the thumbnail strip in the row. */
-  itemThumbs(q: CustomerQuotation): string[] {
-    return (q.items || [])
-      .slice(0, 4)
-      .map(item => this.itemImage(item))
-      .filter(Boolean);
+  // ---- The link to an uploaded quotation ----
+
+  /**
+   * A link to the uploaded file that works outside this console.
+   *
+   * The file itself is stored inline on the document as a data URL, which no
+   * browser will navigate to and nothing can be pasted anywhere. The hosting
+   * rewrite `/quotation-image/<id>` hands the same bytes back as a real
+   * response — a picture or a PDF, whichever was sent — so that URL can be
+   * opened, pasted or forwarded, and the browser's own viewer shows it. A
+   * quotation already held at a real URL is simply that URL.
+   */
+  imageLink(q: CustomerQuotation): string {
+    const src = (q?.image || '').trim();
+    if (!src) return '';
+    if (/^https?:\/\//i.test(src)) return src;
+    // The extension is what makes this work inside the installed app: a service
+    // worker answers a link with no extension out of its own cache, which meant
+    // tapping View showed the console again rather than the quotation.
+    return `${window.location.origin}/quotation-image/${q.id}.${this.fileExt(src)}`;
   }
 
-  /** Hide a thumbnail whose file has gone missing rather than show a torn icon. */
-  onThumbError(event: Event) {
-    const target = event.target as HTMLElement | null;
-    if (target) target.style.display = 'none';
+  /** The extension for what was uploaded. The response's own type still rules. */
+  private fileExt(src: string): string {
+    const mime = (/^data:([^;,]+)/.exec(src)?.[1] || '').toLowerCase();
+    if (mime === 'application/pdf') return 'pdf';
+    if (mime === 'image/png') return 'png';
+    if (mime === 'image/webp') return 'webp';
+    return 'jpg';
+  }
+
+  /**
+   * Whether the customer sent a PDF rather than a picture.
+   *
+   * Only decides what the row shows in place of a thumbnail — a PDF has no
+   * frame to draw, and an <img> pointed at one leaves a torn icon. The link
+   * itself is the same either way.
+   */
+  isPdf(q: CustomerQuotation): boolean {
+    const src = (q?.image || '').trim().toLowerCase();
+    return src.startsWith('data:application/pdf') || /\.pdf(\?|#|$)/.test(src);
   }
 
   trackById(_index: number, q: CustomerQuotation): string {
     return q.id;
   }
 
-  trackByItemIndex(index: number): number {
-    return index;
-  }
-
-  // ---- Navigation between the two jobs ----
-
-  openRequests() { this.view = 'requests'; }
-  openCompare() { this.view = 'compare'; }
-  backToMenu() { this.view = 'menu'; }
+  // ---- The two jobs ----
 
   get heading(): string {
-    if (this.view === 'requests') return 'Requested Quotations';
     if (this.view === 'compare') return 'Compare Quotation';
-    return 'Quotations';
+    if (this.view === 'areas') return 'Area Quotation';
+    return 'Request Quotation';
   }
 
   get subheading(): string {
-    if (this.view === 'requests') return 'Lists customers built in the catalogue and asked to be priced.';
     if (this.view === 'compare') return 'Quotes customers uploaded from the catalogue link.';
-    return 'Everything to do with customer quotations, in one place.';
+    if (this.view === 'areas') return 'Jobs sent from the area-wise link, area by area.';
+    return 'Lists customers built in the catalogue and asked to be priced.';
   }
 
   /** The count shown beside the title — whichever list is on screen. */
   get visibleCount(): number {
-    return this.view === 'requests' ? this.requests.length : this.uploads.length;
-  }
-
-  // ---- Preview ----
-
-  openPreview(q: CustomerQuotation) {
-    // A request has no picture; its lines go into the same overlay so both
-    // kinds open the same way.
-    this.previewImage = q.image || null;
-    this.previewItems = q.items && q.items.length ? q.items : null;
-    this.previewTitle = `${q.name} · ${this.formatMobile(q.mobile)}`;
-  }
-
-  closePreview() {
-    this.previewImage = null;
-    this.previewItems = null;
-    this.previewTitle = '';
+    if (this.view === 'compare') return this.uploads.length;
+    if (this.view === 'areas') return this.areaRequests.length;
+    return this.requests.length;
   }
 
   removeQuotation(q: CustomerQuotation, event: Event) {
@@ -167,26 +181,6 @@ export class QuotationsPage implements OnInit {
 
   callHref(mobile: string): string {
     return 'tel:+91' + (mobile || '').replace(/\D/g, '').slice(-10);
-  }
-
-  // WhatsApp is where these conversations actually happen, so "send" opens the
-  // thread with the customer, greeting written. The quote itself is attached in
-  // WhatsApp — a wa.me link cannot carry a file.
-  //
-  // A customer who built a list gets it read back to them, so the reply names
-  // what they asked about instead of opening on a bare greeting.
-  whatsappHref(q: CustomerQuotation): string {
-    const digits = (q.mobile || '').replace(/\D/g, '').slice(-10);
-    const items = q.items || [];
-
-    const message = items.length
-      ? `Hello ${q.name}, thank you for your quotation request to Glaron India.\n\n` +
-        items.map(i => `• ${i.name}${i.variant ? ' (' + i.variant + ')' : ''} × ${i.quantity}`).join('\n') +
-        `\n\nHere is our best price for this list.`
-      : `Hello ${q.name}, thank you for sharing your quotation with Glaron India. ` +
-        `Here is our best offer for the same requirement.`;
-
-    return `https://wa.me/91${digits}?text=${encodeURIComponent(message)}`;
   }
 
   // A short human-readable "time ago" label.

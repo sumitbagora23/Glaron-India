@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/standalone';
@@ -7,6 +7,8 @@ import { DealerService, Dealer } from '../admin/dealer.service';
 import { SettingsService } from '../admin/settings.service';
 import { DealerAuthService } from '../dealer-auth.service';
 import { orderRefLabel } from '../order-ref';
+import { lightColourSwatch, splitLightColourLabel } from '../admin/light-colours';
+import { LightColourService } from '../admin/light-colour.service';
 
 @Component({
   selector: 'app-dealer-orders',
@@ -19,6 +21,26 @@ import { orderRefLabel } from '../order-ref';
   ]
 })
 export class DealerOrdersPage implements OnInit {
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
+  // A saved line keeps what was ordered as one string — "7W · 2ft · Cool
+  // White". These two split the shade off its end so the box of colour sits
+  // right before the shade, not in front of the wattage.
+  private lightColourNames = inject(LightColourService);
+
+  labelHead(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).head;
+  }
+
+  labelColour(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).colour;
+  }
+
   expandedOrderId: string | null = null;
 
   constructor(

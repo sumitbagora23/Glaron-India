@@ -221,6 +221,7 @@
 }
 
 .td-amount { font-weight: 700; color: #0F9B72; }
+.td-client { font-weight: 600; color: #2D1B4E; }
 .td-note { color: #6B7280; font-weight: 400; }
 
 .pct-chip {
@@ -476,6 +477,8 @@
     }
 
     .td-date { font-weight: 700; color: #170338; }
+    .td-client { color: #2D1B4E; font-weight: 600; }
+    .td-client:empty { display: none; }
     .td-pct { grid-row: 1; grid-column: 2; text-align: right; }
     .td-sales::before { content: 'Sales '; color: #94A3B8; font-weight: 600; font-size: 12px; }
     .td-amount::before { content: 'Commission '; color: #94A3B8; font-weight: 600; font-size: 12px; }
@@ -486,4 +489,12 @@
   .form-grid, .form-actions { padding: 0 16px; }
   .admin-error, .admin-success { margin: 0 16px; }
   .modal-save-btn { width: 100%; }
+}
+
+/* The shell puts a Back in the top bar on mobile (see admin-layout). Two back
+   buttons on one screen is one too many, and the top-left one is where a
+   phone user looks for it — so this page's own steps aside there. Desktop,
+   where the top bar has no Back, keeps it. */
+@media (max-width: 900px) {
+  .back-btn { display: none; }
 }

@@ -23,6 +23,7 @@ const TOKENS_COLLECTION = 'dealer_tokens';
 const AGENT_TOKENS_COLLECTION = 'agent_tokens';
 const ADMIN_TOKENS_COLLECTION = 'admin_tokens';
 const NOTIFICATIONS_COLLECTION = 'notifications';
+const QUOTATIONS_COLLECTION = 'quotations';
 const ORDERS_COLLECTION = 'orders';
 
 // Public origin the dealer PWA is served from. Used to build absolute URLs for
@@ -77,6 +78,58 @@ exports.notificationImage = onRequest(async (req, res) => {
     res.send(Buffer.from(match[2], 'base64'));
   } catch (err) {
     logger.warn(`Could not serve notification image ${id}: ${err.message || err}`);
+    res.status(500).send('Error');
+  }
+});
+
+/**
+ * Serve an uploaded quotation picture.
+ *
+ * A customer's quotation is stored inline on the document as a JPEG data URL,
+ * the same way notifications and banners are — no Firebase Storage anywhere in
+ * this project. That is fine inside the console, which reads the document, but
+ * it leaves the admin with no link to hand anyone: a browser refuses to
+ * navigate to a data: URL, and a blob: URL only exists inside the tab that made
+ * it. So the console builds a link to here instead, which anyone can open or
+ * paste anywhere.
+ *
+ * Reached as https://glaron-ade19.web.app/quotation-image/<id> via the hosting
+ * rewrite in firebase.json.
+ */
+exports.quotationImage = onRequest(async (req, res) => {
+  const fromPath = String(req.path || '').split('/').filter(Boolean).pop() || '';
+  // The link carries a file extension — /quotation-image/<id>.jpg — purely so
+  // that a service worker treats it as a file and lets it reach here. Without
+  // one, the installed app answers its own link with the app shell and tapping
+  // View showed the console again instead of the quotation. Ids never contain a
+  // dot, so dropping the extension leaves the id itself untouched, and a link
+  // without one still works.
+  const id = String(req.query.id || fromPath || '').replace(/\.[A-Za-z0-9]{1,5}$/, '');
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(id)) {
+    res.status(400).send('Bad request');
+    return;
+  }
+
+  try {
+    const doc = await admin.firestore().collection(QUOTATIONS_COLLECTION).doc(id).get();
+    const image = doc.exists ? String((doc.data() || {}).image || '') : '';
+    // A picture, or the PDF a customer sent instead of one. Nothing else is
+    // served from here, so a document can never be turned into a delivery route
+    // for some other kind of file.
+    const match = /^data:(image\/[a-zA-Z0-9+.-]+|application\/pdf);base64,(.+)$/.exec(image);
+    if (!match) {
+      res.status(404).send('Not found');
+      return;
+    }
+    res.set('Content-Type', match[1]);
+    // Shown in the browser rather than downloaded — the point of the link is
+    // that whoever opens it sees the quotation.
+    res.set('Content-Disposition', 'inline');
+    // What a customer uploaded never changes, so the link is safe to cache.
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(Buffer.from(match[2], 'base64'));
+  } catch (err) {
+    logger.warn(`Could not serve quotation image ${id}: ${err.message || err}`);
     res.status(500).send('Error');
   }
 });

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent } from '@ionic/angular/standalone';
@@ -10,6 +10,8 @@ import {
   ACTIVITY_SECTIONS, normaliseActor
 } from '../activity-log.service';
 import { orderRefLabel } from '../order-ref';
+import { lightColourSwatch, splitLightColourLabel } from '../light-colours';
+import { LightColourService } from '../light-colour.service';
 
 /** One person who shows up in the feed, for the "Person" filter. */
 interface ActivityPerson {
@@ -38,6 +40,26 @@ interface ActivityPerson {
   imports: [CommonModule, FormsModule, IonContent]
 })
 export class LogsPage implements OnInit {
+
+  // The box of colour drawn before a light colour name. Worked out from the
+  // name itself, so a shade added today is painted without a code change.
+  swatch(colour: string): string {
+    return lightColourSwatch(colour);
+  }
+
+  // A saved line keeps what was ordered as one string — "7W · 2ft · Cool
+  // White". These two split the shade off its end so the box of colour sits
+  // right before the shade, not in front of the wattage.
+  private lightColourNames = inject(LightColourService);
+
+  labelHead(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).head;
+  }
+
+  labelColour(label?: string): string {
+    return splitLightColourLabel(label || '', this.lightColourNames.names).colour;
+  }
+
   roleFilter: 'all' | 'dealer' | 'agent' = 'all';
   sectionFilter: 'all' | ActivitySection = 'all';
   /** A normalised mobile number, or 'all'. */

@@ -1,3 +1,6 @@
+@use '../shared/product-card';
+@use '../shared/catalog-filter';
+
 /* ============================================================================
    Public catalogue — the read-only page a shared link opens.
    Same palette and the same component styling as the dealer panel (deep purple
@@ -71,6 +74,8 @@ ion-content { --background: var(--g-bg); }
 
 /* ============ Main ============ */
 .catalog-main-container {
+  /* What the fixed catalogue bar cancels to reach both edges. */
+  --g-gutter: 16px;
   padding: 12px 16px 8px;
   display: flex;
   flex-direction: column;
@@ -282,92 +287,12 @@ ion-content { --background: var(--g-bg); }
   -webkit-box-orient: vertical;
   min-height: 2.5em;
 }
-.category-empty-state {
-  grid-column: 1 / -1;
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--g-text-soft);
-  font-size: 14px;
-  font-weight: 500;
-}
 
-/* ============ Product cards ============ */
-.product-cards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.product-card {
-  position: relative;
-  background: var(--g-surface);
-  border: 1px solid var(--g-border);
-  border-radius: var(--g-r-md);
-  padding: 12px;
-  box-shadow: var(--g-shadow-sm);
-  animation: g-fade-up .35s ease both;
-  transition: box-shadow .2s ease;
-}
-.card-head-row {
-  display: flex;
-  gap: 12px;
-}
-.product-media-box {
-  position: relative;
-  width: 72px; height: 72px;
-  flex-shrink: 0;
-  border-radius: var(--g-r-sm);
-  overflow: hidden;
-  background: #FFFFFF;
-  display: grid; place-items: center;
-  cursor: pointer;
-  &.no-image {
-    background: linear-gradient(90deg, #e9e9ec 25%, #f4f4f6 37%, #e9e9ec 63%);
-    background-size: 840px 100%;
-    animation: g-shimmer 1.4s ease-in-out infinite;
-  }
-}
-.product-card-img { width: 100%; height: 100%; object-fit: contain; display: block; }
-
-.card-head-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.category-uppercase-tag {
-  align-self: flex-start;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  color: var(--g-gold-strong);
-  background: rgba(254,179,0,.13);
-  padding: 2px 7px;
-  border-radius: 6px;
-}
-.product-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--g-text);
-}
-/* Clamped to two lines; tapping it opens the full text in place — there is no
-   details sheet on this page. */
-.product-description {
-  margin: 0;
-  font-size: 11.5px;
-  line-height: 1.4;
-  font-weight: 500;
-  color: var(--g-text-soft);
-  cursor: pointer;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  &.expanded { -webkit-line-clamp: unset; display: block; }
-}
+/* The product card is defined once, in src/app/shared/_product-card.scss, and
+ * imported at the top of this file: the same picture, title, wattage tabs, the
+ * ⓘ sheet behind them and the line per shade that the dealer app and the sales
+ * panel show. Only the add-to-list pill below is particular to this page — a
+ * visitor has no rate, so a line here carries a quantity and never a price. */
 
 /* ---- Add to list ----
    The only control on a product card. It carries a quantity and nothing else:
@@ -400,78 +325,7 @@ ion-content { --background: var(--g-bg); }
   &.compact { padding: 6px 12px; font-size: 11.5px; .add-ic { width: 13px; height: 13px; } }
 }
 
-.qty-stepper {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border: 1.5px solid var(--g-border);
-  border-radius: 999px;
-  background: var(--g-surface);
 
-  .step-btn {
-    width: 28px; height: 28px;
-    display: grid; place-items: center;
-    border: none;
-    border-radius: 50%;
-    background: var(--g-surface-2);
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--g-text);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform .14s ease, background .18s ease;
-    &:active { transform: scale(.9); background: rgba(254, 179, 0, .18); }
-  }
-  .step-val {
-    min-width: 26px;
-    text-align: center;
-    font-size: 13.5px;
-    font-weight: 800;
-    color: var(--g-text);
-  }
-
-  &.compact {
-    .step-btn { width: 25px; height: 25px; font-size: 15px; }
-    .step-val { min-width: 22px; font-size: 12.5px; }
-  }
-}
-
-/* Specification rows — the variants, each addable to the quotation list. */
-.product-details-body {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--g-border);
-}
-.specs-header {
-  display: block;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: .6px;
-  text-transform: uppercase;
-  color: var(--g-text-soft);
-  margin-bottom: 8px;
-}
-.variants-inline-list { display: flex; flex-direction: column; gap: 7px; }
-.variant-inline-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  background: var(--g-surface-2);
-  border-radius: var(--g-r-sm);
-}
-.variant-inline-label {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--g-text);
-  line-height: 1.3;
-}
 
 /* ============ Quotation list (the cart) ============
    Deliberately without a totals card. The dealer checkout has one because a
@@ -828,6 +682,53 @@ ion-content { --background: var(--g-bg); }
   cursor: pointer;
   &:active { background: var(--g-surface-2); }
 }
+/* The three plain steps under the compare headline. Numbers rather than
+   prose: whoever opens this link has never seen the page before. */
+.compare-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, .13);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li { display: flex; align-items: center; gap: 10px; }
+}
+.step-num {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+  color: var(--g-primary);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.step-text {
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .88);
+}
+
+/* Note under the preview once a PDF has been turned into a picture. */
+.quote-filenote {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--g-text-soft);
+}
+
+/* Form and confirmation pages. The tab bar is gone on these, so they get the
+   space back and sit clear of the fold. */
+.focus-page {
+  padding-top: 6px;
+  padding-bottom: 24px;
+  animation: g-fade-up .28s ease both;
+}
 
 /* ============ Bottom navigation (four destinations) ============ */
 .bottom-nav-bar {
@@ -865,10 +766,12 @@ ion-content { --background: var(--g-bg); }
   transition: transform .42s cubic-bezier(.34, 1.32, .48, 1);
 }
 .nav-tab-group[data-count="4"] .nav-indicator { width: 25%; }
+.nav-tab-group[data-count="5"] .nav-indicator { width: 20%; }
 
 .nav-tab-group[data-active="1"] .nav-indicator { transform: translateX(100%); }
 .nav-tab-group[data-active="2"] .nav-indicator { transform: translateX(200%); }
 .nav-tab-group[data-active="3"] .nav-indicator { transform: translateX(300%); }
+.nav-tab-group[data-active="4"] .nav-indicator { transform: translateX(400%); }
 
 .nav-tab-item {
   position: relative;
@@ -963,6 +866,180 @@ ion-content { --background: var(--g-bg); }
   span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
+/* ============ Quantity keypad (bottom sheet) ============
+   Lifted wholesale from the installed app, down to the sizes: someone who uses
+   both must not have to learn two ways of typing a quantity. */
+.numpad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  background: rgba(23, 3, 56, .55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: g-fade-in .2s ease;
+}
+.numpad-sheet {
+  width: 100%;
+  max-width: 440px;
+  background: var(--g-surface);
+  border-radius: 22px 22px 0 0;
+  padding: 16px 16px calc(18px + var(--g-safe-bottom));
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, .25);
+  animation: numpadUp .28s cubic-bezier(.16, 1, .3, 1);
+}
+@keyframes numpadUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.numpad-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.numpad-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.numpad-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--g-gold-deep, var(--g-gold-strong));
+}
+.numpad-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.numpad-close {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: var(--g-surface-2);
+  color: var(--g-text-soft);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.numpad-display {
+  background: var(--g-primary);
+  border-radius: var(--g-r-md);
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  text-align: right;
+  overflow: hidden;
+}
+.numpad-value {
+  font-size: 40px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: .5px;
+}
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.numpad-key {
+  height: 56px;
+  border: 1.5px solid var(--g-border);
+  background: var(--g-surface);
+  border-radius: var(--g-r-md);
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--g-text);
+  cursor: pointer;
+  transition: transform .1s ease, background .12s ease;
+  &:active { transform: scale(.95); background: var(--g-surface-2); }
+}
+.numpad-key-alt {
+  color: var(--g-gold-deep, var(--g-gold-strong));
+  background: rgba(254, 179, 0, .10);
+  border-color: rgba(254, 179, 0, .32);
+}
+.numpad-confirm {
+  margin-top: 14px;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: var(--g-r-md);
+  background: var(--g-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--g-shadow-md);
+  transition: transform .1s ease;
+  &:active { transform: scale(.99); }
+}
+
+/* ============ Sending overlay ============
+   Over everything, including the tab bar, until the send lands. */
+.sending-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  background: rgba(23, 3, 56, .62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: g-fade-in .18s ease;
+}
+.sending-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+  padding: 30px 24px 26px;
+  text-align: center;
+  border-radius: var(--g-r-lg);
+  background: var(--g-surface);
+  box-shadow: var(--g-shadow-md);
+  animation: g-pop .28s ease;
+}
+.sending-spinner {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 3.5px solid rgba(254, 179, 0, .22);
+  border-top-color: var(--g-gold);
+  animation: sendingSpin .8s linear infinite;
+}
+@keyframes sendingSpin {
+  to { transform: rotate(360deg); }
+}
+.sending-title {
+  margin: 2px 0 0;
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--g-text);
+}
+.sending-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--g-text-soft);
+}
+
 /* ============ Image lightbox ============ */
 .lightbox-overlay {
   position: fixed;
@@ -1007,3 +1084,168 @@ ion-content { --background: var(--g-bg); }
   box-shadow: var(--g-shadow-lg);
 }
 .lightbox-title { color: #fff; font-size: 15px; font-weight: 700; text-align: center; }
+
+/* ============ Areas ============
+   The area-wise link's own tab: a list of the rooms of a job, each opening onto
+   what goes in it. Built out of the same pieces as the quotation list — same
+   rows, same steppers, same request button — because it is the same list, only
+   kept in named piles. */
+.area-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: g-fade-in .3s ease;
+}
+
+/* Naming a room: the field and the button read as one control. */
+.area-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.area-input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1.5px solid var(--g-border);
+  border-radius: var(--g-r-md);
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--g-text);
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease;
+
+  &::placeholder { color: var(--g-text-soft); font-weight: 500; }
+  &:focus {
+    border-color: var(--g-primary);
+    box-shadow: 0 0 0 3px rgba(23, 3, 56, .08);
+  }
+}
+.area-add-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--g-r-md);
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent, #F5941D) 100%);
+  color: var(--g-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(254, 179, 0, .32);
+
+  svg { width: 17px; height: 17px; }
+  &:active { transform: translateY(1px); }
+}
+
+.area-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 34px 20px 26px;
+}
+
+.area-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* One room. The whole row opens it; the bin inside it stops the tap. */
+.area-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-r-lg);
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(23, 3, 56, .05);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease;
+
+  &:active { transform: scale(.99); }
+}
+.area-row-mark {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(150deg, var(--g-primary-80) 0%, var(--g-primary) 100%);
+  color: var(--g-gold);
+  font-size: 17px;
+  font-weight: 800;
+}
+.area-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.area-row-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--g-text);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.area-row-count { font-size: 12px; font-weight: 600; color: var(--g-text-soft); }
+.area-row-del {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--g-text-soft);
+
+  svg { width: 17px; height: 17px; }
+  &:active { color: #c62828; background: rgba(198, 40, 40, .08); }
+}
+.area-row-chev { flex-shrink: 0; width: 16px; height: 16px; color: var(--g-text-soft); }
+
+/* Filling a room: a bar over the catalogue that says which room, and closes it. */
+.area-browse-bar {
+  position: sticky;
+  bottom: 86px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 4px;
+  padding: 11px 12px 11px 16px;
+  border-radius: var(--g-r-lg);
+  background: linear-gradient(150deg, var(--g-primary-80) 0%, var(--g-primary) 100%);
+  box-shadow: 0 12px 28px rgba(23, 3, 56, .3);
+}
+.area-browse-text {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  strong { color: #fff; font-weight: 800; }
+}
+.area-browse-done {
+  flex-shrink: 0;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent, #F5941D) 100%);
+  color: var(--g-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:active { transform: translateY(1px); }
+}

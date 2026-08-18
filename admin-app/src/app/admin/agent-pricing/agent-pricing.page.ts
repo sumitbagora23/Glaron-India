@@ -87,7 +87,7 @@ export class AgentPricingPage implements OnInit {
   loadPricingData() {
     const products = this.productService.products;
     const savedPrices: Record<string, number> = { ...(this.currentAgent?.customPrices || {}) };
-    const mult = this.currentAgent?.multiplier || 1.0;
+    const mult = this.effectiveMultiplier;
 
     this.pricingGroups = products.map(product => {
       const rows: PricingRow[] = [];
@@ -119,6 +119,40 @@ export class AgentPricingPage implements OnInit {
     return parts.join(' · ');
   }
 
+  /**
+   * The rate that will be saved: the discount box when it holds a usable
+   * percentage, otherwise the rate already on the agent's record.
+   */
+  private get effectiveMultiplier(): number {
+    const pct = this.discountPercent;
+    return (pct !== null && pct >= 0 && pct <= 100)
+      ? (100 - pct) / 100
+      : (this.currentAgent?.multiplier || 1.0);
+  }
+
+  /** What a line shows when it simply follows the catalog at the blanket rate. */
+  discountedPrice(row: PricingRow): number {
+    return Math.round(row.catalogPrice * this.effectiveMultiplier);
+  }
+
+  /**
+   * True when the line carries a hand-typed rate rather than the blanket
+   * discount. Only these get written to the agent record; every other line is
+   * left to be recomputed from the catalog, so a later price edit in Products
+   * reaches the agent at the same discount. A blank or nonsense box counts as
+   * following the catalog rather than pinning them to Rs. 0.
+   */
+  isPinned(row: PricingRow): boolean {
+    const typed = Number(row.customPrice);
+    if (!isFinite(typed) || typed <= 0) return false;
+    return Math.round(typed) !== this.discountedPrice(row);
+  }
+
+  /** Drop a line's typed rate so it tracks the catalog again. */
+  followCatalog(row: PricingRow) {
+    row.customPrice = this.discountedPrice(row);
+  }
+
   applyDiscount() {
     if (this.discountPercent === null || this.discountPercent < 0 || this.discountPercent > 100) {
       alert('Please enter a valid discount percentage between 0 and 100.');
@@ -148,15 +182,19 @@ export class AgentPricingPage implements OnInit {
     }
 
     this.isLoading = true;
+    const mult = this.effectiveMultiplier;
     const pricingMap: Record<string, number> = {};
 
+    // Only hand-typed rates are written down. A line still sitting at the blanket
+    // discount is left out on purpose: the agent panel recomputes that line from
+    // whatever the catalog says at the time, so editing a price in Products
+    // reaches the agent at the same discount instead of the amount frozen here.
     this.pricingGroups.forEach(group => {
       group.rows.forEach(row => {
-        pricingMap[row.key] = row.customPrice;
+        if (this.isPinned(row)) pricingMap[row.key] = Math.round(Number(row.customPrice));
       });
     });
 
-    const mult = this.discountPercent !== null ? (100 - this.discountPercent) / 100 : (this.currentAgent?.multiplier || 1.0);
     this.agentService.updateAgentPricing(this.currentAgent.id || this.agentId, mult, pricingMap);
 
     setTimeout(() => {

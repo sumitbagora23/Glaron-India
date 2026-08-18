@@ -146,13 +146,15 @@
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  overflow: hidden;
+  /* Never clip or shrink — the page scrolls, not the card. Same rule as every
+     other list in the console; see "Admin list pages" in global.scss. */
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .form-card {
   padding: 0 0 22px;
   gap: 18px;
-  overflow: visible;
 }
 
 .card-head {
@@ -451,4 +453,12 @@
   .form-grid, .form-actions { padding: 0 16px; }
   .admin-error, .admin-success, .balance-preview { margin: 0 16px; }
   .modal-save-btn { width: 100%; }
+}
+
+/* The shell puts a Back in the top bar on mobile (see admin-layout). Two back
+   buttons on one screen is one too many, and the top-left one is where a
+   phone user looks for it — so this page's own steps aside there. Desktop,
+   where the top bar has no Back, keeps it. */
+@media (max-width: 900px) {
+  .back-btn { display: none; }
 }

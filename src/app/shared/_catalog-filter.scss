@@ -1,0 +1,203 @@
+/* ============================================================================
+   The catalogue's fixed bar, and the categories behind it.
+   ----------------------------------------------------------------------------
+   The search field stays put while the list scrolls under it, so a dealer
+   half-way down a long catalogue can search, or move to another category,
+   without scrolling back to the top first.
+
+   The categories themselves open in a sheet over the page, laid out exactly as
+   the Home browser lays them out — the same picture tiles, the same names — so
+   there is one way a category is chosen in this app, not two that look alike
+   but read differently. The bar stays one line and the list keeps the screen.
+
+   The bar belongs to all three catalogues — the dealer app, the sales panel and
+   the shared link — so it lives here and each page imports it:
+
+       @use '../shared/catalog-filter';
+
+   The bar must sit as a DIRECT child of the page's scrolling container. Nested
+   inside a short section it would only be sticky within that section's own
+   height, which is to say not sticky at all.
+   ============================================================================ */
+
+.catalog-sticky-bar {
+  position: sticky;
+  /* Directly under the top app bar, which is itself sticky at the top of the
+     scroller and stands 60px tall below the notch. */
+  top: calc(var(--g-safe-top, 0px) + 60px);
+  z-index: 40;
+  /* The bar runs edge to edge; the list it heads keeps the page's gutter. */
+  margin: 0 calc(var(--g-gutter, 16px) * -1);
+  padding: 8px var(--g-gutter, 16px) 8px;
+  /* Frosted, like the app bar above it, so the cards read as passing beneath. */
+  background: color-mix(in srgb, var(--g-bg) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--g-border);
+}
+
+/* ---- The search line: the field, then the filter beside it ---- */
+.catalog-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  /* The field takes whatever the buttons beside it leave. */
+  .catalog-search { flex: 1; min-width: 0; }
+}
+
+/* The funnel opens the categories. It carries a gold dot while one is on, so
+   the bar can never hide the fact that the list is narrowed. */
+.catalog-filter-btn {
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1.5px solid var(--g-border);
+  border-radius: 50%;
+  background: var(--g-surface);
+  color: var(--g-text-soft);
+  cursor: pointer;
+  box-shadow: var(--g-shadow-sm);
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+
+  .filter-ic { width: 19px; height: 19px; }
+  &:active { transform: scale(.94); }
+
+  /* The sheet is open. */
+  &.is-on {
+    background: var(--g-primary);
+    border-color: var(--g-primary);
+    color: #fff;
+  }
+
+  /* A category is on. */
+  &.has-filter {
+    border-color: var(--g-primary);
+    color: var(--g-primary);
+  }
+  .filter-dot {
+    position: absolute;
+    top: 4px; right: 5px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--g-gold);
+    border: 1.5px solid var(--g-surface);
+  }
+}
+
+/* The filter's own cross, the twin of the one inside the search field: it
+   drops the category and hands back the whole range. It appears only when
+   there is something to clear. */
+.filter-clear-btn {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1.5px solid var(--g-border);
+  border-radius: 50%;
+  background: var(--g-surface);
+  color: var(--g-text-soft);
+  font-family: inherit;
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--g-shadow-sm);
+  transition: background .16s ease, color .16s ease;
+  &:active { transform: scale(.94); background: var(--g-surface-2); }
+}
+
+/* ---- The categories, in a sheet over the page ---- */
+.cat-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(23, 3, 56, .55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  animation: g-fade-in .2s ease;
+}
+.cat-sheet {
+  width: 100%;
+  max-height: 82vh;
+  background: var(--g-surface);
+  border-radius: var(--g-r-xl) var(--g-r-xl) 0 0;
+  padding: 10px 20px calc(var(--g-safe-bottom, 0px) + 24px);
+  overflow-y: auto;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, .25);
+  animation: catSheetUp .32s cubic-bezier(.2, .8, .3, 1);
+}
+@keyframes catSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* The grab handle every sheet in this app wears. */
+.cat-sheet::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: var(--g-border-strong);
+}
+
+.cat-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+.cat-sheet-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--g-text);
+}
+.cat-sheet-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--g-surface-2);
+  color: var(--g-text-soft);
+  font-family: inherit;
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+  &:active { background: var(--g-border); }
+}
+
+/* The tiles are the Home browser's own — `.category-grid` and its cards are
+   already defined by each page, and the sheet borrows them whole so both ways
+   into a category look identical. Only the open one needs marking, which the
+   Home browser never had to do. */
+.cat-sheet .category-grid-card {
+  position: relative;
+
+  &.is-on {
+    .cat-grid-media {
+      outline: 2.5px solid var(--g-gold);
+      outline-offset: -2.5px;
+    }
+    .cat-grid-name { color: var(--g-text); font-weight: 800; }
+  }
+}
+/* "All" has no picture of its own, so it wears a small grid of squares. */
+.cat-grid-all {
+  display: grid;
+  place-items: center;
+  background: var(--g-surface-2);
+  .cat-grid-all-ic { width: 30px; height: 30px; color: var(--g-text-soft); }
+}
+.cat-sheet .category-grid-card.is-on .cat-grid-all .cat-grid-all-ic { color: var(--g-gold-strong); }
