@@ -7,4 +7,4 @@
 //    part of `npm run deploy:admin`), which mirrors it into
 //    admin-app/ngsw-config.json's appData.
 // ────────────────────────────────────────────────────────────────────────────
-export const APP_VERSION = '1.0.93';
+export const APP_VERSION = '1.0.94';
