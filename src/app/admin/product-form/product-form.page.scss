@@ -619,9 +619,6 @@
 }
 /* --- Compact Horizontal Form Rows --- */
 .variant-horizontal-form-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -644,20 +641,13 @@
     white-space: nowrap;
   }
 
-  .v-row-inputs {
-    display: flex;
-    flex-wrap: wrap;
-    flex: 1;
-    gap: 8px;
-
-    .v-input {
+  .v-input {
       border: 1px solid #d1d5db;
       border-radius: 6px;
       padding: 6px 10px;
       font-size: 0.82rem;
       color: #1f2937;
-      flex: 1 1 110px;
-      min-width: 100px;
+      min-width: 0;
 
       &:focus {
         outline: none;
@@ -665,19 +655,11 @@
         box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
       }
 
-      &.v-input-sm {
-        flex: 1 1 70px;
-        min-width: 70px;
-      }
-
-      &.v-input-price {
-        flex: 1 1 90px;
-        min-width: 80px;
-        font-weight: 600;
-        color: #059669;
-        background: #f0fdf4;
-        border-color: #a7f3d0;
-      }
+    &.v-in-price {
+      font-weight: 600;
+      color: #059669;
+      background: #f0fdf4;
+      border-color: #a7f3d0;
     }
   }
 
@@ -1110,51 +1092,59 @@
   color: var(--g-text-soft);
 }
 
-/* ---- The options table ----
-   Was ten equal boxes with the field name inside each as placeholder text, so
-   nothing could be scanned down a column and a placeholder vanished the moment
-   anything was typed. Now the names sit once in a header and the rows line up
-   under them, which is how the price sheet itself reads. */
-.v-head {
-  display: flex;
+/* ---- The options table: one grid, shared by the header and every row ----
+
+   These were two separate flex containers, so the headings could only ever
+   approximate the boxes under them — and `.v-row-inputs .v-input` outranked the
+   per-column widths, so the inputs sized themselves and the headings drifted.
+   One grid definition, applied to both, makes the columns the same tracks. */
+$v-grid: 34px 92px minmax(80px, 1fr) minmax(80px, 1fr) 92px 92px 152px 30px;
+
+.v-head,
+.variant-horizontal-form-row {
+  display: grid;
+  grid-template-columns: $v-grid;
   align-items: center;
-  gap: 8px;
-  padding: 0 4px 6px;
+  column-gap: 10px;
+  padding-left: 14px;
+  padding-right: 14px;
 }
-.v-head-badge { flex: 0 0 34px; }
+
+.v-head {
+  /* The row carries a 1px border, so the header takes a transparent one and
+     both grids start at the same x. Applied here only — putting it on the
+     shared selector would paint over the row's own border. */
+  border: 1px solid transparent;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+}
 .v-h {
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: .05em;
   text-transform: uppercase;
-  color: var(--g-text-soft, #6b7280);
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   em {
     font-style: normal;
     font-weight: 600;
     text-transform: none;
     letter-spacing: 0;
-    opacity: .65;
+    opacity: .6;
   }
 }
-/* The columns and the inputs under them share these widths, so a heading always
-   sits over the box it names. */
-.v-h-wattage, .v-in-wattage { flex: 0 0 72px; }
-.v-h-type,    .v-in-type    { flex: 1 1 130px; min-width: 0; }
-.v-h-dim,     .v-in-dim     { flex: 1 1 120px; min-width: 0; }
-.v-h-cut,     .v-in-cut     { flex: 0 0 74px; }
-.v-h-pack,    .v-in-pack    { flex: 0 0 74px; }
-.v-h-price,   .v-price-cell { flex: 0 0 148px; }
 
 .v-price-cell {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
 }
 .v-in-price { flex: 1 1 auto; min-width: 0; }
 
-/* The unit sits with the number rather than in a column of its own: it is a
-   property of that rate, not another rate. */
 .v-per-mtr {
   display: inline-flex;
   align-items: center;
@@ -1162,7 +1152,7 @@
   flex: 0 0 auto;
   font-size: 10.5px;
   font-weight: 700;
-  color: var(--g-text-soft, #6b7280);
+  color: #6b7280;
   cursor: pointer;
   user-select: none;
   input { margin: 0; cursor: pointer; }
@@ -1171,8 +1161,8 @@
 .no-variants-placeholder {
   text-align: center;
   padding: 22px 18px;
-  color: var(--g-text-soft, #6b7280);
-  border: 1px dashed var(--g-border, #e5e7eb);
+  color: #6b7280;
+  border: 1px dashed #e5e7eb;
   border-radius: 8px;
   font-size: 12.5px;
   line-height: 1.5;

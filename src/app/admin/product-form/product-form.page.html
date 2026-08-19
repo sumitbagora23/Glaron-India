@@ -141,8 +141,9 @@
                   <span class="bc-preview-chip" *ngFor="let bc of bodyColourPreview">{{ bc }}</span>
                 </div>
                 <span class="bc-hint">
-                  Separate them with a comma. "|" and the sheet's "+" and "/" are understood too,
-                  so BK/WH + GBK/RG reads as BK/GBK and WH/RG.
+                  One finish per comma — these are what a customer picks from. You can also paste a
+                  cell straight from the price sheet: <strong>BK/WH + GBK/RG</strong> becomes the four
+                  combinations BK/GBK, BK/RG, WH/GBK and WH/RG.
                 </span>
               </div>
 
@@ -371,34 +372,32 @@
                row. The row below reads as a table: the eye checks a column
                against the price sheet rather than decoding ten placeholders. -->
           <div class="v-head" *ngIf="variantsArray.controls.length">
-            <span class="v-head-badge"></span>
-            <span class="v-h v-h-wattage">Wattage</span>
-            <span class="v-h v-h-type">Type <em>optional</em></span>
-            <span class="v-h v-h-dim">Dimension</span>
-            <span class="v-h v-h-cut">Cut-out</span>
-            <span class="v-h v-h-pack">Packing</span>
-            <span class="v-h v-h-price">Rate&nbsp;₹</span>
-            <span class="v-head-badge"></span>
+            <span></span>
+            <span class="v-h">Wattage</span>
+            <span class="v-h">Type <em>optional</em></span>
+            <span class="v-h">Dimension</span>
+            <span class="v-h">Cut-out</span>
+            <span class="v-h">Packing</span>
+            <span class="v-h">Rate&nbsp;₹</span>
+            <span></span>
           </div>
 
           <div *ngFor="let vGroup of variantsArray.controls; let i = index" [formGroupName]="i" class="variant-horizontal-form-row">
             <div class="v-row-badge">#{{ i + 1 }}</div>
-            <div class="v-row-inputs">
-              <input type="text" formControlName="wattage" placeholder="7W" class="v-input v-in-wattage" />
-              <input type="text" formControlName="type" placeholder="only if needed" class="v-input v-in-type" />
-              <input type="text" formControlName="dimension" placeholder="63*61" class="v-input v-in-dim" />
-              <input type="text" formControlName="cutout" placeholder="50" class="v-input v-in-cut" />
-              <input type="text" formControlName="packing" placeholder="40" class="v-input v-in-pack" />
-              <!-- One rate, with the unit beside it. Two price boxes meant a
-                   number could go in the wrong one and quote as zero. -->
-              <span class="v-price-cell">
-                <input type="number" formControlName="price" placeholder="580" class="v-input v-in-price" />
-                <label class="v-per-mtr" title="Charge this rate per metre instead of per piece">
-                  <input type="checkbox" formControlName="perMetre" />
-                  <span>/mtr</span>
-                </label>
-              </span>
-            </div>
+            <input type="text" formControlName="wattage" placeholder="7W" class="v-input" />
+            <input type="text" formControlName="type" placeholder="only if needed" class="v-input" />
+            <input type="text" formControlName="dimension" placeholder="63*61" class="v-input" />
+            <input type="text" formControlName="cutout" placeholder="50" class="v-input" />
+            <input type="text" formControlName="packing" placeholder="40" class="v-input" />
+            <!-- One rate, with the unit beside it. Two price boxes meant a
+                 number could go in the wrong one and quote as zero. -->
+            <span class="v-price-cell">
+              <input type="number" formControlName="price" placeholder="580" class="v-input v-in-price" />
+              <label class="v-per-mtr" title="Charge this rate per metre instead of per piece">
+                <input type="checkbox" formControlName="perMetre" />
+                <span>/mtr</span>
+              </label>
+            </span>
             <button type="button" (click)="removeVariant(i)" class="v-remove-btn" title="Remove variant">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>

@@ -122,13 +122,26 @@ export function orderableBodyColours(product: { bodyColours?: string[] }): strin
 /**
  * What the admin types on the product form, turned into the stored list.
  *
- * The same punctuation the import used is accepted, plus a comma, so an admin
- * can paste a cell straight out of the price sheet and get the options it means.
+ * Two kinds of text arrive here and they must not be treated alike:
+ *
+ *   a cell pasted from the sheet — "BK/WH + GBK/RG" — is an expression, and
+ *   the combinations it stands for are worked out by parseBodyColours above;
+ *
+ *   the list this field shows back — "BK/GBK, BK/RG, WH/GBK" — is already
+ *   those combinations, and each comma-separated item is one finish, whole.
+ *
+ * The two are told apart by "+" and "|", which only ever appear in an
+ * expression. Without that test a finish like "BK/RG" would be read as the
+ * alternatives BK and RG and split back into two, so opening a product and
+ * saving it would quietly replace eight combinations with six loose tokens.
  */
 export function readBodyColourInput(text: string): string[] {
   const out: string[] = [];
   for (const chunk of String(text || '').split(',')) {
-    out.push(...parseBodyColours(chunk));
+    const item = chunk.trim();
+    if (!item) continue;
+    if (item.includes('+') || item.includes('|')) out.push(...parseBodyColours(item));
+    else out.push(item);
   }
   return dedupe(out).filter(c => !NOT_A_COLOUR.test(c));
 }
