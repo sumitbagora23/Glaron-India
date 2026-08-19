@@ -1089,7 +1089,13 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   /** The sheet behind the ⓘ: the size, the cut-out, the packing, everything
    *  the tab itself no longer prints. */
   specRows(tab: SpecTab): SpecDetail[] {
-    return specDetails(tab.variant);
+    return specDetails(tab.variant, this.warrantyFor(tab));
+  }
+
+  /** The guarantee on the product a tab belongs to. The key is `productId#i`. */
+  private warrantyFor(tab: SpecTab): string | undefined {
+    const productId = String(tab.key || '').split('#')[0];
+    return this.products.find((p: Product) => p.id === productId)?.warranty;
   }
 
   isSpecSheetOpen(product: Product): boolean {

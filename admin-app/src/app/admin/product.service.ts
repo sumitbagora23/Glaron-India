@@ -103,6 +103,11 @@ export interface Product {
    * literal word "Dimension".
    */
   catalogueTidy?: boolean;
+  /**
+   * Set once the warranty has been put on the stored product, and the two
+   * hand-made duplicates of the track rail removed.
+   */
+  warrantySet?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -127,6 +132,17 @@ export interface Product {
   // are read off the variants' imported `bodyColour` text instead. See
   // orderableBodyColours() in body-colours.ts.
   bodyColours?: string[];
+  /**
+   * How long the fitting is guaranteed for — "2 Years", "1 Year".
+   *
+   * The range carries two years unless the sheet prints a note under that
+   * product's own table, which it does for the rope, the strip, both
+   * concealed, the striker, the polycarbonate curve, the ball light, the
+   * K-type, the foot light and the spike. Stored as the sheet words it rather
+   * than a number of months: one product's note covers two warranties at once
+   * ("1 Year Eco Strip / 2 Years Pure Copper") and a number could not say that.
+   */
+  warranty?: string;
   variants?: ProductVariant[];
 }
 
@@ -184,7 +200,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-CURV-4",
@@ -238,7 +255,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-GEM-5",
@@ -286,7 +304,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-GLAR-6",
@@ -312,7 +331,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-DELT-7",
@@ -360,7 +380,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-VOGU-8",
@@ -386,7 +407,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-GLON-9",
@@ -412,7 +434,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-ELEG-10",
@@ -438,7 +461,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-ORBI-11",
@@ -464,7 +488,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-PRIS-12",
@@ -490,7 +515,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-DUO-13",
@@ -516,7 +542,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-DUOR-14",
@@ -542,7 +569,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-MOVA-15",
@@ -589,7 +617,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-PULL-16",
@@ -615,7 +644,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-LINE-17",
@@ -641,7 +671,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-SPOT-18",
@@ -687,7 +718,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-DEEP-19",
@@ -731,7 +763,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-NEXU-20",
@@ -783,7 +816,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-NEXU-21",
@@ -809,7 +843,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-NOVA-22",
@@ -844,7 +879,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-CONC-23",
@@ -884,7 +920,8 @@ export class ProductService {
         "Blue": 150,
         "Pink": 150,
         "3 In 1": 180
-      }
+      },
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-TRAC-24",
@@ -929,7 +966,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-TRAC-25",
@@ -955,7 +993,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-STRE-26",
@@ -992,7 +1031,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Cool White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-MOVA-27",
@@ -1018,7 +1058,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-CYLI-28",
@@ -1065,7 +1106,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-MAGN-29",
@@ -1091,7 +1133,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-STRI-30",
@@ -1122,7 +1165,8 @@ export class ProductService {
         "Cool White",
         "Natural White",
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year (Eco Strip) / 2 Years (Pure Copper)"
     },
     {
       "id": "GLR-SLIM-31",
@@ -1166,7 +1210,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-SURF-32",
@@ -1211,7 +1256,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-TRIM-33",
@@ -1246,7 +1292,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-TILE-34",
@@ -1290,7 +1337,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-STRI-35",
@@ -1325,7 +1373,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-SMPS-36",
@@ -1371,7 +1420,8 @@ export class ProductService {
           "price": 1100,
           "wattage": "12V/25A"
         }
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-ROPE-37",
@@ -1424,7 +1474,8 @@ export class ProductService {
         "Pink",
         "Ice Blue",
         "Multi"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-PROF-38",
@@ -1454,7 +1505,8 @@ export class ProductService {
           "pricePerMtr": 140,
           "wattage": "60 GM (CONCEALED)"
         }
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-MAGN-39",
@@ -1485,7 +1537,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-LINE-40",
@@ -1511,7 +1564,8 @@ export class ProductService {
         "Warm White",
         "3 In 1",
         "Dimmable-Tunable"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-KTYP-41",
@@ -1545,7 +1599,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-BALL-42",
@@ -1591,7 +1646,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-CURV-43",
@@ -1628,7 +1684,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-CASE-44",
@@ -1650,7 +1707,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-UPDO-45",
@@ -1672,7 +1730,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-RUBI-46",
@@ -1694,7 +1753,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-FOOT-47",
@@ -1723,7 +1783,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-SPIK-48",
@@ -1754,7 +1815,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "1 Year"
     },
     {
       "id": "GLR-WALL-49",
@@ -1776,7 +1838,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-INGR-50",
@@ -1798,7 +1861,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-SWIM-51",
@@ -1820,7 +1884,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-GMFL-52",
@@ -1863,7 +1928,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Cool White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-SLIM-53",
@@ -1900,7 +1966,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Cool White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-HIBA-54",
@@ -1922,7 +1989,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Cool White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-STRE-55",
@@ -1944,7 +2012,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Cool White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-SOLA-56",
@@ -1976,7 +2045,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Cool White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-AURA-57",
@@ -2001,7 +2071,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-VIST-58",
@@ -2026,7 +2097,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-CUBE-59",
@@ -2051,7 +2123,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-CUBE-60",
@@ -2076,7 +2149,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-MASH-61",
@@ -2101,7 +2175,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-FREE-62",
@@ -2126,7 +2201,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-RUBI-63",
@@ -2148,7 +2224,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-TEMP-64",
@@ -2170,7 +2247,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-LEGA-65",
@@ -2192,7 +2270,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-FOUR-66",
@@ -2214,7 +2293,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-SQUA-67",
@@ -2236,7 +2316,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-RING-68",
@@ -2258,7 +2339,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-ROUN-69",
@@ -2280,7 +2362,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-OVAL-70",
@@ -2302,7 +2385,8 @@ export class ProductService {
       ],
       "lightColours": [
         "Warm White"
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-PCTR-71",
@@ -2332,7 +2416,8 @@ export class ProductService {
           "packing": "100",
           "price": 420
         }
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-METR-72",
@@ -2362,7 +2447,8 @@ export class ProductService {
           "packing": "50",
           "price": 700
         }
-      ]
+      ],
+      "warranty": "2 Years"
     },
     {
       "id": "GLR-LUXC-73",
@@ -2389,7 +2475,8 @@ export class ProductService {
           "packing": "100",
           "price": 340
         }
-      ]
+      ],
+      "warranty": "1 Year"
     }
   ];
 
@@ -2637,6 +2724,28 @@ export class ProductService {
     return true;
   }
 
+  /** Products superseded by a catalogue one, removed on sight. */
+  private static readonly SUPERSEDED = new Set([
+    'GLR-MSYMX7N4-2779',   // "Track Patti - PC"     -> GLR-PCTR-71 PC Track
+    'GLR-MSYNTUCV-2363',   // "Track Patti - Metal " -> GLR-METR-72 Metal Track
+  ]);
+
+  /**
+   * Puts the sheet's warranty on a stored product.
+   *
+   * Two years unless the seed says otherwise, which it does for the ten
+   * products whose own table carries a note.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyWarranty(p: Product): boolean {
+    if (p.warrantySet) return false;
+    const def = this.defaultProducts.find(dp => dp.id === p.id);
+    p.warranty = def?.warranty || p.warranty || '2 Years';
+    p.warrantySet = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2724,6 +2833,15 @@ export class ProductService {
             if (this.applyCatalogueTidy(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // A hand-made product the catalogue has since superseded is
+            // removed rather than listed beside the one that replaced it.
+            if (ProductService.SUPERSEDED.has(p.id)) {
+              if (this.firestore) deleteDoc(doc(this.firestore, 'products', p.id)).catch(() => {});
+              return;
+            }
+            if (this.applyWarranty(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -2792,8 +2910,12 @@ export class ProductService {
           this.applyLightColours2026(p);
           this.applyTrackSplit(p);
           this.applyCatalogueTidy(p);
+          this.applyWarranty(p);
           return p;
         });
+        // Keep the superseded duplicates off the first paint too, or they show
+        // for a moment before the Firestore sync removes them.
+        parsed = parsed.filter((p: any) => !ProductService.SUPERSEDED.has(p.id));
         return parsed;
       }
     } catch (e) {

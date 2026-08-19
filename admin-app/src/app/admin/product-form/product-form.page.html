@@ -86,6 +86,19 @@
                 </div>
               </div>
 
+              <!-- Warranty. The range carries two years; a product whose own
+                   table on the price sheet prints a note carries that instead. -->
+              <div class="input-form-group">
+                <label for="warranty" class="input-field-label">Warranty</label>
+                <input id="warranty" type="text" formControlName="warranty"
+                       placeholder="2 Years" class="text-input-field" list="warranty-options" />
+                <datalist id="warranty-options">
+                  <option value="2 Years"></option>
+                  <option value="1 Year"></option>
+                </datalist>
+                <span class="input-hint-text">Two years unless the price sheet says otherwise for this product.</span>
+              </div>
+
               <!-- Product Category field (multi-select) -->
               <div class="input-form-group">
                 <label class="input-field-label">Categories <span class="req-star">*</span></label>

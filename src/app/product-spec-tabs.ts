@@ -81,7 +81,7 @@ export function dimensionLabel(variant: ProductVariant): string {
 }
 
 /** Everything known about one option — what the ⓘ opens. */
-export function specDetails(variant: ProductVariant): SpecDetail[] {
+export function specDetails(variant: ProductVariant, warranty?: string): SpecDetail[] {
   const rows: SpecDetail[] = [];
   const push = (label: string, value?: string) => {
     if (!isBlank(value)) rows.push({ label, value: value!.trim() });
@@ -92,6 +92,9 @@ export function specDetails(variant: ProductVariant): SpecDetail[] {
   if (size) rows.push({ label: 'Dimension', value: size });
   push('Cut-out', variant.cutout);
   push('Packing', variant.packing);
+  // The guarantee belongs to the product rather than the option, but the sheet
+  // behind the ⓘ is where a dealer looks for it.
+  push('Warranty', warranty);
   return rows;
 }
 

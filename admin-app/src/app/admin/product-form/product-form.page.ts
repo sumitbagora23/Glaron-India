@@ -367,6 +367,7 @@ export class ProductFormPage implements OnInit {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
+      warranty: ['2 Years'],
       // Base price is optional when variant pricing is supplied (handled by the
       // form-level pricingValidator). If a value IS entered it must be >= 1.
       price: [null, [Validators.min(1)]],
@@ -638,6 +639,7 @@ export class ProductFormPage implements OnInit {
         this.selectedCategories = [];
       }
 
+      this.productForm.patchValue({ warranty: product.warranty || '2 Years' });
       this.selectedLightColours = product.lightColours ? [...product.lightColours] : [];
       this.lightColourPrices = { ...(product.lightColourPrice || {}) };
 
@@ -760,6 +762,7 @@ export class ProductFormPage implements OnInit {
             lightColours,
             lightColourPrice,
             bodyColours,
+            warranty: (formData.warranty || '').trim() || '2 Years',
             image: imageUrl,
             variants: cleanedVariants.length > 0 ? cleanedVariants : undefined
           });
@@ -775,6 +778,7 @@ export class ProductFormPage implements OnInit {
           lightColours,
           lightColourPrice,
           bodyColours,
+          warranty: (formData.warranty || '').trim() || '2 Years',
           stock: 999,
           image: imageUrl,
           previewType: 'panel',
