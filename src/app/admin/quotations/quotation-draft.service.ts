@@ -130,6 +130,42 @@ export class QuotationDraftService {
     return [label, bodyColour || '', lightColour || ''].filter(p => p && p.trim()).join(' · ');
   }
 
+/**
+   * The option a saved line was asked for, matched by the label it was saved
+   * with.
+   *
+   * A label saved yesterday need not read the way the same option reads today.
+   * A line sent before the finish moved off the descriptor still says
+   * "12W · 73*85 mm · BK/WH + GBK/RG", where that option now reads
+   * "12W · 73*85 mm" — and an exact comparison misses it, drops to the
+   * product's headline price and quotes an 18W at the 7W rate. Real
+   * quotations were being priced that way.
+   *
+   * So: the exact label first, then the longest option label the saved text
+   * begins with — which is how a saved label carrying segments the current one
+   * no longer prints still finds its option — then the option's own name
+   * alone. Longest first, so "7W · 60*70 mm" is preferred over a bare "7W"
+   * when both would match.
+   */
+  private matchVariant(product: Product, label: string): ProductVariant | undefined {
+    const variants = product.variants || [];
+    const norm = (s?: string) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const target = norm(label);
+    if (!target) return undefined;
+
+    const exact = variants.find(v => norm(this.variantLabel(v)) === target);
+    if (exact) return exact;
+
+    const prefixed = variants
+      .map(v => ({ v, text: norm(this.variantLabel(v)) }))
+      .filter(x => x.text && target.startsWith(x.text))
+      .sort((a, b) => b.text.length - a.text.length);
+    if (prefixed.length) return prefixed[0].v;
+
+    const firstSegment = target.split('·')[0].trim();
+    return variants.find(v => norm(v.wattage) === firstSegment);
+  }
+
   private productFor(sku: string): Product | undefined {
     return sku ? this.products.products.find(p => p.id === sku) : undefined;
   }
@@ -149,19 +185,21 @@ export class QuotationDraftService {
     const label = item.variant || '';
     const product = this.productFor(sku);
 
-    let variant = (product?.variants || []).find(v => this.variantLabel(v) === label);
+    let head = label;
     let colour = '';
 
-    // No exact match: the trailing segment may be the shade that was asked for.
-    if (!variant && product && label.includes(' · ')) {
+    // A trailing shade is priced on its own, so it is peeled off before the
+    // option is looked up.
+    if (product && label.includes(' · ')) {
       const cut = label.lastIndexOf(' · ');
       const tail = label.slice(cut + 3).trim();
-      if ((product.lightColours || []).includes(tail)) {
-        const head = label.slice(0, cut);
+      if ((product.lightColours || []).some(c => c.trim().toLowerCase() === tail.toLowerCase())) {
         colour = tail;
-        variant = (product.variants || []).find(v => this.variantLabel(v) === head);
+        head = label.slice(0, cut);
       }
     }
+
+    let variant = product ? this.matchVariant(product, head) : undefined;
 
     // A product with no options at all can still be asked for in a shade.
     if (!variant && !colour && product && (product.lightColours || []).includes(label)) {
