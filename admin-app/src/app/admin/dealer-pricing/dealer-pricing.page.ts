@@ -122,10 +122,8 @@ export class DealerPricingPage implements OnInit {
     if (!bad(variant.wattage)) parts.push(variant.wattage!.trim());
     if (variant.type && variant.type.trim()) parts.push(variant.type.trim());
     if (variant.dimension && variant.dimension.trim() && variant.dimension.trim() !== '-') parts.push(variant.dimension.trim());
-    const colour = variant.bodyColour || variant.colorSize;
-    if (colour && colour.trim()) parts.push(colour.trim());
     if (variant.pricePerMtr) parts.push('per mtr');
-    if (parts.length === 0) parts.push(variant.model || 'Variant');
+    if (parts.length === 0) parts.push('Variant');
     return parts.join(' · ');
   }
 

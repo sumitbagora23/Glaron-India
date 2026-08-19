@@ -492,16 +492,16 @@ export class ProductFormPage implements OnInit {
 
   createVariantGroup(variant?: ProductVariant): FormGroup {
     return this.fb.group({
-      model: [variant?.model || ''],
       wattage: [variant?.wattage || ''],
       type: [variant?.type || ''],
       dimension: [variant?.dimension || ''],
       cutout: [variant?.cutout || ''],
-      bodyColour: [variant?.bodyColour || ''],
-      colorSize: [variant?.colorSize || ''],
       packing: [variant?.packing || ''],
-      price: [variant?.price || null],
-      pricePerMtr: [variant?.pricePerMtr || null],
+      // One rate, and a switch for whether it is charged by the piece or by the
+      // metre. They were two fields, which meant a rate could be typed into the
+      // wrong one and silently priced at zero.
+      price: [variant?.price ?? variant?.pricePerMtr ?? null],
+      perMetre: [variant?.pricePerMtr != null],
       // Not typed into the row below — written by the light colour picker
       // above, under this option's own tab. Empty means this option is sold in
       // whatever shades the product is sold in.
@@ -676,8 +676,8 @@ export class ProductFormPage implements OnInit {
     // an option can be nothing but "this one is warm white only".
     const cleanedVariants = (formData.variants || [])
       .filter((v: any) =>
-        v.model || v.wattage || v.type || v.dimension || v.cutout || v.bodyColour ||
-        v.colorSize || v.packing || v.price || v.pricePerMtr ||
+        v.wattage || v.type || v.dimension || v.cutout ||
+        v.packing || v.price ||
         (v.lightColours && v.lightColours.length)
       )
       // An option with no shades of its own is written without the fields at
@@ -690,8 +690,16 @@ export class ProductFormPage implements OnInit {
           const value = (v.lightColourPrice || {})[colour];
           if (value > 0) priced[colour] = value;
         });
+        // The one rate goes back into whichever field the rest of the app
+        // reads: pricePerMtr for the goods sold by length, price otherwise.
+        // Only ever one of the two, so nothing downstream has to guess.
+        const rate = Number(v.price) || undefined;
+        const byMetre = !!v.perMetre;
+        const { perMetre, ...rest } = v;
         return {
-          ...v,
+          ...rest,
+          price: byMetre ? undefined : rate,
+          pricePerMtr: byMetre ? rate : undefined,
           lightColours: colours.length ? colours : undefined,
           lightColourPrice: Object.keys(priced).length ? priced : undefined
         };

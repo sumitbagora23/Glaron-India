@@ -621,12 +621,9 @@ export class AgentPanelPage implements OnInit, OnDestroy {
       parts.push(/mm/i.test(d) ? d : `${d} mm`);
     }
 
-    const colour = variant.bodyColour || variant.colorSize;
-    if (colour && colour.trim()) parts.push(colour.trim());
-
     if (variant.pricePerMtr) parts.push('per mtr');
 
-    if (parts.length === 0) parts.push(variant.model || 'Variant');
+    if (parts.length === 0) parts.push('Variant');
     return parts.join(' · ');
   }
 

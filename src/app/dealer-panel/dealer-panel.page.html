@@ -990,12 +990,11 @@
           <ng-container *ngIf="selectedVariantProduct.variants as variants">
             <div class="variant-item-card" *ngFor="let variant of variants; let vi = index">
               <div class="v-details">
-                <span class="v-model">{{ variant.model || tn(selectedVariantProduct.name) }}</span>
+                <span class="v-model">{{ tn(selectedVariantProduct.name) }}</span>
                 <span class="v-badge" *ngIf="variant.wattage">{{ variant.wattage }}</span>
                 <div class="v-chips">
                   <span *ngIf="variant.dimension">{{ t('dim') }} {{ variant.dimension }}</span>
                   <span *ngIf="variant.cutout">{{ t('cut') }} {{ variant.cutout }}</span>
-                  <span *ngIf="variant.bodyColour">{{ t('color') }} {{ variant.bodyColour }}</span>
                 </div>
               </div>
               <div class="v-right">

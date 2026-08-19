@@ -753,10 +753,9 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       parts.push(/mm/i.test(d) ? d : `${d} mm`);
     }
 
-    const colour = omitBodyColour ? variant.colorSize : (variant.bodyColour || variant.colorSize);
-    if (colour && colour.trim()) parts.push(colour.trim());
-
-    if (parts.length === 0) parts.push(variant.model || 'Variant');
+    // The finish is chosen per line and appended by lineLabel(), so it is not
+    // part of the option's own descriptor any more.
+    if (parts.length === 0) parts.push('Variant');
     return parts.join(' · ');
   }
 

@@ -98,10 +98,10 @@ export class QuotationDraftService {
       parts.push(/mm/i.test(d) ? d : `${d} mm`);
     }
 
-    const colour = omitBodyColour ? variant.colorSize : (variant.bodyColour || variant.colorSize);
-    if (colour && colour.trim()) parts.push(colour.trim());
-
-    if (parts.length === 0) parts.push(variant.model || 'Variant');
+    // The finish is no longer part of the option's own descriptor: it is
+    // chosen per line and appended by lineLabel() above, so an option reads
+    // "7W · 60*70 mm" and the line reads "7W · 60*70 mm · BK/GBK".
+    if (parts.length === 0) parts.push('Variant');
     return parts.join(' · ');
   }
 

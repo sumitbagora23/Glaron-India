@@ -150,7 +150,7 @@
           <div class="variant-horizontal-card" *ngFor="let variant of variants">
             <div class="variant-card-left">
               <div class="variant-card-header">
-                <span class="variant-model-name">{{ variant.model || selectedVariantProduct.name }}</span>
+                <span class="variant-model-name">{{ selectedVariantProduct.name }}</span>
                 <span class="variant-badge wattage-badge" *ngIf="variant.wattage">{{ variant.wattage }}</span>
                 <span class="variant-badge type-badge" *ngIf="variant.type">{{ variant.type }}</span>
               </div>
@@ -160,12 +160,6 @@
                 </span>
                 <span class="detail-chip" *ngIf="variant.cutout">
                   <strong>Cutout:</strong> {{ variant.cutout }}
-                </span>
-                <span class="detail-chip" *ngIf="variant.bodyColour">
-                  <strong>Color:</strong> {{ variant.bodyColour }}
-                </span>
-                <span class="detail-chip" *ngIf="variant.colorSize">
-                  <strong>Specs:</strong> {{ variant.colorSize }}
                 </span>
                 <span class="detail-chip" *ngIf="variant.packing">
                   <strong>Pack:</strong> {{ variant.packing }}

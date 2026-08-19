@@ -286,7 +286,7 @@ export class OrdersPage implements OnInit {
   }
 
   variantLabel(v: ProductVariant): string {
-    return [v.model, v.wattage, v.type, v.dimension].filter(Boolean).join(' · ') || 'Variant';
+    return [v.wattage, v.type, v.dimension].filter(Boolean).join(' · ') || 'Variant';
   }
 
   onNewProductChange() {

@@ -1018,13 +1018,10 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   private variantKey(variant?: ProductVariant, lightColour?: string): string {
     if (!variant && !lightColour) return '';
     return [
-      variant?.model,
       variant?.wattage,
       variant?.type,
       variant?.dimension,
       variant?.cutout,
-      variant?.colorSize,
-      variant?.bodyColour,
       variant?.packing,
       variant?.price,
       variant?.pricePerMtr,
@@ -1151,12 +1148,9 @@ export class DealerPanelPage implements OnInit, OnDestroy {
       parts.push(/mm/i.test(d) ? d : `${d} mm`);
     }
 
-    const colour = variant.bodyColour || variant.colorSize;
-    if (colour && colour.trim()) parts.push(colour.trim());
-
     if (variant.pricePerMtr) parts.push('per mtr');
 
-    if (parts.length === 0) parts.push(variant.model || 'Variant');
+    if (parts.length === 0) parts.push('Variant');
     return parts.join(' · ');
   }
 
@@ -1302,7 +1296,7 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     const checkoutItems = this.orderItems.map(item => ({
       id: item.product.id,
       name: item.product.name,
-      sku: 'SKU: ' + (item.variant?.model || item.product.id),
+      sku: 'SKU: ' + item.product.id,
       image: item.product.image,
       quantity: item.quantity,
       unitPrice: item.unitPrice,

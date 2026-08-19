@@ -96,23 +96,14 @@ const NOT_A_COLOUR = /^(fixtures?|reflectors?|n\/?a|-|dimension)$/i;
 /**
  * The finishes a product is sold in.
  *
- * The admin's own list wins once it is set. Until then the list is read off
- * whatever the import left on the variants, so a product that has never been
- * edited still offers its finishes instead of none. The variants are unioned:
- * one list serves the whole product, which is how the product form presents it.
+ * One list serves the whole product. It is set on the product form, and was
+ * seeded from the price sheet's BODY COLOUR column by the 2026 catalogue
+ * migration — which also parsed whatever the old per-variant text said, so
+ * nothing was lost when that field went away.
  */
-export function orderableBodyColours(product: {
-  bodyColours?: string[];
-  variants?: { bodyColour?: string }[];
-}): string[] {
+export function orderableBodyColours(product: { bodyColours?: string[] }): string[] {
   const picked = (product.bodyColours || []).map(c => c.trim()).filter(Boolean);
-  if (picked.length) return dedupe(picked).filter(c => !NOT_A_COLOUR.test(c));
-
-  const fromVariants: string[] = [];
-  for (const variant of product.variants || []) {
-    fromVariants.push(...parseBodyColours(variant.bodyColour));
-  }
-  return dedupe(fromVariants).filter(c => !NOT_A_COLOUR.test(c));
+  return dedupe(picked).filter(c => !NOT_A_COLOUR.test(c));
 }
 
 /**

@@ -1109,3 +1109,71 @@
   line-height: 1.45;
   color: var(--g-text-soft);
 }
+
+/* ---- The options table ----
+   Was ten equal boxes with the field name inside each as placeholder text, so
+   nothing could be scanned down a column and a placeholder vanished the moment
+   anything was typed. Now the names sit once in a header and the rows line up
+   under them, which is how the price sheet itself reads. */
+.v-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 6px;
+}
+.v-head-badge { flex: 0 0 34px; }
+.v-h {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--g-text-soft, #6b7280);
+  em {
+    font-style: normal;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: .65;
+  }
+}
+/* The columns and the inputs under them share these widths, so a heading always
+   sits over the box it names. */
+.v-h-wattage, .v-in-wattage { flex: 0 0 72px; }
+.v-h-type,    .v-in-type    { flex: 1 1 130px; min-width: 0; }
+.v-h-dim,     .v-in-dim     { flex: 1 1 120px; min-width: 0; }
+.v-h-cut,     .v-in-cut     { flex: 0 0 74px; }
+.v-h-pack,    .v-in-pack    { flex: 0 0 74px; }
+.v-h-price,   .v-price-cell { flex: 0 0 148px; }
+
+.v-price-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.v-in-price { flex: 1 1 auto; min-width: 0; }
+
+/* The unit sits with the number rather than in a column of its own: it is a
+   property of that rate, not another rate. */
+.v-per-mtr {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--g-text-soft, #6b7280);
+  cursor: pointer;
+  user-select: none;
+  input { margin: 0; cursor: pointer; }
+}
+
+.no-variants-placeholder {
+  text-align: center;
+  padding: 22px 18px;
+  color: var(--g-text-soft, #6b7280);
+  border: 1px dashed var(--g-border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}

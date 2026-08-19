@@ -93,10 +93,7 @@ export function specDetails(variant: ProductVariant): SpecDetail[] {
   const size = dimensionLabel(variant);
   if (size) rows.push({ label: 'Dimension', value: size });
   push('Cut-out', variant.cutout);
-  push('Model', variant.model);
   push('Type', variant.type);
-  push('Size', variant.colorSize);
-  push('Body Colour', variant.bodyColour);
   push('Packing', variant.packing);
   return rows;
 }
@@ -108,10 +105,10 @@ function clean(value?: string): string {
 /**
  * What a tab reads when the option carries neither a wattage nor a rating.
  *
- * The model is the option's name — "CB DELTA" is what the catalogue calls that
- * one fitting — so it comes first, and the specs that merely describe it come
- * after. A type that is a shape or a technology ("Round", "2 WAY") sits far
- * down the list: it is a poor name, but still a better tab than a number.
+ * The type is the sub-family the option belongs to — "METAL SPOT", "TRACK - PC"
+ * — which is the only remaining name a tab can take once the option carries no
+ * wattage. A shape or a technology ("Round", "2 WAY") is a poor name, but still
+ * a better tab than a number.
  *
  * The size is not on the list at all, here or in the separators below. It is a
  * measurement rather than a way of choosing, it is long enough to push a tab
@@ -123,11 +120,7 @@ function clean(value?: string): string {
  * tab than a line of noise.
  */
 function fallbackLabel(variant: ProductVariant, index: number): string {
-  return clean(variant.model)
-    || clean(variant.type)
-    || clean(variant.colorSize)
-    || clean(variant.bodyColour)
-    || `Option ${index + 1}`;
+  return clean(variant.type) || `Option ${index + 1}`;
 }
 
 /**
@@ -139,10 +132,8 @@ function fallbackLabel(variant: ProductVariant, index: number): string {
  */
 const SEPARATORS: Array<(v: ProductVariant) => string> = [
   v => clean(v.type),
-  v => clean(v.bodyColour),
-  v => clean(v.colorSize),
   v => clean(v.cutout),
-  v => clean(v.model),
+  v => clean(v.dimension),
 ];
 
 /**

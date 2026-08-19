@@ -362,23 +362,42 @@
         </div>
         
         <div class="card-body-variants" formArrayName="variants" style="padding: 20px;">
-          <div *ngIf="variantsArray.controls.length === 0" class="no-variants-placeholder" style="text-align: center; padding: 24px; color: #6b7280; border: 1px dashed #e5e7eb; border-radius: 8px;">
-            No variants added yet. Click "+ Add Variant" to specify different models, wattages, or pricing.
+          <div *ngIf="variantsArray.controls.length === 0" class="no-variants-placeholder">
+            No options yet. An option is one row of the price sheet — one wattage, at one price.
+            Add one for each row this product has.
+          </div>
+
+          <!-- One header, once, instead of a placeholder repeated down every
+               row. The row below reads as a table: the eye checks a column
+               against the price sheet rather than decoding ten placeholders. -->
+          <div class="v-head" *ngIf="variantsArray.controls.length">
+            <span class="v-head-badge"></span>
+            <span class="v-h v-h-wattage">Wattage</span>
+            <span class="v-h v-h-type">Type <em>optional</em></span>
+            <span class="v-h v-h-dim">Dimension</span>
+            <span class="v-h v-h-cut">Cut-out</span>
+            <span class="v-h v-h-pack">Packing</span>
+            <span class="v-h v-h-price">Rate&nbsp;₹</span>
+            <span class="v-head-badge"></span>
           </div>
 
           <div *ngFor="let vGroup of variantsArray.controls; let i = index" [formGroupName]="i" class="variant-horizontal-form-row">
             <div class="v-row-badge">#{{ i + 1 }}</div>
             <div class="v-row-inputs">
-              <input type="text" formControlName="model" placeholder="Model (e.g. CB DELTA)" class="v-input" />
-              <input type="text" formControlName="wattage" placeholder="Wattage (7W)" class="v-input v-input-sm" />
-              <input type="text" formControlName="type" placeholder="Type (2 WAY)" class="v-input v-input-sm" />
-              <input type="text" formControlName="dimension" placeholder="Dimension (63*61)" class="v-input" />
-              <input type="text" formControlName="cutout" placeholder="Cutout (50)" class="v-input v-input-sm" />
-              <input type="text" formControlName="bodyColour" placeholder="Body Color" class="v-input" />
-              <input type="text" formControlName="colorSize" placeholder="Specs/CCT" class="v-input" />
-              <input type="text" formControlName="packing" placeholder="Packing (40)" class="v-input v-input-sm" />
-              <input type="number" formControlName="price" placeholder="Price (₹)" class="v-input v-input-price" />
-              <input type="number" formControlName="pricePerMtr" placeholder="₹/Mtr" class="v-input v-input-price" />
+              <input type="text" formControlName="wattage" placeholder="7W" class="v-input v-in-wattage" />
+              <input type="text" formControlName="type" placeholder="only if needed" class="v-input v-in-type" />
+              <input type="text" formControlName="dimension" placeholder="63*61" class="v-input v-in-dim" />
+              <input type="text" formControlName="cutout" placeholder="50" class="v-input v-in-cut" />
+              <input type="text" formControlName="packing" placeholder="40" class="v-input v-in-pack" />
+              <!-- One rate, with the unit beside it. Two price boxes meant a
+                   number could go in the wrong one and quote as zero. -->
+              <span class="v-price-cell">
+                <input type="number" formControlName="price" placeholder="580" class="v-input v-in-price" />
+                <label class="v-per-mtr" title="Charge this rate per metre instead of per piece">
+                  <input type="checkbox" formControlName="perMetre" />
+                  <span>/mtr</span>
+                </label>
+              </span>
             </div>
             <button type="button" (click)="removeVariant(i)" class="v-remove-btn" title="Remove variant">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">

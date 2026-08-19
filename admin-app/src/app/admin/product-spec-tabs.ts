@@ -93,10 +93,7 @@ export function specDetails(variant: ProductVariant): SpecDetail[] {
   const size = dimensionLabel(variant);
   if (size) rows.push({ label: 'Dimension', value: size });
   push('Cut-out', variant.cutout);
-  push('Model', variant.model);
   push('Type', variant.type);
-  push('Size', variant.colorSize);
-  push('Body Colour', variant.bodyColour);
   push('Packing', variant.packing);
   return rows;
 }
@@ -123,11 +120,7 @@ function clean(value?: string): string {
  * tab than a line of noise.
  */
 function fallbackLabel(variant: ProductVariant, index: number): string {
-  return clean(variant.model)
-    || clean(variant.type)
-    || clean(variant.colorSize)
-    || clean(variant.bodyColour)
-    || `Option ${index + 1}`;
+  return clean(variant.type) || `Option ${index + 1}`;
 }
 
 /**
@@ -139,10 +132,8 @@ function fallbackLabel(variant: ProductVariant, index: number): string {
  */
 const SEPARATORS: Array<(v: ProductVariant) => string> = [
   v => clean(v.type),
-  v => clean(v.bodyColour),
-  v => clean(v.colorSize),
   v => clean(v.cutout),
-  v => clean(v.model),
+  v => clean(v.dimension),
 ];
 
 /**
