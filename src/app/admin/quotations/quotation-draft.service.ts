@@ -85,7 +85,8 @@ export class QuotationDraftService {
    * The same descriptor the public catalogue builds, so a variant sent from
    * there can be matched back to the one in the catalogue and priced.
    */
-  variantLabel(variant: ProductVariant): string {
+  /** `omitBodyColour` drops the imported finish LIST once one has been chosen. */
+  variantLabel(variant: ProductVariant, omitBodyColour = false): string {
     const parts: string[] = [];
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
 
@@ -97,7 +98,7 @@ export class QuotationDraftService {
       parts.push(/mm/i.test(d) ? d : `${d} mm`);
     }
 
-    const colour = variant.bodyColour || variant.colorSize;
+    const colour = omitBodyColour ? variant.colorSize : (variant.bodyColour || variant.colorSize);
     if (colour && colour.trim()) parts.push(colour.trim());
 
     if (parts.length === 0) parts.push(variant.model || 'Variant');
@@ -116,11 +117,18 @@ export class QuotationDraftService {
       : (product.price || 0);
   }
 
-  /** The option and the shade, as one descriptor — what the document prints. */
-  lineLabel(variant?: ProductVariant, lightColour?: string): string {
-    const label = variant ? this.variantLabel(variant) : '';
-    if (!lightColour) return label;
-    return label ? label + ' · ' + lightColour : lightColour;
+  /**
+   * The option, the finish and the shade, as one descriptor — what the
+   * document prints.
+   *
+   * `bodyColour` is the finish that was actually chosen. When one is passed,
+   * the variant's own body-colour text is left out of the label: that text is
+   * the LIST of finishes the import recorded ("BK/WH + GBK/RG"), so printing it
+   * beside the chosen one would read as a contradiction.
+   */
+  lineLabel(variant?: ProductVariant, lightColour?: string, bodyColour?: string): string {
+    const label = variant ? this.variantLabel(variant, !!bodyColour) : '';
+    return [label, bodyColour || '', lightColour || ''].filter(p => p && p.trim()).join(' · ');
   }
 
   private productFor(sku: string): Product | undefined {
@@ -177,19 +185,22 @@ export class QuotationDraftService {
 
   // The shade is part of the key, so one option quoted in two colours is two
   // lines — exactly what the catalogue link and the dealer app now send.
-  key(product: Product, variant?: ProductVariant, lightColour?: string): string {
-    return product.id + '::' + this.lineLabel(variant, lightColour);
+  // The finish parts the lines the same way the shade does — six black and
+  // four white is two rows — but unlike the shade it never reaches unitPrice()
+  // below, because a finish does not move the price.
+  key(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): string {
+    return product.id + '::' + this.lineLabel(variant, lightColour, bodyColour);
   }
 
   /** How many of this exact line are on the quotation already. */
-  quantityOf(product: Product, variant?: ProductVariant, lightColour?: string): number {
-    const key = this.key(product, variant, lightColour);
+  quantityOf(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): number {
+    const key = this.key(product, variant, lightColour, bodyColour);
     return this.lines.find(l => l.key === key)?.quantity || 0;
   }
 
   /** Put one more of this line on, or start it at one. */
-  add(product: Product, variant?: ProductVariant, lightColour?: string) {
-    const key = this.key(product, variant, lightColour);
+  add(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
+    const key = this.key(product, variant, lightColour, bodyColour);
     const line = this.lines.find(l => l.key === key);
     if (line) {
       line.quantity += 1;
@@ -198,7 +209,7 @@ export class QuotationDraftService {
     this.lines = [...this.lines, {
       key,
       name: product.name,
-      variant: this.lineLabel(variant, lightColour),
+      variant: this.lineLabel(variant, lightColour, bodyColour),
       sku: product.id,
       image: product.image || '',
       mrp: this.unitPrice(product, variant, lightColour),
@@ -208,8 +219,8 @@ export class QuotationDraftService {
   }
 
   /** One fewer, and off the quotation entirely at zero. */
-  remove(product: Product, variant?: ProductVariant, lightColour?: string) {
-    const key = this.key(product, variant, lightColour);
+  remove(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
+    const key = this.key(product, variant, lightColour, bodyColour);
     const index = this.lines.findIndex(l => l.key === key);
     if (index < 0) return;
     if (this.lines[index].quantity > 1) this.lines[index].quantity -= 1;

@@ -86,8 +86,8 @@ export class AreaQuoteDraftService {
 
   // ---- Editing ----
 
-  variantLabel(variant: ProductVariant): string {
-    return this.base.variantLabel(variant);
+  variantLabel(variant: ProductVariant, omitBodyColour = false): string {
+    return this.base.variantLabel(variant, omitBodyColour);
   }
 
   unitPrice(product: Product, variant?: ProductVariant): number {
@@ -113,19 +113,20 @@ export class AreaQuoteDraftService {
     this.groups = this.groups.filter(g => g !== group);
   }
 
-  key(product: Product, variant?: ProductVariant): string {
-    return this.base.key(product, variant);
+  // The finish parts the lines but never the price — see QuotationDraftService.
+  key(product: Product, variant?: ProductVariant, bodyColour?: string): string {
+    return this.base.key(product, variant, undefined, bodyColour);
   }
 
   /** How many of this exact line are in this area already. */
-  quantityOf(group: AreaGroup, product: Product, variant?: ProductVariant): number {
-    const key = this.key(product, variant);
+  quantityOf(group: AreaGroup, product: Product, variant?: ProductVariant, bodyColour?: string): number {
+    const key = this.key(product, variant, bodyColour);
     return group.lines.find(l => l.key === key)?.quantity || 0;
   }
 
   /** Put one more of this line into this area, or start it at one. */
-  add(group: AreaGroup, product: Product, variant?: ProductVariant) {
-    const key = this.key(product, variant);
+  add(group: AreaGroup, product: Product, variant?: ProductVariant, bodyColour?: string) {
+    const key = this.key(product, variant, bodyColour);
     const line = group.lines.find(l => l.key === key);
     if (line) {
       line.quantity += 1;
@@ -135,7 +136,7 @@ export class AreaQuoteDraftService {
     group.lines = [...group.lines, {
       key,
       name: product.name,
-      variant: variant ? this.variantLabel(variant) : '',
+      variant: this.base.lineLabel(variant, undefined, bodyColour),
       sku: product.id,
       image: product.image || '',
       mrp: price,
@@ -147,8 +148,8 @@ export class AreaQuoteDraftService {
   }
 
   /** One fewer, and out of the area entirely at zero. */
-  remove(group: AreaGroup, product: Product, variant?: ProductVariant) {
-    const key = this.key(product, variant);
+  remove(group: AreaGroup, product: Product, variant?: ProductVariant, bodyColour?: string) {
+    const key = this.key(product, variant, bodyColour);
     const index = group.lines.findIndex(l => l.key === key);
     if (index < 0) return;
     if (group.lines[index].quantity > 1) group.lines[index].quantity -= 1;

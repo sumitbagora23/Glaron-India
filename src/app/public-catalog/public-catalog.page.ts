@@ -11,6 +11,7 @@ import { CategoryService, Category } from '../admin/category.service';
 import { QuotationService, QuotationItem, QuotationArea } from '../admin/quotation.service';
 import { CatalogShareService } from '../catalog-share.service';
 import { LightColourService } from '../admin/light-colour.service';
+import { orderableBodyColours } from '../admin/body-colours';
 
 /** One line a visitor has put on their list. */
 export interface PublicCartItem {
@@ -674,6 +675,58 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   trackByColour = (_: number, colour: string) => colour;
 
+  // ---- Body colour: the outer tab ----
+  //
+  // The finish is chosen ABOVE the wattage, because it is the coarser choice: a
+  // customer decides the fitting is going to be black before deciding which
+  // wattage of it they want. The wattage tabs, the shade rows and the quantity
+  // under them all belong to whichever finish is open.
+  //
+  // A finish is remembered per product, so opening a second card does not
+  // disturb the first. Nothing is stored for a product with only one finish (or
+  // none) — there is no choice to make, and the row is not drawn.
+  private openBodyColourByProduct: { [productId: string]: string } = {};
+
+  trackByBodyColour = (_: number, colour: string) => colour;
+
+  /** The finishes this product is sold in — empty when it has none to choose. */
+  productBodyColours(product: Product): string[] {
+    const colours = orderableBodyColours(product);
+    return colours.length > 1 ? colours : [];
+  }
+
+  /**
+   * The finish every quantity on this card is counted against.
+   *
+   * Undefined when the product has no choice of finish, which keeps the line
+   * key and the line label exactly as they were before body colours existed —
+   * an untouched product quotes the same way it always did.
+   */
+  activeBodyColour(product: Product): string | undefined {
+    const colours = this.productBodyColours(product);
+    if (!colours.length) return undefined;
+    const open = this.openBodyColourByProduct[product.id];
+    return open && colours.includes(open) ? open : colours[0];
+  }
+
+  isBodyColourOpen(product: Product, colour: string): boolean {
+    return this.activeBodyColour(product) === colour;
+  }
+
+  selectBodyColour(product: Product, colour: string) {
+    this.openBodyColourByProduct[product.id] = colour;
+  }
+
+  /**
+   * Everything asked for in one finish, across every wattage and shade under
+   * it — what the finish tab's badge shows.
+   */
+  bodyColourTotalQty(product: Product, colour: string): number {
+    const tabs = this.specTabs(product);
+    if (!tabs.length) return this.qtyInCart(product, undefined, undefined, colour);
+    return tabs.reduce((sum, tab) => sum + this.specTabTotalQty(product, tab.variant, colour), 0);
+  }
+
   // The light colours the admin picked, for this option or — with no option,
   // or one that carries none of its own — for the product.
   productLightColours(product: Product, variant?: ProductVariant): string[] {
@@ -682,7 +735,13 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   // Only the name of the light is shown — no swatch, no colour temperature.
 
-  getVariantLabel(variant: ProductVariant): string {
+  /**
+   * `omitBodyColour` is set once a finish has actually been chosen. The text
+   * the import left on the variant is the LIST of finishes ("BK/WH + GBK/RG"),
+   * so printing it beside the one that was picked reads as a contradiction:
+   * "BK/WH + GBK/RG · BK/GBK". The choice replaces the list.
+   */
+  getVariantLabel(variant: ProductVariant, omitBodyColour = false): string {
     const parts: string[] = [];
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
 
@@ -694,7 +753,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       parts.push(/mm/i.test(d) ? d : `${d} mm`);
     }
 
-    const colour = variant.bodyColour || variant.colorSize;
+    const colour = omitBodyColour ? variant.colorSize : (variant.bodyColour || variant.colorSize);
     if (colour && colour.trim()) parts.push(colour.trim());
 
     if (parts.length === 0) parts.push(variant.model || 'Variant');
@@ -740,16 +799,18 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   // The shade is part of the key, so 7W warm white and 7W cool white are two
   // lines on the list. Appended only when there IS a shade, which leaves keys
   // already saved on a visitor's device matching what they were.
-  private cartKey(product: Product, variant?: ProductVariant, lightColour?: string): string {
+  private cartKey(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): string {
     const base = product.id + '::' + (variant ? this.getVariantLabel(variant) : '');
-    return lightColour ? base + '::' + lightColour : base;
+    const withShade = lightColour ? base + '::' + lightColour : base;
+    // The finish is part of what was asked for, so it parts the lines: six in
+    // black and four in white are two rows, never one row of ten.
+    return bodyColour ? withShade + '::body:' + bodyColour : withShade;
   }
 
   /** What the request reads: the option, then the shade asked for. */
-  private lineLabel(variant?: ProductVariant, lightColour?: string): string {
-    const label = variant ? this.getVariantLabel(variant) : '';
-    if (!lightColour) return label;
-    return label ? label + ' · ' + lightColour : lightColour;
+  private lineLabel(variant?: ProductVariant, lightColour?: string, bodyColour?: string): string {
+    const parts = [variant ? this.getVariantLabel(variant, !!bodyColour) : '', bodyColour || '', lightColour || ''];
+    return parts.filter(p => p && p.trim()).join(' · ');
   }
 
   /**
@@ -765,8 +826,8 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /** How many of this exact line are already on the list (0 if none). */
-  qtyInCart(product: Product, variant?: ProductVariant, lightColour?: string): number {
-    const key = this.cartKey(product, variant, lightColour);
+  qtyInCart(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): number {
+    const key = this.cartKey(product, variant, lightColour, bodyColour);
     return this.activeItems.find(item => item.key === key)?.quantity || 0;
   }
 
@@ -774,16 +835,16 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
    * Everything asked for against one wattage tab, across all its shades — what
    * the tab's badge shows, so a closed tab still says it has something in it.
    */
-  specTabTotalQty(product: Product, variant: ProductVariant): number {
+  specTabTotalQty(product: Product, variant: ProductVariant, bodyColour?: string): number {
     const colours = this.productLightColours(product, variant);
-    if (!colours.length) return this.qtyInCart(product, variant);
-    return colours.reduce((sum, c) => sum + this.qtyInCart(product, variant, c), 0);
+    if (!colours.length) return this.qtyInCart(product, variant, undefined, bodyColour);
+    return colours.reduce((sum, c) => sum + this.qtyInCart(product, variant, c, bodyColour), 0);
   }
 
   /** Put one more of this line on the list, or start it at one. */
-  addToCart(product: Product, variant?: ProductVariant, lightColour?: string) {
+  addToCart(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
     if (!this.quotationsAllowed) return;
-    const key = this.cartKey(product, variant, lightColour);
+    const key = this.cartKey(product, variant, lightColour, bodyColour);
     const list = this.activeItems;
     const existing = list.find(item => item.key === key);
     if (existing) {
@@ -794,7 +855,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
         productId: product.id,
         name: product.name,
         image: product.image,
-        variant: this.lineLabel(variant, lightColour),
+        variant: this.lineLabel(variant, lightColour, bodyColour),
         quantity: 1
       });
     }
@@ -803,9 +864,9 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /** Step a line down, dropping it off the list at zero. */
-  removeOneFromCart(product: Product, variant?: ProductVariant, lightColour?: string) {
+  removeOneFromCart(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
     const list = this.activeItems;
-    const index = list.findIndex(item => item.key === this.cartKey(product, variant, lightColour));
+    const index = list.findIndex(item => item.key === this.cartKey(product, variant, lightColour, bodyColour));
     if (index === -1) return;
     if (list[index].quantity > 1) {
       list[index].quantity -= 1;
@@ -866,19 +927,19 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   private numpadItems: PublicCartItem[] | null = null;
 
   /** Tapping the quantity on a product, variant or shade row. */
-  openNumpad(product: Product, variant?: ProductVariant, lightColour?: string) {
+  openNumpad(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
     if (!this.quotationsAllowed) return;
     this.numpadItems = this.activeItems;
-    const label = this.lineLabel(variant, lightColour);
+    const label = this.lineLabel(variant, lightColour, bodyColour);
     this.numpadLine = {
-      key: this.cartKey(product, variant, lightColour),
+      key: this.cartKey(product, variant, lightColour, bodyColour),
       productId: product.id,
       name: product.name,
       image: product.image,
       variant: label
     };
     this.numpadTitle = label && label !== product.name ? `${product.name} · ${label}` : product.name;
-    const current = this.qtyInCart(product, variant, lightColour);
+    const current = this.qtyInCart(product, variant, lightColour, bodyColour);
     this.numpadValue = current > 0 ? String(current) : '';
     this.showNumpad = true;
   }

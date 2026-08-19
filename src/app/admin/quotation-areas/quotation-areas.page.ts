@@ -6,6 +6,7 @@ import { IonContent } from '@ionic/angular/standalone';
 import { QuotationService, CustomerQuotation } from '../quotation.service';
 import { QuoteLine } from '../quotations/quotation-draft.service';
 import { AreaQuoteDraftService, AreaGroup, MergedLine } from '../quotations/area-draft.service';
+import { orderableBodyColours } from '../body-colours';
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { CategoryService, Category } from '../category.service';
 import { orderRefDigits } from '../../order-ref';
@@ -440,8 +441,8 @@ export class QuotationAreasPage implements OnInit {
     return category.id;
   }
 
-  variantLabel(v: ProductVariant): string {
-    return this.draft.variantLabel(v);
+  variantLabel(v: ProductVariant, omitBodyColour = false): string {
+    return this.draft.variantLabel(v, omitBodyColour);
   }
 
   unitPrice(product: Product, variant?: ProductVariant): number {
@@ -450,17 +451,48 @@ export class QuotationAreasPage implements OnInit {
 
   quantityOf(product: Product, variant?: ProductVariant): number {
     const group = this.pickGroup;
-    return group ? this.draft.quantityOf(group, product, variant) : 0;
+    return group ? this.draft.quantityOf(group, product, variant, this.activeBodyColour(product)) : 0;
   }
 
   addProduct(product: Product, variant?: ProductVariant) {
     const group = this.pickGroup;
-    if (group) this.draft.add(group, product, variant);
+    if (group) this.draft.add(group, product, variant, this.activeBodyColour(product));
   }
 
   removeProduct(product: Product, variant?: ProductVariant) {
     const group = this.pickGroup;
-    if (group) this.draft.remove(group, product, variant);
+    if (group) this.draft.remove(group, product, variant, this.activeBodyColour(product));
+  }
+
+  // ---- Body colour ----
+  //
+  // The finish is chosen once per product in the picker and applies to whatever
+  // variant is stepped under it, so the admin picks "black" and then the
+  // wattages, exactly as the customer does on the catalogue card.
+  private openBodyColourByProduct: { [productId: string]: string } = {};
+
+  trackByBodyColour = (_: number, colour: string) => colour;
+
+  /** The finishes this product is sold in — empty when there is no choice. */
+  productBodyColours(product: Product): string[] {
+    const colours = orderableBodyColours(product);
+    return colours.length > 1 ? colours : [];
+  }
+
+  /** Undefined when there is no choice, which keeps the line exactly as before. */
+  activeBodyColour(product: Product): string | undefined {
+    const colours = this.productBodyColours(product);
+    if (!colours.length) return undefined;
+    const open = this.openBodyColourByProduct[product.id];
+    return open && colours.includes(open) ? open : colours[0];
+  }
+
+  isBodyColourOpen(product: Product, colour: string): boolean {
+    return this.activeBodyColour(product) === colour;
+  }
+
+  selectBodyColour(product: Product, colour: string) {
+    this.openBodyColourByProduct[product.id] = colour;
   }
 
   // ---- Small helpers ----

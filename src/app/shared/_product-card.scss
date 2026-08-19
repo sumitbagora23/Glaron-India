@@ -1,3 +1,4 @@
+@use 'body-colour';
 /* ============================================================================
    The product card — one definition, every screen.
    ----------------------------------------------------------------------------
@@ -178,6 +179,9 @@
 
    Because the open tab names the option, the sheet under it never names it a
    second time; only the ⓘ at the end of the strip is left there. */
+/* The finish pills that sit above these tabs live in _body-colour.scss —
+   the admin's area picker needs them without the rest of the card. */
+
 .spec-tab-strip {
   display: flex;
   align-items: flex-end;

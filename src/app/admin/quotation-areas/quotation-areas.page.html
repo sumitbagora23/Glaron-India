@@ -460,9 +460,20 @@
             </ng-container>
           </div>
 
+          <!-- The finish, chosen once for the product; the variants stepped
+               under it are added in whichever one is open. -->
+          <div class="body-colour-row" *ngIf="productBodyColours(product).length">
+            <button type="button" class="body-colour-tab"
+                    *ngFor="let bc of productBodyColours(product); trackBy: trackByBodyColour"
+                    [class.is-open]="isBodyColourOpen(product, bc)"
+                    (click)="selectBodyColour(product, bc)">
+              <span class="bc-text">{{ bc }}</span>
+            </button>
+          </div>
+
           <div class="qa-pick-variants" *ngIf="product.variants?.length">
             <div class="qa-pick-variant" *ngFor="let variant of product.variants; trackBy: trackByVariantIndex">
-              <span class="qa-pick-variant-label">{{ variantLabel(variant) }}</span>
+              <span class="qa-pick-variant-label">{{ variantLabel(variant, !!activeBodyColour(product)) }}</span>
               <span class="qa-pick-price" *ngIf="view === 'final'">₹{{ money(unitPrice(product, variant)) }}</span>
               <div class="qd-stepper qa-pick-step">
                 <button type="button" (click)="removeProduct(product, variant)" aria-label="One less">−</button>

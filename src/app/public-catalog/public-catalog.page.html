@@ -251,13 +251,26 @@
             <!-- Wattage reads as small tabs. The open one takes the quantity,
                  and the ⓘ beside it opens the size and the rest of the sheet. -->
             <ng-container *ngIf="specTabs(product).length">
+              <!-- The finish comes first: it is the coarser choice, and the
+                   wattage tabs under it belong to whichever one is open. Drawn
+                   only when there is something to choose between. -->
+              <div class="body-colour-row" *ngIf="productBodyColours(product).length">
+                <button class="body-colour-tab"
+                        *ngFor="let bc of productBodyColours(product); trackBy: trackByBodyColour"
+                        [class.is-open]="isBodyColourOpen(product, bc)"
+                        (click)="selectBodyColour(product, bc)">
+                  <span class="bc-text">{{ bc }}</span>
+                  <span class="bc-qty" *ngIf="bodyColourTotalQty(product, bc) > 0">{{ bodyColourTotalQty(product, bc) }}</span>
+                </button>
+              </div>
+
               <div class="spec-tab-strip">
                 <div class="spec-tab-row">
                   <button class="spec-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
                           [class.is-open]="isSpecTabOpen(product, tab)"
                           (click)="selectSpecTab(tab)">
                     <span class="spec-tab-text">{{ tab.detail }}</span>
-                    <span class="spec-tab-qty" *ngIf="specTabTotalQty(product, tab.variant) > 0">{{ specTabTotalQty(product, tab.variant) }}</span>
+                    <span class="spec-tab-qty" *ngIf="specTabTotalQty(product, tab.variant, activeBodyColour(product)) > 0">{{ specTabTotalQty(product, tab.variant, activeBodyColour(product)) }}</span>
                   </button>
                 </div>
                 <!-- The ⓘ rides at the end of the strip rather than inside the
@@ -284,32 +297,32 @@
                   <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
 
                   <ng-container *ngIf="canAddProducts">
-                    <button class="add-pill compact" *ngIf="qtyInCart(product, tab.variant, colour) === 0" (click)="addToCart(product, tab.variant, colour)">
+                    <button class="add-pill compact" *ngIf="qtyInCart(product, tab.variant, colour, activeBodyColour(product)) === 0" (click)="addToCart(product, tab.variant, colour, activeBodyColour(product))">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
                       </svg>
                       <span>Add</span>
                     </button>
-                    <div class="qty-stepper-box compact" *ngIf="qtyInCart(product, tab.variant, colour) > 0">
-                      <button class="qty-btn" (click)="removeOneFromCart(product, tab.variant, colour)" aria-label="Remove one">&minus;</button>
-                      <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant, colour)" aria-label="Type a quantity">{{ qtyInCart(product, tab.variant, colour) }}</button>
-                      <button class="qty-btn" (click)="addToCart(product, tab.variant, colour)" aria-label="Add one">+</button>
+                    <div class="qty-stepper-box compact" *ngIf="qtyInCart(product, tab.variant, colour, activeBodyColour(product)) > 0">
+                      <button class="qty-btn" (click)="removeOneFromCart(product, tab.variant, colour, activeBodyColour(product))" aria-label="Remove one">&minus;</button>
+                      <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant, colour, activeBodyColour(product))" aria-label="Type a quantity">{{ qtyInCart(product, tab.variant, colour, activeBodyColour(product)) }}</button>
+                      <button class="qty-btn" (click)="addToCart(product, tab.variant, colour, activeBodyColour(product))" aria-label="Add one">+</button>
                     </div>
                   </ng-container>
                 </div>
 
                 <!-- No shades on this product: the option is asked for as it is. -->
                 <div class="light-colour-row no-name" *ngIf="canAddProducts && !productLightColours(product, tab.variant).length">
-                  <button class="add-pill compact" *ngIf="qtyInCart(product, tab.variant) === 0" (click)="addToCart(product, tab.variant)">
+                  <button class="add-pill compact" *ngIf="qtyInCart(product, tab.variant, undefined, activeBodyColour(product)) === 0" (click)="addToCart(product, tab.variant, undefined, activeBodyColour(product))">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="add-ic">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
                     </svg>
                     <span>Add</span>
                   </button>
-                  <div class="qty-stepper-box compact" *ngIf="qtyInCart(product, tab.variant) > 0">
-                    <button class="qty-btn" (click)="removeOneFromCart(product, tab.variant)" aria-label="Remove one">&minus;</button>
-                    <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant)" aria-label="Type a quantity">{{ qtyInCart(product, tab.variant) }}</button>
-                    <button class="qty-btn" (click)="addToCart(product, tab.variant)" aria-label="Add one">+</button>
+                  <div class="qty-stepper-box compact" *ngIf="qtyInCart(product, tab.variant, undefined, activeBodyColour(product)) > 0">
+                    <button class="qty-btn" (click)="removeOneFromCart(product, tab.variant, undefined, activeBodyColour(product))" aria-label="Remove one">&minus;</button>
+                    <button class="qty-number qty-number-btn" (click)="openNumpad(product, tab.variant, undefined, activeBodyColour(product))" aria-label="Type a quantity">{{ qtyInCart(product, tab.variant, undefined, activeBodyColour(product)) }}</button>
+                    <button class="qty-btn" (click)="addToCart(product, tab.variant, undefined, activeBodyColour(product))" aria-label="Add one">+</button>
                   </div>
                 </div>
               </div>
