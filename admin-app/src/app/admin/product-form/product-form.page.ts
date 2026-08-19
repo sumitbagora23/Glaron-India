@@ -302,12 +302,17 @@ export class ProductFormPage implements OnInit {
     return value ? value : '';
   }
 
-  // What an empty box means under an option's tab: the product's own price for
-  // that shade still applies, so it is shown there rather than a bare 0.
-  pricePlaceholder(colour: string): string {
-    if (this.lightColourTab < 0) return '0';
-    const shared = this.lightColourPrices[colour];
-    return shared > 0 ? String(shared) : '0';
+  /**
+   * What a blank box means: the shade sells at the option's own rate.
+   *
+   * Shown as that rate rather than a bare 0, so it is obvious the shade is
+   * priced at all — the rope reads 104 behind an empty box and 120 in the box
+   * for multi, which is exactly what the sheet says.
+   */
+  pricePlaceholder(_colour: string): string {
+    const first = this.variantsArray.length ? this.variantsArray.at(0).value : null;
+    const rate = Number(first?.price) || Number(this.productForm?.get('price')?.value) || 0;
+    return rate > 0 ? String(rate) : '0';
   }
 
   setLightColourPrice(colour: string, event: Event) {
