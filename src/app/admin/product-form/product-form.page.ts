@@ -315,6 +315,65 @@ export class ProductFormPage implements OnInit {
     return rate > 0 ? String(rate) : '0';
   }
 
+// ---- Rates that differ by option ----
+  //
+  // A shade rate held on the PRODUCT is absolute, so on a product with several
+  // options it would quote the same figure for every one of them — the same
+  // number for a 7W and an 18W whose own rates are Rs.740 and Rs.1420. That is
+  // only safe where there is one option, which is why a product with more than
+  // one is priced in the grid below instead: a rate per shade PER OPTION,
+  // written to that option and read back before the product's.
+
+  /** True when shade rates have to be given per option rather than once. */
+  get pricesByOption(): boolean {
+    return this.variantsArray.length > 1 && this.selectedLightColours.length > 0;
+  }
+
+  /** The options across the top of the grid, labelled as the card labels them. */
+  get rateOptions(): { index: number; label: string; rate: number }[] {
+    return this.variantsArray.controls.map((c, i) => {
+      const v = c.value || {};
+      return {
+        index: i,
+        label: (v.wattage || '').trim() || `Option ${i + 1}`,
+        rate: Number(v.price) || 0
+      };
+    });
+  }
+
+  private optionPrices(index: number): { [colour: string]: number } {
+    const group = this.variantsArray.at(index) as FormGroup | null;
+    return (group?.get('lightColourPrice')?.value as { [colour: string]: number }) || {};
+  }
+
+  /** What is typed in one cell — blank when the shade sells at the option's rate. */
+  shadeRate(index: number, colour: string): number | string {
+    const value = this.optionPrices(index)[colour];
+    return value > 0 ? value : '';
+  }
+
+  /** A blank cell means the option's own rate, so that is what it shows. */
+  shadeRatePlaceholder(index: number): string {
+    const rate = this.rateOptions[index]?.rate || 0;
+    return rate > 0 ? String(rate) : '0';
+  }
+
+  setShadeRate(index: number, colour: string, event: Event) {
+    const group = this.variantsArray.at(index) as FormGroup | null;
+    if (!group) return;
+    const raw = (event.target as HTMLInputElement).value;
+    const value = Number(raw);
+    const prices = { ...this.optionPrices(index) };
+    if (!raw.trim() || !isFinite(value) || value <= 0) delete prices[colour];
+    else prices[colour] = value;
+    // The option must also carry the shade list, or the price would sit on an
+    // option that does not offer the shade it prices.
+    group.patchValue({
+      lightColourPrice: prices,
+      lightColours: [...this.selectedLightColours]
+    });
+  }
+
   setLightColourPrice(colour: string, event: Event) {
     const raw = (event.target as HTMLInputElement).value;
     const value = Number(raw);

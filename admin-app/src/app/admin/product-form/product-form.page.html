@@ -204,7 +204,8 @@
                      that way — the rope is Rs.104 in white and Rs.120 in multi,
                      PC Concealed is Rs.140 in white and Rs.180 in 3-in-1 — and
                      without this box those rates could only be set in code. -->
-                <div class="lc-selected-list" *ngIf="selectedLightColours.length">
+                <!-- One option: the rate can be held once on the product. -->
+                <div class="lc-selected-list" *ngIf="selectedLightColours.length && !pricesByOption">
                   <div class="lc-selected-row" *ngFor="let c of selectedLightColours">
                     <span class="lc-selected-name"><span class="lc-swatch" [style.background]="swatch(c)"></span>{{ c }}</span>
                     <div class="lc-extra-box">
@@ -216,11 +217,42 @@
                   </div>
                 </div>
 
+                <!-- Several options: a rate per shade PER OPTION. A single rate
+                     held on the product would quote the same figure for a 7W
+                     and an 18W, whose own rates are far apart. -->
+                <div class="lc-grid-wrap" *ngIf="pricesByOption">
+                  <table class="lc-grid">
+                    <thead>
+                      <tr>
+                        <th class="lc-grid-shade">Shade</th>
+                        <th *ngFor="let o of rateOptions">
+                          {{ o.label }}
+                          <small *ngIf="o.rate">Rs.{{ o.rate }}</small>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let c of selectedLightColours">
+                        <td class="lc-grid-shade">
+                          <span class="lc-swatch" [style.background]="swatch(c)"></span>{{ c }}
+                          <button type="button" class="chip-remove" (click)="toggleLightColour(c)" aria-label="Remove">&times;</button>
+                        </td>
+                        <td *ngFor="let o of rateOptions">
+                          <input type="number" min="0" class="lc-grid-input"
+                                 [placeholder]="shadeRatePlaceholder(o.index)"
+                                 [value]="shadeRate(o.index, c)"
+                                 (input)="setShadeRate(o.index, c, $event)" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
                 <span class="input-hint-text">
                   The shades this product is sold in. Leave empty for anything with no shade to
-                  choose — a driver, a profile, an accessory. The box beside a shade is its own
-                  rate: leave it blank and the shade sells at the option's rate; fill it in and
-                  enter the full rate, not the difference.
+                  choose — a driver, a profile, an accessory. A rate box is the full rate for
+                  that shade, not a difference; leave it blank and the shade sells at the
+                  option's own rate, shown greyed behind it.
                 </span>
               </div>
 
