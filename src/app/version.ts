@@ -6,4 +6,4 @@
 //    update the matching "version" in ngsw-config.json's `appData` so the PWA
 //    update banner announces the new version number.
 // ────────────────────────────────────────────────────────────────────────────
-export const APP_VERSION = '1.2.176';
+export const APP_VERSION = '1.2.177';
