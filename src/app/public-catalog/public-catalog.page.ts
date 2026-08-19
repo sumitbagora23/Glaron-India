@@ -262,6 +262,15 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.ref = this.route.snapshot.paramMap.get('ref') || '';
+    // The catalogue site's own address carries no link code, and a ref-less
+    // visit is otherwise read as a dealer's share — browse only, with no list,
+    // no rooms and no compare. But this address is Glaron's, not a dealer's:
+    // someone who typed it in is Glaron's own customer and may ask Glaron for
+    // a price. So the bare site stands in for the generic area-wise link,
+    // which is the one that can do everything.
+    if (!this.ref && typeof location !== 'undefined' && location.hostname.includes('catalogue')) {
+      this.ref = 'qa-' + this.catalogShare.linkCode('');
+    }
     // The link is shared as "Glaron India Catalogue"; the page it opens says so
     // too, in the browser tab and in whatever preview a chat app renders.
     this.title.setTitle('Glaron India Catalogue');
