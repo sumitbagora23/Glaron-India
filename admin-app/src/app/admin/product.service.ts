@@ -117,6 +117,15 @@ export interface Product {
    * they share, so nothing told Eco from Pure Copper.
    */
   ropeStripFixed?: boolean;
+  /**
+   * Set once the ball light's auto option carries its own shade.
+   *
+   * The sheet heads that table "BALL LIGHT WW", so the product is warm white —
+   * but the 4-way auto option is the one that cycles red, green, blue and
+   * pink, and it is the only option on the range that differs from its
+   * product this way.
+   */
+  ballRgbpFixed?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -1636,7 +1645,10 @@ export class ProductService {
           "dimension": "74*74*44",
           "packing": "20",
           "price": 620,
-          "wattage": "4WAY AUTO RGBP"
+          "wattage": "4WAY AUTO RGBP",
+          "lightColours": [
+            "RGBP"
+          ]
         }
       ],
       "bodyColours": [
@@ -2794,6 +2806,22 @@ export class ProductService {
     return true;
   }
 
+  /**
+   * Gives the ball light's auto option the shade it actually cycles.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyBallRgbp(p: Product): boolean {
+    if (p.ballRgbpFixed) return false;
+    if (p.id === 'GLR-BALL-42') {
+      for (const v of (p.variants || [])) {
+        if (/RGBP/i.test(String(v.wattage || ''))) v.lightColours = ['RGBP'];
+      }
+    }
+    p.ballRgbpFixed = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2894,6 +2922,10 @@ export class ProductService {
             if (this.applyRopeStripFix(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the ball light's auto option cycling RGBP.
+            if (this.applyBallRgbp(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -2964,6 +2996,7 @@ export class ProductService {
           this.applyCatalogueTidy(p);
           this.applyWarranty(p);
           this.applyRopeStripFix(p);
+          this.applyBallRgbp(p);
           return p;
         });
         // Keep the superseded duplicates off the first paint too, or they show

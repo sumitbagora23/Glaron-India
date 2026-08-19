@@ -37,7 +37,9 @@ export const LIGHT_COLOUR_OPTIONS: string[] = [
   'Amber',
   'Pink',
   'Ice Blue',
-  'Multi'
+  'Multi',
+  // The ball light's auto-changing option cycles these four.
+  'RGBP'
 ];
 
 /**
@@ -86,6 +88,7 @@ const NAMED_STOPS: Record<string, string[]> = {
   'golden': ['#f0b429'],
   // Sold in more than one shade at once, so the box carries all of them.
   '3 in 1': ['#ffc98a', '#ffeed4', '#dcefff'],
+  'rgbp': ['#ff4d4d', '#35d07f', '#35b7ff', '#ff4d9e'],
   '3in1': ['#ffc98a', '#ffeed4', '#dcefff'],
   '3 in one': ['#ffc98a', '#ffeed4', '#dcefff'],
   'three in one': ['#ffc98a', '#ffeed4', '#dcefff'],
