@@ -27,7 +27,17 @@ export const LIGHT_COLOUR_OPTIONS: string[] = [
   'Warm White',
   'Natural White',
   '3 In 1',
-  'Smart'
+  'Dimmable-Tunable',
+  'Smart',
+  // The rope's own range. It is the one product sold in actual colours rather
+  // than colour temperatures, and the sheet lists these for it by name.
+  'Blue',
+  'Green',
+  'Red',
+  'Amber',
+  'Pink',
+  'Ice Blue',
+  'Multi'
 ];
 
 /**

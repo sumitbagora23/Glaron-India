@@ -82,6 +82,23 @@ export interface Product {
    * word "LED" beside a real wattage and is simply dropped.
    */
   optionFieldMerged?: boolean;
+  /**
+   * Set once the shades have been assigned from the 1 July 2026 catalogue:
+   * the full indoor range on the COBs, panels, cylinders, track and surface
+   * fittings; warm white on the decorative outdoor ones; cool white on the
+   * rest; the rope's own colours; and none at all on a driver or a profile.
+   */
+  lightColours2026?: boolean;
+  /**
+   * Set once the track rail has been taken off the tracklight.
+   *
+   * The rail is not a fitting: it is sold by the metre, in black or white, and
+   * a dealer picks it separately. It lived as two rows on the tracklight
+   * reading "1M | 2M", which is a length rather than a wattage. Those rows are
+   * removed here and the rail is now PC Track and Metal Track, two products of
+   * their own.
+   */
+  trackSplit?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -129,7 +146,7 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-DELT-3.webp",
-      "description": "TM. Delta. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63\u00d761 mm / 82\u00d779 mm / 90\u00d788 mm. 50 mm / 72 mm / 78 mm. 3000k / 4000k / 6500k. Available. 24\u00b0 / 38\u00b0 / 38\u00b0. > 80. Aluminium. Black / White. N/A. 2 YEARS",
+      "description": "TM. Delta. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63×61 mm / 82×79 mm / 90×88 mm. 50 mm / 72 mm / 78 mm. 3000k / 4000k / 6500k. Available. 24° / 38° / 38°. > 80. Aluminium. Black / White. N/A. 2 YEARS",
       "variants": [
         {
           "wattage": "7W",
@@ -156,6 +173,13 @@ export class ProductService {
       "bodyColours": [
         "WHITE",
         "BLACK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -170,7 +194,7 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-CURV-4.webp",
-      "description": "TM. Curve. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 70\u00d750 mm / 85\u00d765 mm / 95\u00d775 mm. 65 mm / 80 mm / 90 mm. 3000k / 4000k / 6500k. Available. 24\u00b0. >80. Aluminium. BK / WH. RG / GBK / MW / MB. 2 YEARS",
+      "description": "TM. Curve. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 70×50 mm / 85×65 mm / 95×75 mm. 65 mm / 80 mm / 90 mm. 3000k / 4000k / 6500k. Available. 24°. >80. Aluminium. BK / WH. RG / GBK / MW / MB. 2 YEARS",
       "variants": [
         {
           "wattage": "7W",
@@ -203,6 +227,13 @@ export class ProductService {
         "WH/GBK",
         "WH/MW",
         "WH/MB"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -217,7 +248,7 @@ export class ProductService {
       "price": 670,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-GEM-5.webp",
-      "description": "TM TM. Gem. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 73\u00d761 mm / 85\u00d767 mm / 93\u00d773 mm. 65 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24\u00b0 / 38\u00b0 / 38\u00b0. >80. Aluminium. BK / WH. GBK / RG. 2 YEARS",
+      "description": "TM TM. Gem. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 73×61 mm / 85×67 mm / 93×73 mm. 65 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38° / 38°. >80. Aluminium. BK / WH. GBK / RG. 2 YEARS",
       "variants": [
         {
           "wattage": "7W",
@@ -244,6 +275,13 @@ export class ProductService {
       "bodyColours": [
         "BK/GBK",
         "WH/RG"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -258,12 +296,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-GLAR-6.webp",
-      "description": "TM. Glare. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 55 \u00d7 55 \u00d7 60 mm / 55 \u00d7 55 \u00d7 70 mm. 50 mm. 3000k / 4000k / 6500k. Available. 38\u00b0. >80. Aluminium Die-casting. MW / MB / RG / SILVER / GB. N/A. 2 YEARS",
+      "description": "TM. Glare. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 55 × 55 × 60 mm / 55 × 55 × 70 mm. 50 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. MW / MB / RG / SILVER / GB. N/A. 2 YEARS",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -278,7 +323,7 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-DELT-7.webp",
-      "description": "TM. Delta Pro. 2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 75 \u00d7 60 mm / 85 \u00d7 76 mm / 95 \u00d7 100 mm. 65 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24\u00b0 / 38\u00b0. >80. Aluminium Die-casting. BK / WH. GBK / RGD / GD / CH",
+      "description": "TM. Delta Pro. 2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 75 × 60 mm / 85 × 76 mm / 95 × 100 mm. 65 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. BK / WH. GBK / RGD / GD / CH",
       "variants": [
         {
           "wattage": "7W",
@@ -305,6 +350,13 @@ export class ProductService {
       "bodyColours": [
         "WHITE",
         "BLACK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -319,12 +371,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-VOGU-8.webp",
-      "description": "TM. Vogue. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 42 \u00d7 42 \u00d7 60 mm / 62 \u00d7 62 \u00d7 60 mm. 35 mm / 55 mm. 3000k / 4000k / 6500k. Available. 36\u00b0. >80. Aluminium Die-casting. MW / MB. N/A. 2 YEARS",
+      "description": "TM. Vogue. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 42 × 42 × 60 mm / 62 × 62 × 60 mm. 35 mm / 55 mm. 3000k / 4000k / 6500k. Available. 36°. >80. Aluminium Die-casting. MW / MB. N/A. 2 YEARS",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -339,12 +398,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-GLON-9.webp",
-      "description": "TM. 2 YEARS. Glon. FOCUSED PERFORMANCE.. PREMIUM FINISH.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63 \u00d7 63 \u00d7 43 mm / 80 \u00d7 80 \u00d7 44 mm / 94 \u00d7 84 \u00d7 51 mm. 55 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 38\u00b0. N/A. Aluminium Die-casting. MW / MB / RG / SB / ANTIQUE BRASS. N/A",
+      "description": "TM. 2 YEARS. Glon. FOCUSED PERFORMANCE.. PREMIUM FINISH.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63 × 63 × 43 mm / 80 × 80 × 44 mm / 94 × 84 × 51 mm. 55 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 38°. N/A. Aluminium Die-casting. MW / MB / RG / SB / ANTIQUE BRASS. N/A",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -359,12 +425,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-ELEG-10.webp",
-      "description": "TM. Elegance. 2 YEARS. WHERE DESIGN MEETS LIGHT.. WHERE QUALITY LASTS.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 68 \u00d7 66 mm / 83 \u00d7 75 mm / 93 \u00d7 85 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24\u00b0 / 38\u00b0. >80. Aluminium Die-casting. White / Black. N/A",
+      "description": "TM. Elegance. 2 YEARS. WHERE DESIGN MEETS LIGHT.. WHERE QUALITY LASTS.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 68 × 66 mm / 83 × 75 mm / 93 × 85 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. White / Black. N/A",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -379,12 +452,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-ORBI-11.webp",
-      "description": "TM. 2 YEARS. Orbit. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63 \u00d7 32 mm / 80 \u00d7 40 mm / 95 \u00d7 40 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24\u00b0 / 38\u00b0. >80. Aluminium Die-casting. White / Black. N/A",
+      "description": "TM. 2 YEARS. Orbit. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63 × 32 mm / 80 × 40 mm / 95 × 40 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. White / Black. N/A",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -399,12 +479,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-PRIS-12.webp",
-      "description": "Prism. 2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 68 \u00d7 48 mm / 83 \u00d7 55 mm / 93 \u00d7 60 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24\u00b0 / 38\u00b0. >80. Aluminium Die-casting. BK / WH. RGD / GBK. TM",
+      "description": "Prism. 2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 68 × 48 mm / 83 × 55 mm / 93 × 60 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. BK / WH. RGD / GBK. TM",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -419,12 +506,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-DUO-13.webp",
-      "description": "2 YEARS. TM. Duo. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2\u00d710W / 2\u00d715W. N/A. 113\u00d755mm / 153\u00d775mm. 3000k / 4000k / 6500k. Available. 36\u00b0. >80. Aluminium Die-casting. Black / White. N/A",
+      "description": "2 YEARS. TM. Duo. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2×10W / 2×15W. N/A. 113×55mm / 153×75mm. 3000k / 4000k / 6500k. Available. 36°. >80. Aluminium Die-casting. Black / White. N/A",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -439,12 +533,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-DUOR-14.webp",
-      "description": "2 YEARS. TM. Duo R. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2*7W / 2*12W. 68 x 134mm / 85 x 170mm. 55 x 122mm / 75 x 160mm. 3000k / 4000k / 6500k. Available. 36\u00b0. >80. Aluminium Die-casting. MW / BK. GBK / RG / WH",
+      "description": "2 YEARS. TM. Duo R. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2*7W / 2*12W. 68 x 134mm / 85 x 170mm. 55 x 122mm / 75 x 160mm. 3000k / 4000k / 6500k. Available. 36°. >80. Aluminium Die-casting. MW / BK. GBK / RG / WH",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -459,7 +560,7 @@ export class ProductService {
       "price": 665,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-MOVA-15.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W / 30W. 85\u00d740 mm / 108\u00d750 mm / 135\u00d780 mm / 150\u00d7100 mm. 80 mm / 100 mm / 120 mm / 132 mm. 3000k / 4000k / 6500k. No. 38\u00b0/60\u00b0. >80. Aluminium. White. N/A. TM. Movable",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W / 30W. 85×40 mm / 108×50 mm / 135×80 mm / 150×100 mm. 80 mm / 100 mm / 120 mm / 132 mm. 3000k / 4000k / 6500k. No. 38°/60°. >80. Aluminium. White. N/A. TM. Movable",
       "variants": [
         {
           "wattage": "12W",
@@ -485,6 +586,13 @@ export class ProductService {
       ],
       "bodyColours": [
         "WHITE"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -499,12 +607,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-PULL-16.webp",
-      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. Shape. 7W / 12W / 2 x 7W / 2 \u00d7 12W. 68 \u00d7 48 mm / 83 \u00d7 55 mm / 93 \u00d7 60 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. No. 24\u00b0 / 38\u00b0. >80. Aluminium Die-casting. BK / WH. N/A. Round/Square. Pull Out",
+      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. Shape. 7W / 12W / 2 x 7W / 2 × 12W. 68 × 48 mm / 83 × 55 mm / 93 × 60 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. No. 24° / 38°. >80. Aluminium Die-casting. BK / WH. N/A. Round/Square. Pull Out",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -519,12 +634,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-LINE-17.webp",
-      "description": "2 YEARS. TM. EVERY SPACE SHINES.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 6W / 8W / 12W. 68 \u00d7 45 \u00d7 32 mm / 95 \u00d7 45 \u00d7 32 mm / 146 \u00d7 45 \u00d7 32 mm. 58 \u00d7 35 mm / 85 \u00d7 35 mm / 137 \u00d7 35 mm. 3000k / 4000k / 6500k. Available. 38\u00b0. >80. Aluminium Die-casting. PKW / BK. MW / MB / RG / GB. Linea",
+      "description": "2 YEARS. TM. EVERY SPACE SHINES.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 6W / 8W / 12W. 68 × 45 × 32 mm / 95 × 45 × 32 mm / 146 × 45 × 32 mm. 58 × 35 mm / 85 × 35 mm / 137 × 35 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. PKW / BK. MW / MB / RG / GB. Linea",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -564,6 +686,13 @@ export class ProductService {
         "BLACK",
         "WHITE",
         "RGD"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -601,6 +730,13 @@ export class ProductService {
           "packing": "20",
           "price": 1200
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -615,7 +751,7 @@ export class ProductService {
       "price": 850,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-NEXU-20.webp",
-      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W. 85\u00d745 mm / 100\u00d748 mm / 130\u00d748 mm. 75 mm / 92 mm / 120 mm /140 mm. 3000k / 4000k / 6500k. Available. N/A. >80. Aluminium. WH / BK. WH/ SB / RG / MB /MW. Nexus Pro",
+      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W. 85×45 mm / 100×48 mm / 130×48 mm. 75 mm / 92 mm / 120 mm /140 mm. 3000k / 4000k / 6500k. Available. N/A. >80. Aluminium. WH / BK. WH/ SB / RG / MB /MW. Nexus Pro",
       "variants": [
         {
           "wattage": "7W",
@@ -646,6 +782,13 @@ export class ProductService {
         "BK/WH",
         "BK/SB",
         "BK/RG"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -660,12 +803,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-NEXU-21.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 18W / 24W. 92 \u00d7 75 mm / 122 \u00d7 75 mm / 142 \u00d7 75 mm. N/A. 3000k / 4000k / 6500k. N/A. 120\u00b0. >80. Aluminium Die-casting. PKW / BK. WH / SB / RG / MB / MW. TM. Nexus surface",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 18W / 24W. 92 × 75 mm / 122 × 75 mm / 142 × 75 mm. N/A. 3000k / 4000k / 6500k. N/A. 120°. >80. Aluminium Die-casting. PKW / BK. WH / SB / RG / MB / MW. TM. Nexus surface",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -680,7 +830,7 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-NOVA-22.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W. 51 x 51 x 45 / 80 \u00d7 80 \u00d7 46 mm / 90 \u00d7 90 \u00d7 48 mm / 128 \u00d7 128 \u00d7 50 mm. N/A. 3000k / 4000k / 6500k. N/A. 38\u00b0. >80. Aluminium Die-casting. PKW / BK. N/A. TM. Nova",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W / 24W. 51 x 51 x 45 / 80 × 80 × 46 mm / 90 × 90 × 48 mm / 128 × 128 × 50 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. PKW / BK. N/A. TM. Nova",
       "variants": [
         {
           "wattage": "50W",
@@ -694,6 +844,13 @@ export class ProductService {
           "packing": "10",
           "price": 2860
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -708,7 +865,7 @@ export class ProductService {
       "price": 140,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-CONC-23.webp",
-      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 108\u00d753 mm. 70 mm. 3000K / 4000K. No. N/A. >80. Polycarbonate. White. N/A. Concealed",
+      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 108×53 mm. 70 mm. 3000K / 4000K. No. N/A. >80. Polycarbonate. White. N/A. Concealed",
       "variants": [
         {
           "wattage": "7W",
@@ -738,6 +895,13 @@ export class ProductService {
           "packing": "200",
           "price": 180
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -752,7 +916,7 @@ export class ProductService {
       "price": 210,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-TRAC-24.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Track channel. 10W / 20W / 30W. 50\u00d7125 mm / 65\u00d7150 mm / 75\u00d7180 mm. N/A. 3000k / 4000k / 6500k. No. N/A. >80. Aluminium. Black / White. 1M / 2M. TM. Tracklight",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Track channel. 10W / 20W / 30W. 50×125 mm / 65×150 mm / 75×180 mm. N/A. 3000k / 4000k / 6500k. No. N/A. >80. Aluminium. Black / White. 1M / 2M. TM. Tracklight",
       "variants": [
         {
           "wattage": "10W",
@@ -771,21 +935,18 @@ export class ProductService {
           "dimension": "75*180",
           "packing": "20",
           "price": 1700
-        },
-        {
-          "wattage": "1M | 2M",
-          "packing": "100",
-          "price": 210
-        },
-        {
-          "wattage": "1M | 2M",
-          "packing": "50",
-          "price": 350
         }
       ],
       "bodyColours": [
         "WHITE",
         "BLACK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -800,12 +961,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-TRAC-25.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 10W / 20W / 30W. 30 \u00d7 30 \u00d7 110 mm / 50 \u00d7 50 \u00d7 120 mm / 75 \u00d7 75 \u00d7 180 mm. N/A. 3000k / 4000k / 6500k. N/A. 38\u00b0. >80. Aluminium Die-casting. MW / MB. N/A. TM. Track Wall",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 10W / 20W / 30W. 30 × 30 × 110 mm / 50 × 50 × 120 mm / 75 × 75 × 180 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. MW / MB. N/A. TM. Track Wall",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -820,7 +988,7 @@ export class ProductService {
       "price": 1050,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-STRE-26.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 35 \u00d7 35 \u00d7 120 mm. N/A. 3000k / 4000k / 6500k. N/A. 38\u00b0. N/A. Aluminium Die-casting. PKW / BK. N/A. TM. Streak",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 35 × 35 × 120 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. N/A. Aluminium Die-casting. PKW / BK. N/A. TM. Streak",
       "variants": [
         {
           "wattage": "24W",
@@ -840,6 +1008,9 @@ export class ProductService {
           "packing": "20",
           "price": 1950
         }
+      ],
+      "lightColours": [
+        "Cool White"
       ]
     },
     {
@@ -854,12 +1025,19 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-MOVA-27.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 24W. 85 \u00d7 90 mm / 103 \u00d7 120 mm / 165 \u00d7 90 mm. 75 mm / 90 mm / 80 \u00d7 150 mm. 3000k / 4000k / 6500k. N/A. 38\u00b0. >80. Aluminium Die-casting. Matt White / Matt Black. GBK / RG. TM. Movable Cylinder",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 24W. 85 × 90 mm / 103 × 120 mm / 165 × 90 mm. 75 mm / 90 mm / 80 × 150 mm. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. Matt White / Matt Black. GBK / RG. TM. Movable Cylinder",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -874,7 +1052,7 @@ export class ProductService {
       "price": 740,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-CYLI-28.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 60\u00d770 mm / 73\u00d785 mm / 87\u00d7100 mm. N/A. 3000k / 4000k / 6500k. No. 34\u00b0. >80. Aluminium. BK / WH. MB / MW / GBK / RG. TM. Cylinder",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 60×70 mm / 73×85 mm / 87×100 mm. N/A. 3000k / 4000k / 6500k. No. 34°. >80. Aluminium. BK / WH. MB / MW / GBK / RG. TM. Cylinder",
       "variants": [
         {
           "wattage": "7W",
@@ -900,6 +1078,13 @@ export class ProductService {
         "BK/RG",
         "WH/GBK",
         "WH/RG"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -914,27 +1099,34 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-MAGN-29.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 10W / 15W. 85 \u00d7 85 \u00d7 65 mm / 75 \u00d7 75 \u00d7 70 mm. N/A. 3000k / 4000k / 6500k. N/A. 38\u00b0. >80. Aluminium Die-casting. N/A. BRASS GOLD / MESH BLACK. TM. Magna",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 10W / 15W. 85 × 85 × 65 mm / 75 × 75 × 70 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. N/A. BRASS GOLD / MESH BLACK. TM. Magna",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
       "id": "GLR-STRI-30",
       "name": "Strip Light",
-      "category": "Striker",
+      "category": "Rope & Striped Light",
       "categories": [
-        "Striker"
+        "Rope & Striped Light"
       ],
       "status": "In Stock",
       "stock": 100,
       "price": 106,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-STRI-30.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 5W / 3W. 58\u00d714 mm / 62\u00d718 mm. N/A. 3000k. No. N/A. >80. Metal / Polycarbonate. Black / White. N/A. TM. Striker",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 5W / 3W. 58×14 mm / 62×18 mm. N/A. 3000k. No. N/A. >80. Metal / Polycarbonate. Black / White. N/A. TM. Striker",
       "variants": [
         {
           "packing": "500 METER",
@@ -946,6 +1138,11 @@ export class ProductService {
           "pricePerMtr": 150,
           "wattage": "240LED-12V"
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White"
       ]
     },
     {
@@ -960,7 +1157,7 @@ export class ProductService {
       "price": 350,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-SLIM-31.webp",
-      "description": "2 YEARS. UNIFORM ILLUMINATION.. EFFORTLESS COMFORT.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 15W / 22W. 120 mm / 170 mm / 225 mm. 105 mm / 155 mm / 205 mm. 3000K / 4000K / 6500K. No. 110\u00b0. Metal. White. N/A. TM. Slim Panel",
+      "description": "2 YEARS. UNIFORM ILLUMINATION.. EFFORTLESS COMFORT.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 15W / 22W. 120 mm / 170 mm / 225 mm. 105 mm / 155 mm / 205 mm. 3000K / 4000K / 6500K. No. 110°. Metal. White. N/A. TM. Slim Panel",
       "variants": [
         {
           "wattage": "8W",
@@ -983,6 +1180,13 @@ export class ProductService {
           "packing": "20",
           "price": 750
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -998,7 +1202,7 @@ export class ProductService {
       "price": 480,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-SURF-32.webp",
-      "description": "2 YEARS. WHERE DESIGN MEETS LIGHT.. WHERE QUALITY LASTS.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 15W / 22W. 120 mm / 170 mm / 225 mm. N/A. 3000K / 4000K / 6500K. No. 110\u00b0. >80. Metal. White. N/A. TM. Surface Panel",
+      "description": "2 YEARS. WHERE DESIGN MEETS LIGHT.. WHERE QUALITY LASTS.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 15W / 22W. 120 mm / 170 mm / 225 mm. N/A. 3000K / 4000K / 6500K. No. 110°. >80. Metal. White. N/A. TM. Surface Panel",
       "variants": [
         {
           "wattage": "8W",
@@ -1021,6 +1225,13 @@ export class ProductService {
           "packing": "20",
           "price": 970
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -1035,7 +1246,7 @@ export class ProductService {
       "price": 430,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-TRIM-33.webp",
-      "description": "2 YEARS. TM. MODERN FINISHES.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 20W. 120 mm / 150 mm. N/A. 3000K / 4000K / 6500K. No. 180\u00b0. >80. Polycarbonate / Metal. White / Black ( Metal ). N/A. Trimless Surface",
+      "description": "2 YEARS. TM. MODERN FINISHES.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 20W. 120 mm / 150 mm. N/A. 3000K / 4000K / 6500K. No. 180°. >80. Polycarbonate / Metal. White / Black ( Metal ). N/A. Trimless Surface",
       "variants": [
         {
           "wattage": "12W",
@@ -1049,6 +1260,13 @@ export class ProductService {
           "packing": "20",
           "price": 560
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -1063,7 +1281,7 @@ export class ProductService {
       "price": 580,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-TILE-34.webp",
-      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 24W / 30W / 40W / 50W. 285 \u00d7 285 mm / 285 \u00d7 285 mm / 575 \u00d7 575 mm / 575 \u00d7 575 mm. 300 \u00d7 300 mm / 300 \u00d7 300 mm / 595 \u00d7 595 mm / 595 \u00d7 595 mm. 3000K / 4000K / 6500K. N/A. 120\u00b0. >80. Metal. White. N/A. Tile",
+      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 24W / 30W / 40W / 50W. 285 × 285 mm / 285 × 285 mm / 575 × 575 mm / 575 × 575 mm. 300 × 300 mm / 300 × 300 mm / 595 × 595 mm / 595 × 595 mm. 3000K / 4000K / 6500K. N/A. 120°. >80. Metal. White. N/A. Tile",
       "variants": [
         {
           "wattage": "8W",
@@ -1086,14 +1304,21 @@ export class ProductService {
           "packing": "20",
           "price": 720
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
       "id": "GLR-STRI-35",
       "name": "Striker",
-      "category": "Rope & Striped Light",
+      "category": "Striker",
       "categories": [
-        "Rope & Striped Light"
+        "Striker"
       ],
       "status": "In Stock",
       "stock": 100,
@@ -1118,6 +1343,9 @@ export class ProductService {
       "bodyColours": [
         "BLACK",
         "WHITE"
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1205,6 +1433,18 @@ export class ProductService {
           "price": 170,
           "wattage": "MULTI CONTROLLER (6 IN 1)"
         }
+      ],
+      "lightColours": [
+        "Warm White",
+        "Natural White",
+        "Cool White",
+        "Blue",
+        "Green",
+        "Red",
+        "Amber",
+        "Pink",
+        "Ice Blue",
+        "Multi"
       ]
     },
     {
@@ -1259,6 +1499,13 @@ export class ProductService {
           "wattage": "200W",
           "price": 725
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -1279,6 +1526,13 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 580
         }
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
       ]
     },
     {
@@ -1293,7 +1547,7 @@ export class ProductService {
       "price": 650,
       "previewType": "street",
       "image": "/assets/images/products/GLR-KTYP-41.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 3W / 6W. 75\u00d775\u00d735 mm / 145\u00d775\u00d760 mm. N/A. 3000k. No. N/A. N/A. Die Cast Aluminium. Sand Black. IP65. TM. K-Type",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 3W / 6W. 75×75×35 mm / 145×75×60 mm. N/A. 3000k. No. N/A. N/A. Die Cast Aluminium. Sand Black. IP65. TM. K-Type",
       "variants": [
         {
           "wattage": "3W",
@@ -1310,6 +1564,9 @@ export class ProductService {
       ],
       "bodyColours": [
         "SAND BLACK"
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1324,7 +1581,7 @@ export class ProductService {
       "price": 380,
       "previewType": "street",
       "image": "/assets/images/products/GLR-BALL-42.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 2W/ 4W. 65\u00d765\u00d755 mm / 74\u00d774\u00d744 mm. N/A. 3000k / Auto RGBP. No. N/A. >80. Aluminium / Polycarbonate. Black. IP65. TM. Ball Light",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 2W/ 4W. 65×65×55 mm / 74×74×44 mm. N/A. 3000k / Auto RGBP. No. N/A. >80. Aluminium / Polycarbonate. Black. IP65. TM. Ball Light",
       "variants": [
         {
           "dimension": "65*65*55",
@@ -1353,6 +1610,9 @@ export class ProductService {
       ],
       "bodyColours": [
         "BLACK"
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1367,7 +1627,7 @@ export class ProductService {
       "price": 360,
       "previewType": "street",
       "image": "/assets/images/products/GLR-CURV-43.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 2W / 4 W / 6 W. 75\u00d787\u00d738 mm / 90\u00d7104\u00d743 mm / 88\u00d7161\u00d743 mm. N/A. 3000k. No. N/A. >80. Polycarbonate. Matt Black. IP65. TM. Curve Wall",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 2W / 4 W / 6 W. 75×87×38 mm / 90×104×43 mm / 88×161×43 mm. N/A. 3000k. No. N/A. >80. Polycarbonate. Matt Black. IP65. TM. Curve Wall",
       "variants": [
         {
           "dimension": "75*87*38",
@@ -1387,6 +1647,9 @@ export class ProductService {
           "price": 620,
           "wattage": "6 WAY"
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1407,6 +1670,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1427,6 +1693,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1447,6 +1716,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1461,7 +1733,7 @@ export class ProductService {
       "price": 570,
       "previewType": "street",
       "image": "/assets/images/products/GLR-FOOT-47.webp",
-      "description": "2 YEARS. Variants. Dimension. Fixture. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2M / 4M. 85\u00d785 mm. Wall Concealed / Surface. 3000k. No. N/A. >80. Die Cast Aluminium. Black/White. N/A. TM. Foot Lights",
+      "description": "2 YEARS. Variants. Dimension. Fixture. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2M / 4M. 85×85 mm. Wall Concealed / Surface. 3000k. No. N/A. >80. Die Cast Aluminium. Black/White. N/A. TM. Foot Lights",
       "variants": [
         {
           "wattage": "4W",
@@ -1473,6 +1745,9 @@ export class ProductService {
       "bodyColours": [
         "BLACK",
         "WHITE"
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1487,7 +1762,7 @@ export class ProductService {
       "price": 700,
       "previewType": "street",
       "image": "/assets/images/products/GLR-SPIK-48.webp",
-      "description": "2 YEARS. TM. BEAUTIFULLY.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 50\u00d770 mm / 70\u00d780 mm. N/A. WW / WH / GREEN / RED / AMBER. No. Wide / Narrow. >80. Aluminium. Black. N/A. Spike",
+      "description": "2 YEARS. TM. BEAUTIFULLY.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 50×70 mm / 70×80 mm. N/A. WW / WH / GREEN / RED / AMBER. No. Wide / Narrow. >80. Aluminium. Black. N/A. Spike",
       "variants": [
         {
           "wattage": "7W",
@@ -1501,6 +1776,9 @@ export class ProductService {
           "packing": "20",
           "price": 800
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1521,6 +1799,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1541,6 +1822,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1561,6 +1845,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1575,7 +1862,7 @@ export class ProductService {
       "price": 1500,
       "previewType": "street",
       "image": "/assets/images/products/GLR-GMFL-52.webp",
-      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 30W / 50W / 100W / 200W. 185\u00d7180\u00d750 mm / 227\u00d7218\u00d755 mm / 260\u00d7250\u00d770 mm / 318\u00d7308\u00d775 mm. N/A. 6500K. N/A. N/A. >80. Aluminium. Grey. IP66. GM Flood",
+      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 30W / 50W / 100W / 200W. 185×180×50 mm / 227×218×55 mm / 260×250×70 mm / 318×308×75 mm. N/A. 6500K. N/A. N/A. >80. Aluminium. Grey. IP66. GM Flood",
       "variants": [
         {
           "wattage": "30W",
@@ -1601,6 +1888,9 @@ export class ProductService {
           "packing": "5",
           "price": 5000
         }
+      ],
+      "lightColours": [
+        "Cool White"
       ]
     },
     {
@@ -1635,6 +1925,9 @@ export class ProductService {
           "packing": "18",
           "price": 3800
         }
+      ],
+      "lightColours": [
+        "Cool White"
       ]
     },
     {
@@ -1649,12 +1942,15 @@ export class ProductService {
       "price": 4500,
       "previewType": "street",
       "image": "/assets/images/products/GLR-HIBA-54.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 100W / 150W / 200W. 315 \u00d7 145 \u00d7 175 mm / 315 \u00d7 145 \u00d7 175 mm / 377 \u00d7 145 \u00d7 260 mm. N/A. 6500k. N/A. N/A. >80. Aluminium. Matt Grey. IP66. TM. Hi-Bay",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 100W / 150W / 200W. 315 × 145 × 175 mm / 315 × 145 × 175 mm / 377 × 145 × 260 mm. N/A. 6500k. N/A. N/A. >80. Aluminium. Matt Grey. IP66. TM. Hi-Bay",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 4500
         }
+      ],
+      "lightColours": [
+        "Cool White"
       ]
     },
     {
@@ -1669,12 +1965,15 @@ export class ProductService {
       "price": 3200,
       "previewType": "street",
       "image": "/assets/images/products/GLR-STRE-55.webp",
-      "description": "2 YEARS. EVERY NIGHT.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 24W / 36W / 50W. 275\u00d7120\u00d755 mm / 315\u00d7135\u00d755 mm / 360\u00d7170\u00d755 mm. N/A. 6500K. No. N/A. >80. Aluminium. Grey. IP66. TM. Street",
+      "description": "2 YEARS. EVERY NIGHT.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 24W / 36W / 50W. 275×120×55 mm / 315×135×55 mm / 360×170×55 mm. N/A. 6500K. No. N/A. >80. Aluminium. Grey. IP66. TM. Street",
       "variants": [
         {
           "wattage": "DimensionW",
           "price": 3200
         }
+      ],
+      "lightColours": [
+        "Cool White"
       ]
     },
     {
@@ -1690,7 +1989,7 @@ export class ProductService {
       "price": 3400,
       "previewType": "street",
       "image": "/assets/images/products/GLR-SOLA-56.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 70W / 120W. 275\u00d7120\u00d755 mm / 315\u00d7135\u00d755 mm / 360\u00d7170\u00d755 mm. N/A. 6500K. No. N/A. >80. Aluminium. Black. IP66. TM. Solar Street",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 70W / 120W. 275×120×55 mm / 315×135×55 mm / 360×170×55 mm. N/A. 6500K. No. N/A. >80. Aluminium. Black. IP66. TM. Solar Street",
       "variants": [
         {
           "wattage": "70W",
@@ -1704,6 +2003,9 @@ export class ProductService {
           "packing": "10",
           "price": 4800
         }
+      ],
+      "lightColours": [
+        "Cool White"
       ]
     },
     {
@@ -1718,7 +2020,7 @@ export class ProductService {
       "price": 2160,
       "previewType": "street",
       "image": "/assets/images/products/GLR-AURA-57.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 24W. 258 \u00d7 258 \u00d7 267 mm. N/A. WW. N/A. N/A. >80. Polycarbonate. Black. N/A. TM. Aura Max",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 24W. 258 × 258 × 267 mm. N/A. WW. N/A. N/A. >80. Polycarbonate. Black. N/A. TM. Aura Max",
       "variants": [
         {
           "wattage": "24W",
@@ -1726,6 +2028,9 @@ export class ProductService {
           "packing": "12",
           "price": 2160
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1748,6 +2053,9 @@ export class ProductService {
           "packing": "12",
           "price": 1700
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1762,7 +2070,7 @@ export class ProductService {
       "price": 1300,
       "previewType": "street",
       "image": "/assets/images/products/GLR-CUBE-59.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 150\u00d7150*150 mm. N/A. WW. No. N/A. >80. Polycarbonate. Black. N/A. TM. Cubex",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 150×150*150 mm. N/A. WW. No. N/A. >80. Polycarbonate. Black. N/A. TM. Cubex",
       "variants": [
         {
           "wattage": "20W",
@@ -1770,6 +2078,9 @@ export class ProductService {
           "packing": "12",
           "price": 1300
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1792,6 +2103,9 @@ export class ProductService {
           "packing": "12",
           "price": 1140
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1806,7 +2120,7 @@ export class ProductService {
       "price": 900,
       "previewType": "street",
       "image": "/assets/images/products/GLR-MASH-61.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. Holder Based (No LED). 315\u00d7145\u00d745 mm. N/A. According to LED bulb. No. N/A. N/A. Polycarbonate. Black. N/A. TM. Mashal",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. Holder Based (No LED). 315×145×45 mm. N/A. According to LED bulb. No. N/A. N/A. Polycarbonate. Black. N/A. TM. Mashal",
       "variants": [
         {
           "dimension": "315*145*45",
@@ -1814,6 +2128,9 @@ export class ProductService {
           "price": 900,
           "wattage": "HOLDER"
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1828,7 +2145,7 @@ export class ProductService {
       "price": 1640,
       "previewType": "street",
       "image": "/assets/images/products/GLR-FREE-62.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 275\u00d7120\u00d755 mm. N/A. 3000k / 6500k. No. N/A. >80. Polycarbonate. Black. N/A. TM. Freedom",
+      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 20W. 275×120×55 mm. N/A. 3000k / 6500k. No. N/A. >80. Polycarbonate. Black. N/A. TM. Freedom",
       "variants": [
         {
           "wattage": "20W",
@@ -1836,6 +2153,9 @@ export class ProductService {
           "packing": "12",
           "price": 1640
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1856,6 +2176,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1876,6 +2199,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1896,6 +2222,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1916,6 +2245,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1936,6 +2268,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1956,6 +2291,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1976,6 +2314,9 @@ export class ProductService {
           "wattage": "DimensionW",
           "price": 1850
         }
+      ],
+      "lightColours": [
+        "Warm White"
       ]
     },
     {
@@ -1995,6 +2336,69 @@ export class ProductService {
         {
           "wattage": "DimensionW",
           "price": 1850
+        }
+      ],
+      "lightColours": [
+        "Warm White"
+      ]
+    },
+    {
+      "id": "GLR-PCTR-71",
+      "name": "PC Track",
+      "category": "Track Light",
+      "categories": [
+        "Track Light"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 210,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-TRAC-24.webp",
+      "description": "PC Track. Sold by length in 1 m and 2 m sections, at Rs.210 per metre. Body colour black or white.",
+      "bodyColours": [
+        "BLACK",
+        "WHITE"
+      ],
+      "variants": [
+        {
+          "wattage": "1M",
+          "packing": "100",
+          "price": 210
+        },
+        {
+          "wattage": "2M",
+          "packing": "100",
+          "price": 420
+        }
+      ]
+    },
+    {
+      "id": "GLR-METR-72",
+      "name": "Metal Track",
+      "category": "Track Light",
+      "categories": [
+        "Track Light"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 350,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-TRAC-24.webp",
+      "description": "Metal Track. Sold by length in 1 m and 2 m sections, at Rs.350 per metre. Body colour black or white.",
+      "bodyColours": [
+        "BLACK",
+        "WHITE"
+      ],
+      "variants": [
+        {
+          "wattage": "1M",
+          "packing": "50",
+          "price": 350
+        },
+        {
+          "wattage": "2M",
+          "packing": "50",
+          "price": 700
         }
       ]
     }
@@ -2167,6 +2571,45 @@ export class ProductService {
     return true;
   }
 
+  /**
+   * Puts the catalogue's shades onto a stored product.
+   *
+   * Taken from the seed, which holds the assignment, so there is one rule
+   * rather than two. A product the seed does not know — one an admin added —
+   * is left exactly as it is. Two products also have their category corrected
+   * here: the Striker / Strip Light name swap left each pointing at the
+   * other's category.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyLightColours2026(p: Product): boolean {
+    if (p.lightColours2026) return false;
+    const def = this.defaultProducts.find(dp => dp.id === p.id);
+    if (!def) return false;
+    if (def.lightColours?.length) p.lightColours = [...def.lightColours];
+    else delete p.lightColours;
+    if (def.categories?.length) {
+      p.categories = [...def.categories];
+      p.category = def.categories.join(', ');
+    }
+    p.lightColours2026 = true;
+    return true;
+  }
+
+  /**
+   * Takes the rail rows off the tracklight. The rail is its own product now.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyTrackSplit(p: Product): boolean {
+    if (p.trackSplit) return false;
+    if (p.id !== 'GLR-TRAC-24') { p.trackSplit = true; return true; }
+    const before = (p.variants || []).length;
+    p.variants = (p.variants || []).filter(v => !/\dM\b/i.test(String(v.wattage || '').trim()));
+    p.trackSplit = true;
+    return before !== p.variants.length || true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2242,8 +2685,32 @@ export class ProductService {
             if (this.applyOptionFieldMerge(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the shades the catalogue sells it in.
+            if (this.applyLightColours2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // ...and the rail taken off the tracklight.
+            if (this.applyTrackSplit(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
+
+          // A product added to the seed after this collection was first written
+          // would otherwise never appear: the branch below only runs when the
+          // collection is empty. Anything in the seed and not here is added.
+          // Nothing already stored is touched, so an admin's own products and
+          // edits are safe.
+          const stored = new Set(remoteProducts.map(p => p.id));
+          this.defaultProducts.forEach(p => {
+            if (stored.has(p.id)) return;
+            const fresh = JSON.parse(JSON.stringify(p)) as Product;
+            remoteProducts.push(fresh);
+            if (this.firestore) {
+              setDoc(doc(this.firestore, 'products', fresh.id), fresh).catch(() => {});
+            }
+          });
+
           if (remoteProducts.length > 0) {
             this.productsSignal.set(remoteProducts);
             this.saveToStorage(remoteProducts);
@@ -2291,6 +2758,8 @@ export class ProductService {
           this.applyCatalogue2026(p);
           this.applyBodyColoursV2(p);
           this.applyOptionFieldMerge(p);
+          this.applyLightColours2026(p);
+          this.applyTrackSplit(p);
           return p;
         });
         return parsed;

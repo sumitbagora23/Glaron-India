@@ -208,8 +208,14 @@ export class ProductFormPage implements OnInit {
     return this.lightColourTab < 0 ? this.lightColourPrices : this.ownPrices(this.lightColourTab);
   }
 
+  /**
+   * Matched without regard to case: the managed list has picked up entries in
+   * mixed case over time ("multi" beside "Cool White"), and a product naming a
+   * shade one way should still tick the box that names it the other.
+   */
   isLightColourSelected(name: string): boolean {
-    return this.activeLightColours.includes(name);
+    const key = (name || '').trim().toLowerCase();
+    return this.activeLightColours.some(c => (c || '').trim().toLowerCase() === key);
   }
 
   /**
@@ -233,10 +239,12 @@ export class ProductFormPage implements OnInit {
     let colours = [...this.activeLightColours];
     const prices = { ...this.activePrices };
 
-    if (colours.includes(name)) {
-      colours = colours.filter(c => c !== name);
+    const key = (name || '').trim().toLowerCase();
+    const already = colours.find(c => (c || '').trim().toLowerCase() === key);
+    if (already) {
+      colours = colours.filter(c => c !== already);
       // A dropped colour must not leave its price behind for the next pick.
-      delete prices[name];
+      delete prices[already];
       this.setActive(colours, prices);
       return;
     }

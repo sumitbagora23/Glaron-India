@@ -84,6 +84,22 @@ export class LightColourService {
         }
         const list: LightColour[] = [];
         snapshot.forEach(docSnap => list.push(docSnap.data() as LightColour));
+
+        // Shades added to the seed after this collection was first written
+        // would otherwise never appear: the block above only fires on an empty
+        // collection. Anything in the seed and not here is added; nothing is
+        // ever removed or renamed, so an admin's own edits are left alone.
+        const present = new Set(list.map(c => (c.name || '').trim().toLowerCase()));
+        const missing = this.buildDefaults().filter(c => !present.has(c.name.trim().toLowerCase()));
+        if (missing.length) {
+          let order = list.reduce((max, c) => Math.max(max, Number(c.order) || 0), 0);
+          missing.forEach(c => {
+            const added = { ...c, order: ++order };
+            list.push(added);
+            if (this.firestore) setDoc(doc(this.firestore, 'lightColours', added.id), added).catch(() => {});
+          });
+        }
+
         const sorted = this.sortColours(list);
         this.coloursSignal.set(sorted);
         this.saveToStorage(sorted);
