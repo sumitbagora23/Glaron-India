@@ -493,7 +493,6 @@ export class ProductFormPage implements OnInit {
   createVariantGroup(variant?: ProductVariant): FormGroup {
     return this.fb.group({
       wattage: [variant?.wattage || ''],
-      type: [variant?.type || ''],
       dimension: [variant?.dimension || ''],
       cutout: [variant?.cutout || ''],
       packing: [variant?.packing || ''],
@@ -676,7 +675,7 @@ export class ProductFormPage implements OnInit {
     // an option can be nothing but "this one is warm white only".
     const cleanedVariants = (formData.variants || [])
       .filter((v: any) =>
-        v.wattage || v.type || v.dimension || v.cutout ||
+        v.wattage || v.dimension || v.cutout ||
         v.packing || v.price ||
         (v.lightColours && v.lightColours.length)
       )

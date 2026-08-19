@@ -68,11 +68,9 @@ export function isRatingLabel(value?: string): boolean {
   return /\d\s*(?:m?[AV]|VA|W)\b/i.test((value || '').trim());
 }
 
-/** "7W", or "12V/3A" where the option is picked by its rating instead. */
+/** "7W", "12V/3A", "2 WAY" — whatever the option is picked by. */
 export function specTabLabel(variant: ProductVariant): string {
-  if (!isBlank(variant.wattage)) return variant.wattage!.trim();
-  const type = clean(variant.type);
-  return isRatingLabel(type) ? type : '';
+  return isBlank(variant.wattage) ? '' : variant.wattage!.trim();
 }
 
 /** "63×61 mm" — always with its unit, however the size was typed in. */
@@ -93,7 +91,6 @@ export function specDetails(variant: ProductVariant): SpecDetail[] {
   const size = dimensionLabel(variant);
   if (size) rows.push({ label: 'Dimension', value: size });
   push('Cut-out', variant.cutout);
-  push('Type', variant.type);
   push('Packing', variant.packing);
   return rows;
 }
@@ -120,7 +117,7 @@ function clean(value?: string): string {
  * tab than a line of noise.
  */
 function fallbackLabel(variant: ProductVariant, index: number): string {
-  return clean(variant.type) || `Option ${index + 1}`;
+  return `Option ${index + 1}`;
 }
 
 /**
@@ -131,7 +128,6 @@ function fallbackLabel(variant: ProductVariant, index: number): string {
  * deliberately absent — a tab never carries one.
  */
 const SEPARATORS: Array<(v: ProductVariant) => string> = [
-  v => clean(v.type),
   v => clean(v.cutout),
   v => clean(v.dimension),
 ];

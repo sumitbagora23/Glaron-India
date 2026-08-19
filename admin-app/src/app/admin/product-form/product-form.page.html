@@ -147,39 +147,25 @@
                 </span>
               </div>
 
-              <!-- Light Colour field (multi-select) -->
+              <!-- Light Colour.
+                   This used to carry a tab strip — "Whole product" plus one tab
+                   per option — so a single wattage could be sold in its own
+                   shades, and a price box per shade. Nothing in the catalogue
+                   ever used either: no option carried its own shades and no
+                   shade was priced apart. The machinery cost the field five
+                   controls and a paragraph of instructions to explain, so it is
+                   gone. The model still holds both, so a product that somehow
+                   has them still prices correctly. -->
               <div class="input-form-group">
                 <div class="lc-label-row">
                   <label class="input-field-label">Light Colour <span class="optional-tag">(Optional)</span></label>
-                  <!-- The list itself: add, rename, reorder, delete. This
-                       product is held while the admin is over there. -->
                   <button type="button" class="lc-manage-btn" (click)="manageLightColours()">
                     <svg class="lc-manage-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                     </svg>
-                    <span>Add Light Colour</span>
+                    <span>Manage list</span>
                   </button>
                 </div>
-
-                <!-- One tab per option of this product, so a 7W sold in warm
-                     white alone can say so without touching the 12W beside it.
-                     "Whole product" is what every option follows until it is
-                     given shades of its own. -->
-                <div class="lc-tab-row" *ngIf="variantTabs.length">
-                  <button type="button" class="lc-tab"
-                          [class.is-open]="lightColourTab === -1"
-                          (click)="selectLightColourTab(-1)">Whole product</button>
-                  <button type="button" class="lc-tab" *ngFor="let tab of variantTabs"
-                          [class.is-open]="lightColourTab === tab.index"
-                          [class.has-own]="variantTabHasOwn(tab.index)"
-                          [title]="tab.detail"
-                          (click)="selectLightColourTab(tab.index)">
-                    <span class="lc-tab-text">{{ tab.label }}</span>
-                    <!-- The dot marks the options that carry their own shades. -->
-                    <span class="lc-tab-dot" *ngIf="variantTabHasOwn(tab.index)"></span>
-                  </button>
-                </div>
-                <span class="lc-target-line" *ngIf="variantTabs.length">{{ lightColourTargetLabel }}</span>
 
                 <div class="multi-cat-dropdown">
                   <button type="button" class="multi-cat-toggle field-input-box"
@@ -191,17 +177,6 @@
                   </button>
 
                   <div class="multi-cat-panel" *ngIf="lightColourDropdownOpen" (wheel)="onCategoryWheel($event)">
-                    <!-- The clear (×). Products with no shade to choose — drivers,
-                         profiles, accessories — are marked by clearing the picker,
-                         not by ticking anything: "No Colour" is not a shade. -->
-                    <button type="button" class="lc-clear-option" (click)="clearLightColours()">
-                      <svg class="lc-clear-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span *ngIf="lightColourTab < 0">Clear — this product has no light colour</span>
-                      <span *ngIf="lightColourTab >= 0">Clear — this option has no light colour</span>
-                    </button>
-
                     <label class="multi-cat-option" *ngFor="let lc of lightColourOptions">
                       <input type="checkbox" [checked]="isLightColourSelected(lc)" (change)="toggleLightColour(lc)" />
                       <span class="lc-option-text"><span class="lc-swatch" [style.background]="swatch(lc)"></span>{{ lc }}</span>
@@ -212,38 +187,17 @@
                   </div>
                 </div>
 
-                <!-- Cleared: nothing to price, just a way back out of it. -->
-                <div class="lc-selected-list" *ngIf="isNoColour">
-                  <div class="lc-selected-row">
-                    <span class="lc-selected-name" *ngIf="lightColourTab < 0">No light colour on this product</span>
-                    <span class="lc-selected-name" *ngIf="lightColourTab >= 0">No light colour on this option</span>
-                    <button type="button" class="chip-remove" (click)="clearLightColours()" aria-label="Undo">&times;</button>
-                  </div>
-                </div>
-
-                <!-- Picked colours, each with an optional extra of its own.
-                     Under an option's tab these are that option's shades — and
-                     until it is given its own, the product's, shown as they
-                     will be sold. -->
-                <div class="lc-selected-list" *ngIf="activeLightColours.length && !isNoColour">
-                  <div class="lc-selected-row" *ngFor="let c of activeLightColours">
+                <div class="lc-selected-list" *ngIf="selectedLightColours.length">
+                  <div class="lc-selected-row" *ngFor="let c of selectedLightColours">
                     <span class="lc-selected-name"><span class="lc-swatch" [style.background]="swatch(c)"></span>{{ c }}</span>
-                    <div class="lc-extra-box">
-                      <span class="lc-extra-sign">Rs.</span>
-                      <input type="number" min="0" class="lc-extra-input" [placeholder]="pricePlaceholder(c)"
-                             [value]="priceFor(c)" (input)="setLightColourPrice(c, $event)" />
-                    </div>
                     <button type="button" class="chip-remove" (click)="toggleLightColour(c)" aria-label="Remove">&times;</button>
                   </div>
                 </div>
 
-                <!-- The way back: this option is sold in the product's shades
-                     again, and stops carrying a list of its own. -->
-                <button type="button" class="lc-follow-btn"
-                        *ngIf="lightColourTab >= 0 && !followsProduct"
-                        (click)="followProductColours()">Use the product's shades on this option</button>
-
-                <span class="input-hint-text">Pick every shade this product is sold in — they show on the product card behind each wattage / dimension tab. Sold differently option by option? Open that option's tab above and pick there; it then carries its own shades, and the rest of the product is untouched. Fill the box only when a shade is priced differently, and enter its full price, not a difference. Leave it blank and that shade is sold at the option's own price — under an option's tab, at the product's price for that shade. If the product, or one option of it, has no shade to choose — a driver, a profile, an accessory — use the clear (×) at the top of the list. Not in the list? "Add Light Colour" opens the full list, and brings you back here with this product as you left it.</span>
+                <span class="input-hint-text">
+                  The shades this product is sold in. Leave empty for anything with no shade to
+                  choose — a driver, a profile, an accessory.
+                </span>
               </div>
 
             </div>
@@ -300,7 +254,10 @@
           </section>
           
           <!-- Section - Pricing Information -->
-          <section class="form-section-card pricing-section">
+          <!-- Only when the product is not priced by its options. With options
+               present this card said nothing but "not used", which reads as a
+               field left unfilled rather than one that does not apply. -->
+          <section class="form-section-card pricing-section" *ngIf="!hasVariants">
             <div class="card-header-border">
               <div class="header-icon-container">
                 <!-- Currency/Tag Icon -->
@@ -325,8 +282,7 @@
                     [class.border-error]="(productForm.get('price')?.touched && productForm.get('price')?.invalid) || (submitted && pricingMissing)"
                   />
                 </div>
-                <span class="input-hint-text" *ngIf="!hasVariants">Optional — leave blank if you set prices in the variants below.</span>
-                <span class="input-hint-text" *ngIf="hasVariants">Not used — this product is priced by its variants below.</span>
+                <span class="input-hint-text">The rate for a product sold as one thing. Add options below instead if it comes in sizes.</span>
                 <!-- Error validation -->
                 <div class="validation-error-msg" *ngIf="productForm.get('price')?.touched && productForm.get('price')?.errors?.['min']">
                   Price must be greater than 0.
@@ -352,20 +308,20 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h3 class="card-section-title">Product Variants & Pricing</h3>
+            <h3 class="card-section-title">Options &amp; Rates</h3>
           </div>
           <button type="button" class="add-variant-btn" (click)="addVariant()">
             <svg class="plus-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            <span>Add Variant</span>
+            <span>Add Option</span>
           </button>
         </div>
         
         <div class="card-body-variants" formArrayName="variants" style="padding: 20px;">
           <div *ngIf="variantsArray.controls.length === 0" class="no-variants-placeholder">
-            No options yet. An option is one row of the price sheet — one wattage, at one price.
-            Add one for each row this product has.
+            No options yet. An option is one row of the price sheet — one thing a dealer
+            picks, at one rate. Add one for each row this product has.
           </div>
 
           <!-- One header, once, instead of a placeholder repeated down every
@@ -373,8 +329,7 @@
                against the price sheet rather than decoding ten placeholders. -->
           <div class="v-head" *ngIf="variantsArray.controls.length">
             <span></span>
-            <span class="v-h">Wattage</span>
-            <span class="v-h">Type <em>optional</em></span>
+            <span class="v-h">Option</span>
             <span class="v-h">Dimension</span>
             <span class="v-h">Cut-out</span>
             <span class="v-h">Packing</span>
@@ -384,8 +339,7 @@
 
           <div *ngFor="let vGroup of variantsArray.controls; let i = index" [formGroupName]="i" class="variant-horizontal-form-row">
             <div class="v-row-badge">#{{ i + 1 }}</div>
-            <input type="text" formControlName="wattage" placeholder="7W" class="v-input" />
-            <input type="text" formControlName="type" placeholder="only if needed" class="v-input" />
+            <input type="text" formControlName="wattage" placeholder="7W · 2 WAY · 12V/3A" class="v-input" />
             <input type="text" formControlName="dimension" placeholder="63*61" class="v-input" />
             <input type="text" formControlName="cutout" placeholder="50" class="v-input" />
             <input type="text" formControlName="packing" placeholder="40" class="v-input" />

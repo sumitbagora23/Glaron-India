@@ -1098,7 +1098,7 @@
    approximate the boxes under them — and `.v-row-inputs .v-input` outranked the
    per-column widths, so the inputs sized themselves and the headings drifted.
    One grid definition, applied to both, makes the columns the same tracks. */
-$v-grid: 34px 92px minmax(80px, 1fr) minmax(80px, 1fr) 92px 92px 152px 30px;
+$v-grid: 34px minmax(110px, 1.2fr) minmax(90px, 1fr) 92px 92px 152px 30px;
 
 .v-head,
 .variant-horizontal-form-row {

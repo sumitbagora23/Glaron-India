@@ -168,7 +168,7 @@ export class OrderComposePage implements OnInit {
 
   // ---- product cards / cart ----
   variantLabel(v: ProductVariant): string {
-    return [v.wattage, v.type, v.dimension].filter(Boolean).join(' · ') || 'Variant';
+    return [v.wattage, v.dimension].filter(Boolean).join(' · ') || 'Variant';
   }
 
   /** The option and the shade together — what the order line ends up reading. */

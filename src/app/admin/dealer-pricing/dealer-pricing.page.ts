@@ -120,7 +120,6 @@ export class DealerPricingPage implements OnInit {
     const parts: string[] = [];
     const bad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
     if (!bad(variant.wattage)) parts.push(variant.wattage!.trim());
-    if (variant.type && variant.type.trim()) parts.push(variant.type.trim());
     if (variant.dimension && variant.dimension.trim() && variant.dimension.trim() !== '-') parts.push(variant.dimension.trim());
     if (variant.pricePerMtr) parts.push('per mtr');
     if (parts.length === 0) parts.push('Variant');

@@ -1019,7 +1019,6 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     if (!variant && !lightColour) return '';
     return [
       variant?.wattage,
-      variant?.type,
       variant?.dimension,
       variant?.cutout,
       variant?.packing,
@@ -1141,7 +1140,6 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
 
     if (!isBad(variant.wattage)) parts.push(variant.wattage!.trim());
-    if (variant.type && variant.type.trim()) parts.push(variant.type.trim());
 
     if (variant.dimension && variant.dimension.trim() && variant.dimension.trim() !== '-') {
       const d = variant.dimension.trim();

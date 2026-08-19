@@ -746,7 +746,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     const isBad = (v?: string) => !v || !v.trim() || /dimension/i.test(v);
 
     if (!isBad(variant.wattage)) parts.push(variant.wattage!.trim());
-    if (variant.type && variant.type.trim()) parts.push(variant.type.trim());
 
     if (variant.dimension && variant.dimension.trim() && variant.dimension.trim() !== '-') {
       const d = variant.dimension.trim();
