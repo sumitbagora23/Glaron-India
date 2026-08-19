@@ -239,7 +239,7 @@
                         </td>
                         <td *ngFor="let o of rateOptions">
                           <input type="number" min="0" class="lc-grid-input"
-                                 [placeholder]="shadeRatePlaceholder(o.index)"
+                                 [placeholder]="shadeRatePlaceholder(o.index, c)"
                                  [value]="shadeRate(o.index, c)"
                                  (input)="setShadeRate(o.index, c, $event)" />
                         </td>

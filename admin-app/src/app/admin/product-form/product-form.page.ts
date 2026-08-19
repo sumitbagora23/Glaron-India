@@ -352,8 +352,17 @@ export class ProductFormPage implements OnInit {
     return value > 0 ? value : '';
   }
 
-  /** A blank cell means the option's own rate, so that is what it shows. */
-  shadeRatePlaceholder(index: number): string {
+  /**
+   * What a blank cell will actually be quoted at.
+   *
+   * The same order a quotation resolves: this option's own rate for the shade,
+   * then the product's rate for it, then the option's plain rate. Showing only
+   * the option's plain rate would be a lie the moment a product carries a rate
+   * of its own — the rope would read 104 behind a blank cell while quoting 108.
+   */
+  shadeRatePlaceholder(index: number, colour: string): string {
+    const shared = (this.lightColourPrices || {})[colour];
+    if (shared > 0) return String(shared);
     const rate = this.rateOptions[index]?.rate || 0;
     return rate > 0 ? String(rate) : '0';
   }
