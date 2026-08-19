@@ -99,6 +99,13 @@ export interface Product {
    * their own.
    */
   trackSplit?: boolean;
+  /**
+   * Set once the catalogue tidy-up has been carried onto the stored product:
+   * the categories that did not describe the product, Concealed split into the
+   * two the sheet actually prints, and the option labels the import left as the
+   * literal word "Dimension".
+   */
+  catalogueTidy?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -299,7 +306,6 @@ export class ProductService {
       "description": "TM. Glare. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 55 × 55 × 60 mm / 55 × 55 × 70 mm. 50 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. MW / MB / RG / SILVER / GB. N/A. 2 YEARS",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -374,7 +380,6 @@ export class ProductService {
       "description": "TM. Vogue. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W. 42 × 42 × 60 mm / 62 × 62 × 60 mm. 35 mm / 55 mm. 3000k / 4000k / 6500k. Available. 36°. >80. Aluminium Die-casting. MW / MB. N/A. 2 YEARS",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -401,7 +406,6 @@ export class ProductService {
       "description": "TM. 2 YEARS. Glon. FOCUSED PERFORMANCE.. PREMIUM FINISH.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63 × 63 × 43 mm / 80 × 80 × 44 mm / 94 × 84 × 51 mm. 55 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 38°. N/A. Aluminium Die-casting. MW / MB / RG / SB / ANTIQUE BRASS. N/A",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -428,7 +432,6 @@ export class ProductService {
       "description": "TM. Elegance. 2 YEARS. WHERE DESIGN MEETS LIGHT.. WHERE QUALITY LASTS.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 68 × 66 mm / 83 × 75 mm / 93 × 85 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. White / Black. N/A",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -455,7 +458,6 @@ export class ProductService {
       "description": "TM. 2 YEARS. Orbit. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 63 × 32 mm / 80 × 40 mm / 95 × 40 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. White / Black. N/A",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -482,7 +484,6 @@ export class ProductService {
       "description": "Prism. 2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 68 × 48 mm / 83 × 55 mm / 93 × 60 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. Available. 24° / 38°. >80. Aluminium Die-casting. BK / WH. RGD / GBK. TM",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -509,7 +510,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Duo. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2×10W / 2×15W. N/A. 113×55mm / 153×75mm. 3000k / 4000k / 6500k. Available. 36°. >80. Aluminium Die-casting. Black / White. N/A",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -536,7 +536,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Duo R. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 2*7W / 2*12W. 68 x 134mm / 85 x 170mm. 55 x 122mm / 75 x 160mm. 3000k / 4000k / 6500k. Available. 36°. >80. Aluminium Die-casting. MW / BK. GBK / RG / WH",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -610,7 +609,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. Shape. 7W / 12W / 2 x 7W / 2 × 12W. 68 × 48 mm / 83 × 55 mm / 93 × 60 mm. 60 mm / 75 mm / 85 mm. 3000k / 4000k / 6500k. No. 24° / 38°. >80. Aluminium Die-casting. BK / WH. N/A. Round/Square. Pull Out",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -637,7 +635,6 @@ export class ProductService {
       "description": "2 YEARS. TM. EVERY SPACE SHINES.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 6W / 8W / 12W. 68 × 45 × 32 mm / 95 × 45 × 32 mm / 146 × 45 × 32 mm. 58 × 35 mm / 85 × 35 mm / 137 × 35 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. PKW / BK. MW / MB / RG / GB. Linea",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -806,7 +803,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 18W / 24W. 92 × 75 mm / 122 × 75 mm / 142 × 75 mm. N/A. 3000k / 4000k / 6500k. N/A. 120°. >80. Aluminium Die-casting. PKW / BK. WH / SB / RG / MB / MW. TM. Nexus surface",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -855,7 +851,7 @@ export class ProductService {
     },
     {
       "id": "GLR-CONC-23",
-      "name": "Concealed",
+      "name": "PC Concealed",
       "category": "Concealed",
       "categories": [
         "Concealed"
@@ -865,44 +861,33 @@ export class ProductService {
       "price": 140,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-CONC-23.webp",
-      "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W. 108×53 mm. 70 mm. 3000K / 4000K. No. N/A. >80. Polycarbonate. White. N/A. Concealed",
+      "description": "PC Concealed 7W. 110*110 mm, 70 mm cut-out. Warm, natural or cool white at Rs.140; red, green, blue or pink at Rs.150; 3-in-1 at Rs.180.",
       "variants": [
-        {
-          "wattage": "7W",
-          "dimension": "108*53",
-          "cutout": "70",
-          "packing": "100",
-          "price": 340
-        },
         {
           "wattage": "7W",
           "dimension": "110*110",
           "cutout": "70",
           "packing": "200",
           "price": 140
-        },
-        {
-          "wattage": "7W",
-          "dimension": "110*110",
-          "cutout": "70",
-          "packing": "200",
-          "price": 150
-        },
-        {
-          "wattage": "7W",
-          "dimension": "110*110",
-          "cutout": "70",
-          "packing": "200",
-          "price": 180
         }
       ],
       "lightColours": [
-        "Cool White",
-        "Natural White",
         "Warm White",
-        "3 In 1",
-        "Dimmable-Tunable"
-      ]
+        "Natural White",
+        "Cool White",
+        "Red",
+        "Green",
+        "Blue",
+        "Pink",
+        "3 In 1"
+      ],
+      "lightColourPrice": {
+        "Red": 150,
+        "Green": 150,
+        "Blue": 150,
+        "Pink": 150,
+        "3 In 1": 180
+      }
     },
     {
       "id": "GLR-TRAC-24",
@@ -964,7 +949,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 10W / 20W / 30W. 30 × 30 × 110 mm / 50 × 50 × 120 mm / 75 × 75 × 180 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. MW / MB. N/A. TM. Track Wall",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -979,9 +963,9 @@ export class ProductService {
     {
       "id": "GLR-STRE-26",
       "name": "Streak",
-      "category": "Cylinder",
+      "category": "Street",
       "categories": [
-        "Cylinder"
+        "Street"
       ],
       "status": "In Stock",
       "stock": 100,
@@ -1028,7 +1012,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 24W. 85 × 90 mm / 103 × 120 mm / 165 × 90 mm. 75 mm / 90 mm / 80 × 150 mm. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. Matt White / Matt Black. GBK / RG. TM. Movable Cylinder",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -1102,7 +1085,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 10W / 15W. 85 × 85 × 65 mm / 75 × 75 × 70 mm. N/A. 3000k / 4000k / 6500k. N/A. 38°. >80. Aluminium Die-casting. N/A. BRASS GOLD / MESH BLACK. TM. Magna",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -1523,7 +1505,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. CCT (K). Shapes. Link. CRI (Ra). Material. Body Color. 20W / 30W / 40W / 50W / 70W / 100W. 2ft /3ft /4ft / 6ft /8 Ft. 3000K / 4000K / 6500K / 3 in 1. As Per Choice. Linkable. >80. Aluminium. Black. Linear Hanging",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 580
         }
       ],
@@ -1667,7 +1648,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 6W / 12W. 160*100*25 mm. N/A. 3000k. No. Up / Down. N/A. Die Cast Aluminium. Gloss Black. IP65. Casette",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -1690,7 +1670,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 6W / 12W. 80*65*75mm / 155*65*75mm. N/A. 3000k. No. Up / Down. N/A. Die Cast Aluminium. Gloss Black. IP65. Updown Wall",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -1713,7 +1692,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 6W. 110*110*85mm. N/A. 3000k. No. N/A. N/A. Acrylic. Black. IP65. Rubik Square",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -1796,7 +1774,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Voltage. CCT (K). Length. Beam Angle. CRI (Ra). Material. Body Color. Rating. 18W / 24W / 36W / 72W. 50*55*500mm / 50*55*990mm. 220V AC / 24V DC. WW / AMBER / GREEN / RED. 1 MTR / 0.5 MTR / CUSTOMISED. 10 Degree. >80. Aluminium. Black / Grey. IP 65. Wall Washer",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -1819,7 +1796,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 3W / 6W / 9W / 12W. 65*65*75mm / 80*80*85mm. 32mm. WW. N/A. N/A. >80. Aluminium. Silver Chrome. N/A. Inground",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -1842,7 +1818,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 3W / 9W / 12W / 18W. 85mm / 110mm / 135mm / 160mm. 60mm / 85mm / 110mm / 135mm. WW / WH. N/A. N/A. >80. Aluminium. Silver Chrome. N/A. Swimming Pool",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -1945,7 +1920,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 100W / 150W / 200W. 315 × 145 × 175 mm / 315 × 145 × 175 mm / 377 × 145 × 260 mm. N/A. 6500k. N/A. N/A. >80. Aluminium. Matt Grey. IP66. TM. Hi-Bay",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 4500
         }
       ],
@@ -1968,7 +1942,6 @@ export class ProductService {
       "description": "2 YEARS. EVERY NIGHT.. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. IP Rating. 24W / 36W / 50W. 275×120×55 mm / 315×135×55 mm / 360×170×55 mm. N/A. 6500K. No. N/A. >80. Aluminium. Grey. IP66. TM. Street",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 3200
         }
       ],
@@ -2111,9 +2084,9 @@ export class ProductService {
     {
       "id": "GLR-MASH-61",
       "name": "Mashal",
-      "category": "Street",
+      "category": "Gate Light",
       "categories": [
-        "Street"
+        "Gate Light"
       ],
       "status": "In Stock",
       "stock": 100,
@@ -2126,7 +2099,7 @@ export class ProductService {
           "dimension": "315*145*45",
           "packing": "12",
           "price": 900,
-          "wattage": "HOLDER"
+          "wattage": "LED"
         }
       ],
       "lightColours": [
@@ -2173,7 +2146,6 @@ export class ProductService {
       "description": "2 YEARS. TM. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W. 130*130*120mm. N/A. 3000k / 6500k. No. N/A. >80. Aluminium with PC Diffuser. Sand Black. N/A. Rubik",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2196,7 +2168,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 200MM / 300MM. 3000k / 6500k. N/A. N/A. >80. Aluminium. Grey. N/A. N/A. TM. Temple",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2219,7 +2190,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 200MM / 300MM. 3000k / 6500k. N/A. N/A. >80. Aluminium. Grey. N/A. N/A. TM. Legacy",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2242,7 +2212,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 300 mm / 600 mm / 900 mm. N/A. 3000k / 6500k. N/A. N/A. >80. Alluminium. Grey. N/A. TM. Four Pillar",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2265,7 +2234,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 300 mm / 600 mm / 900 mm. N/A. 3000k / 6500k. N/A. N/A. >80. Alluminium. Grey. N/A. TM. Square. BEAUTIFULLY.",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2288,7 +2256,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 300 mm / 600 mm / 900 mm. N/A. 3000k / 6500k. N/A. N/A. >80. Alluminium. Grey. N/A. TM. Ring",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2311,7 +2278,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 300 mm / 600 mm / 900 mm. N/A. 3000k / 6500k. N/A. N/A. >80. Alluminium. Grey. N/A. TM. Round",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2334,7 +2300,6 @@ export class ProductService {
       "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 15W. 300 mm / 600 mm / 900 mm. N/A. 3000k / 6500k. N/A. N/A. >80. Alluminium. Grey. N/A. TM. Oval",
       "variants": [
         {
-          "wattage": "DimensionW",
           "price": 1850
         }
       ],
@@ -2399,6 +2364,33 @@ export class ProductService {
           "wattage": "2M",
           "packing": "50",
           "price": 700
+        }
+      ]
+    },
+    {
+      "id": "GLR-LUXC-73",
+      "name": "Lux Concealed",
+      "category": "Concealed",
+      "categories": [
+        "Concealed"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 340,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-CONC-23.webp",
+      "description": "Lux Concealed 7W. 108*53 mm, 70 mm cut-out. Warm white or cool white.",
+      "lightColours": [
+        "Warm White",
+        "Cool White"
+      ],
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "108*53",
+          "cutout": "70",
+          "packing": "100",
+          "price": 340
         }
       ]
     }
@@ -2610,6 +2602,44 @@ export class ProductService {
     return before !== p.variants.length || true;
   }
 
+  /**
+   * The catalogue tidy-up, on a stored product.
+   *
+   * Categories, name, options and shades are taken from the seed for the few
+   * products the sheet settles — Mashal is a gate light, Streak is the Leaf
+   * Street fitting, and Concealed is two products rather than one with four
+   * rows that all read "7W". Every product, seeded or not, also has the
+   * import's "DimensionW" labels cleared: a blank option reads as "Option 1"
+   * on a card, which is honest, where the junk read as a real choice.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyCatalogueTidy(p: Product): boolean {
+    if (p.catalogueTidy) return false;
+
+    const RESHAPED = ['GLR-MASH-61', 'GLR-STRE-26', 'GLR-CONC-23'];
+    if (RESHAPED.includes(p.id)) {
+      const def = this.defaultProducts.find(dp => dp.id === p.id);
+      if (def) {
+        p.name = def.name;
+        p.categories = def.categories ? [...def.categories] : p.categories;
+        p.category = (def.categories || []).join(', ') || p.category;
+        p.variants = def.variants ? JSON.parse(JSON.stringify(def.variants)) : p.variants;
+        if (def.lightColours) p.lightColours = [...def.lightColours];
+        if (def.lightColourPrice) p.lightColourPrice = { ...def.lightColourPrice };
+        if (def.price != null) p.price = def.price;
+        if (def.description) p.description = def.description;
+      }
+    }
+
+    for (const v of (p.variants || [])) {
+      if (/dimension/i.test(String(v.wattage || ''))) delete v.wattage;
+    }
+
+    p.catalogueTidy = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2693,6 +2723,10 @@ export class ProductService {
             if (this.applyTrackSplit(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the categories, Concealed split and junk labels.
+            if (this.applyCatalogueTidy(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -2760,6 +2794,7 @@ export class ProductService {
           this.applyOptionFieldMerge(p);
           this.applyLightColours2026(p);
           this.applyTrackSplit(p);
+          this.applyCatalogueTidy(p);
           return p;
         });
         return parsed;
