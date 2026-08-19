@@ -167,6 +167,14 @@
       ],
       "rewrites": [
         {
+          "source": "/notification-image/**",
+          "function": "notificationImage"
+        },
+        {
+          "source": "/quotation-image/**",
+          "function": "quotationImage"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }

@@ -35,8 +35,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { name: 'Dealers', icon: 'people' },
     { name: 'Agents', icon: 'badge' },
     { name: 'Orders', icon: 'receipt' },
-    { name: 'Request Quotation', icon: 'quote' },
-    { name: 'Area Quotation', icon: 'area' },
+    // One entry: a request built room by room and one built as a single list
+    // are the same job and are priced on the same page, so two entries only
+    // made the console look like it had two features.
+    { name: 'Quotations', icon: 'quote' },
     { name: 'Compare Quotation', icon: 'compare' },
     { name: 'Offer Banners', icon: 'pricetag' },
     { name: 'Notifications', icon: 'notifications' },
@@ -205,10 +207,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.activeMenu = 'Orders';
     } else if (url.includes('/admin/quotations/compare')) {
       this.activeMenu = 'Compare Quotation';
-    } else if (url.includes('/admin/quotations/areas')) {
-      this.activeMenu = 'Area Quotation';
     } else if (url.includes('/admin/quotations')) {
-      this.activeMenu = 'Request Quotation';
+      this.activeMenu = 'Quotations';
     } else if (url.includes('/admin/categories')) {
       this.activeMenu = 'Categories';
     } else if (url.includes('/admin/dashboard') || url.includes('/admin/products')) {
@@ -247,10 +247,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/agents']);
     } else if (menu === 'Orders') {
       this.router.navigate(['/admin/orders']);
-    } else if (menu === 'Request Quotation') {
+    } else if (menu === 'Quotations') {
       this.router.navigate(['/admin/quotations/requests']);
-    } else if (menu === 'Area Quotation') {
-      this.router.navigate(['/admin/quotations/areas']);
     } else if (menu === 'Compare Quotation') {
       this.router.navigate(['/admin/quotations/compare']);
     } else if (menu === 'Offer Banners') {
