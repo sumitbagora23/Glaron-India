@@ -108,6 +108,15 @@ export interface Product {
    * hand-made duplicates of the track rail removed.
    */
   warrantySet?: boolean;
+  /**
+   * Set once the rope and the strip have been read off the sheet's MODEL
+   * column rather than its TYPE column.
+   *
+   * The rope was three options that were never options — one rope whose colour
+   * sets the rate — and the strip was two options both labelled with the type
+   * they share, so nothing told Eco from Pure Copper.
+   */
+  ropeStripFixed?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -1148,17 +1157,17 @@ export class ProductService {
       "price": 106,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-STRI-30.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 5W / 3W. 58×14 mm / 62×18 mm. N/A. 3000k. No. N/A. >80. Metal / Polycarbonate. Black / White. N/A. TM. Striker",
+      "description": "Strip 240LED-12V, sold by the metre in 500 m packing. Eco at Rs.106 per metre, pure copper at Rs.150. Warm, natural or cool white.",
       "variants": [
         {
+          "wattage": "Eco",
           "packing": "500 METER",
-          "pricePerMtr": 106,
-          "wattage": "240LED-12V"
+          "pricePerMtr": 106
         },
         {
+          "wattage": "Pure Copper",
           "packing": "500 METER",
-          "pricePerMtr": 150,
-          "wattage": "240LED-12V"
+          "pricePerMtr": 150
         }
       ],
       "lightColours": [
@@ -1425,7 +1434,7 @@ export class ProductService {
     },
     {
       "id": "GLR-ROPE-37",
-      "name": "Rope Light",
+      "name": "Mello Rope",
       "category": "Rope & Striped Light",
       "categories": [
         "Rope & Striped Light"
@@ -1435,32 +1444,12 @@ export class ProductService {
       "price": 104,
       "previewType": "panel",
       "image": "/assets/images/products/GLR-ROPE-37.webp",
-      "description": "2 YEARS. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. ~9W/MTR. 11 mm Thickness. N/A. 3000K / 4000K / 6500K / BLUE / GREEN / RED / AMBER / PINK /. ICE BLUE / MULTI. N/A. N/A. >80. PVC. N/A. N/A. TM. Rope Light",
+      "description": "Mello Rope 2835-120LED. 11 mm thick, 50 m bundle, sold by the metre in 200 m packing. Warm, natural or cool white at Rs.104 per metre; blue, green, red, amber, pink or ice blue at Rs.108; multi at Rs.120.",
       "variants": [
         {
+          "wattage": "2835-120LED",
           "packing": "200 METER",
-          "pricePerMtr": 104,
-          "wattage": "2835-120LED"
-        },
-        {
-          "packing": "200 METER",
-          "pricePerMtr": 108,
-          "wattage": "2835-120LED"
-        },
-        {
-          "packing": "200 METER",
-          "pricePerMtr": 120,
-          "wattage": "2835-120LED"
-        },
-        {
-          "packing": "100",
-          "price": 120,
-          "wattage": "ROPE CORD"
-        },
-        {
-          "packing": "100",
-          "price": 170,
-          "wattage": "MULTI CONTROLLER (6 IN 1)"
+          "pricePerMtr": 104
         }
       ],
       "lightColours": [
@@ -1475,7 +1464,16 @@ export class ProductService {
         "Ice Blue",
         "Multi"
       ],
-      "warranty": "1 Year"
+      "warranty": "1 Year",
+      "lightColourPrice": {
+        "Blue": 108,
+        "Green": 108,
+        "Red": 108,
+        "Amber": 108,
+        "Pink": 108,
+        "Ice Blue": 108,
+        "Multi": 120
+      }
     },
     {
       "id": "GLR-PROF-38",
@@ -2477,6 +2475,33 @@ export class ProductService {
         }
       ],
       "warranty": "1 Year"
+    },
+    {
+      "id": "GLR-RCRD-74",
+      "name": "Rope Cord",
+      "category": "Rope & Striped Light",
+      "categories": [
+        "Rope & Striped Light"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 120,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-ROPE-37.webp",
+      "description": "The cord that drives a Mello Rope run. Regular, or the 6-in-1 multi controller for the colour-changing rope.",
+      "warranty": "1 Year",
+      "variants": [
+        {
+          "wattage": "Regular",
+          "packing": "100",
+          "price": 120
+        },
+        {
+          "wattage": "Multi Controller (6 in 1)",
+          "packing": "100",
+          "price": 170
+        }
+      ]
     }
   ];
 
@@ -2746,6 +2771,29 @@ export class ProductService {
     return true;
   }
 
+  /**
+   * Re-reads the rope and the strip from the seed.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyRopeStripFix(p: Product): boolean {
+    if (p.ropeStripFixed) return false;
+    if (p.id === 'GLR-ROPE-37' || p.id === 'GLR-STRI-30') {
+      const def = this.defaultProducts.find(dp => dp.id === p.id);
+      if (def) {
+        p.name = def.name;
+        p.variants = def.variants ? JSON.parse(JSON.stringify(def.variants)) : p.variants;
+        if (def.lightColours) p.lightColours = [...def.lightColours];
+        if (def.lightColourPrice) p.lightColourPrice = { ...def.lightColourPrice };
+        else delete p.lightColourPrice;
+        if (def.price != null) p.price = def.price;
+        if (def.description) p.description = def.description;
+      }
+    }
+    p.ropeStripFixed = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2842,6 +2890,10 @@ export class ProductService {
             if (this.applyWarranty(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the rope and strip read off the MODEL column.
+            if (this.applyRopeStripFix(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -2911,6 +2963,7 @@ export class ProductService {
           this.applyTrackSplit(p);
           this.applyCatalogueTidy(p);
           this.applyWarranty(p);
+          this.applyRopeStripFix(p);
           return p;
         });
         // Keep the superseded duplicates off the first paint too, or they show
