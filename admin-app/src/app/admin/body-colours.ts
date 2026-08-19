@@ -19,54 +19,67 @@
  */
 
 /**
- * Body colours read off the free-text `bodyColour` the catalogue import left on
- * a variant.
+ * Body colours read off the free-text the catalogue import left on a variant.
  *
- * The imported sheet packed several options into one cell, with three levels of
- * punctuation:
+ * The sheet writes a finish as one or more POSITIONS joined by "+" — a body and
+ * a reflector — and lists the alternatives for a position with "/". What is
+ * actually sold is every combination, so the options are the CROSS PRODUCT of
+ * the positions:
  *
- *   "|"  separates whole options    — "WHITE | BLACK" is two finishes
- *   "+"  joins parts of ONE option  — "BK + GBK" is one finish: black body,
- *                                     gold-black reflector
- *   "/"  distributes alternatives positionally across the "+" parts, so
- *        "BK/WH + GBK/RG" is the pair (BK+GBK) and (WH+RG)
+ *   "BK/WH + RG / GBK / MW / MB"  ->  BK/RG  BK/GBK  BK/MW  BK/MB
+ *                                     WH/RG  WH/GBK  WH/MW  WH/MB
  *
- * The distributing rule is what the sheet itself confirms: one product spells a
- * finish out as "BK/WH + GBK/RG" and another writes the identical pair the long
- * way as "BK + GBK | WH + RG". Both have to come out as the same two options,
- * and with this rule they do.
+ * "|" is the awkward one: the sheet uses it both for alternatives inside a
+ * position and for spelling whole options out one by one. The two are told
+ * apart by how many of the "|" segments carry a "+":
  *
- * Anything that does not fit — a cell whose "/" groups are different lengths,
- * so there is no honest way to pair them — is kept WHOLE as a single option
- * rather than guessed at. It then reads oddly on the card, which is the point:
- * a wrong split is invisible, an unsplit cell asks to be fixed.
+ *   more than one  ->  the sheet is listing complete options, so each segment
+ *                      is one option. "BK + GBK | WH + RG" is exactly two
+ *                      finishes, NOT the four a cross product would give.
+ *   at most one    ->  the tail is more alternatives for the last position.
+ *                      "BK/WH + RG | GBK | MW | MB" is the eight above.
+ *
+ * That distinction is the whole reason the sheet bothers with two notations:
+ * Cylinder's "BK/WH + GBK/RG" really is any of four combinations, while Gem's
+ * "BK + GBK | WH + RG" really is only those two pairings.
  */
 export function parseBodyColours(raw?: string): string[] {
+  const text = String(raw || '').trim();
+  if (!text) return [];
+
+  const segments = text.split('|').map(s => s.trim()).filter(Boolean);
+  const joined = segments.filter(s => s.includes('+'));
+
+  let optionExpressions: string[];
+  if (joined.length > 1) {
+    // Complete options, spelled out one per segment.
+    optionExpressions = segments;
+  } else if (segments.length > 1) {
+    // One joined expression, then more alternatives for its last position.
+    const parts = segments[0].split('+').map(s => s.trim());
+    parts[parts.length - 1] = [parts[parts.length - 1], ...segments.slice(1)].join('/');
+    optionExpressions = [parts.join(' + ')];
+  } else {
+    optionExpressions = segments;
+  }
+
   const out: string[] = [];
+  for (const expression of optionExpressions) {
+    const positions = expression
+      .split('+')
+      .map(part => part.split('/').map(s => s.trim()).filter(Boolean))
+      .filter(group => group.length);
+    if (!positions.length) continue;
 
-  for (const option of String(raw || '').split('|').map(s => s.trim()).filter(Boolean)) {
-    // A plain finish — "BLACK", "SAND BLACK" — is the whole option.
-    if (!option.includes('+')) {
-      out.push(option);
-      continue;
+    let combinations: string[][] = [[]];
+    for (const group of positions) {
+      const next: string[][] = [];
+      for (const combination of combinations) {
+        for (const value of group) next.push([...combination, value]);
+      }
+      combinations = next;
     }
-
-    const parts = option.split('+').map(s => s.trim()).filter(Boolean);
-    const groups = parts.map(p => p.split('/').map(s => s.trim()).filter(Boolean));
-
-    // Every group either names one thing for all the options, or names one
-    // thing per option. Two groups that disagree on how many options there are
-    // cannot be paired, so the cell is left as it was written.
-    const widths = [...new Set(groups.map(g => g.length))].filter(n => n > 1);
-    if (widths.length > 1) {
-      out.push(option);
-      continue;
-    }
-
-    const count = widths[0] || 1;
-    for (let i = 0; i < count; i++) {
-      out.push(groups.map(g => (g.length === 1 ? g[0] : g[i])).join('/'));
-    }
+    for (const combination of combinations) out.push(combination.join('/'));
   }
 
   return dedupe(out);

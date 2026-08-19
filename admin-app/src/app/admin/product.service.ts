@@ -59,6 +59,16 @@ export interface Product {
    * can never fire again.
    */
   catalogue2026?: boolean;
+  /**
+   * Set once the finishes have been re-derived under the corrected reading of
+   * the sheet's BODY COLOUR column.
+   *
+   * The first pass paired the positions off one-for-one, so "BK/WH + GBK/RG"
+   * came out as two finishes. It is a cross product: every body against every
+   * reflector, so that cell is four. A second flag because `catalogue2026` is
+   * already set on every stored product and can never fire again.
+   */
+  bodyColoursV2?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -173,10 +183,13 @@ export class ProductService {
       ],
       "bodyColours": [
         "BK/RG",
+        "BK/GBK",
+        "BK/MW",
+        "BK/MB",
         "WH/RG",
-        "GBK",
-        "MW",
-        "MB"
+        "WH/GBK",
+        "WH/MW",
+        "WH/MB"
       ]
     },
     {
@@ -614,7 +627,12 @@ export class ProductService {
         }
       ],
       "bodyColours": [
-        "WH/BK + WH/SB/RG"
+        "WH/WH",
+        "WH/SB",
+        "WH/RG",
+        "BK/WH",
+        "BK/SB",
+        "BK/RG"
       ]
     },
     {
@@ -866,6 +884,8 @@ export class ProductService {
       ],
       "bodyColours": [
         "BK/GBK",
+        "BK/RG",
+        "WH/GBK",
         "WH/RG"
       ]
     },
@@ -2091,6 +2111,25 @@ export class ProductService {
     return true;
   }
 
+  /**
+   * Re-derives the finishes under the corrected cross-product reading.
+   *
+   * Only the products the price sheet actually prints a BODY COLOUR column for
+   * are touched, and the list is taken from the seed — which is derived from
+   * that column. A product the sheet is silent about keeps whatever it has:
+   * the free text it was originally read from is gone by now, so re-deriving
+   * it is not possible and guessing would be worse than leaving it.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyBodyColoursV2(p: Product): boolean {
+    if (p.bodyColoursV2) return false;
+    const def = this.defaultProducts.find(dp => dp.id === p.id);
+    if (def?.bodyColours?.length) p.bodyColours = [...def.bodyColours];
+    p.bodyColoursV2 = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2158,6 +2197,10 @@ export class ProductService {
             if (this.applyCatalogue2026(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the corrected reading of its finishes.
+            if (this.applyBodyColoursV2(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
           if (remoteProducts.length > 0) {
@@ -2205,6 +2248,7 @@ export class ProductService {
           this.applyCatalogueCategories(p);
           this.applyPriceList2026(p);
           this.applyCatalogue2026(p);
+          this.applyBodyColoursV2(p);
           return p;
         });
         return parsed;
