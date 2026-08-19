@@ -161,12 +161,12 @@ export class QuotationsPage implements OnInit {
 
   get heading(): string {
     if (this.view === 'compare') return 'Compare Quotation';
-    return 'Request Quotation';
+    return 'Quotations';
   }
 
   get subheading(): string {
     if (this.view === 'compare') return 'Quotes customers uploaded from the catalogue link.';
-    return 'Lists customers built in the catalogue and asked to be priced.';
+    return 'Lists customers built in the catalogue and asked to be priced — by room or as one list.';
   }
 
   /** The count shown beside the title — whichever list is on screen. */
