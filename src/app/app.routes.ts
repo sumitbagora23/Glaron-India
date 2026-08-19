@@ -294,10 +294,12 @@ export const routes: Routes = [
         data: { view: 'requests' },
       },
       {
-        // The area-wise link's own list: jobs that arrived split by room.
+        // There is one list of requests now, so this is where the area-wise
+        // tab used to point. Kept as a redirect rather than removed: it is in
+        // the history of anyone who used it.
         path: 'quotations/areas',
-        loadComponent: () => import('./admin/quotations/quotations.page').then((m) => m.QuotationsPage),
-        data: { view: 'areas' },
+        redirectTo: 'quotations/requests',
+        pathMatch: 'full',
       },
       {
         // One of those jobs, opened: every area priced, then the two PDFs.
@@ -310,10 +312,12 @@ export const routes: Routes = [
         data: { view: 'compare' },
       },
       {
-        // A request opened in full: every line priced, more products added, a
-        // discount across the lot, and the PDF that goes back to the customer.
+        // A request opened in full, whichever link it arrived on. One page
+        // prices both: a job sent by room opens on its rooms, and one sent as
+        // a single list opens as one space holding it. The old path is kept so
+        // a link already sent out still lands somewhere.
         path: 'quotations/requests/:id',
-        loadComponent: () => import('./admin/quotation-detail/quotation-detail.page').then((m) => m.QuotationDetailPage),
+        loadComponent: () => import('./admin/quotation-areas/quotation-areas.page').then((m) => m.QuotationAreasPage),
       },
       {
         // Putting products on that quotation — its own screen, the same way

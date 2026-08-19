@@ -48,9 +48,16 @@ export class QuotationsPage implements OnInit {
     return this.quotationService.quotations;
   }
 
-  /** Lists built in the catalogue and sent over to be priced. */
+  /**
+   * Every list a customer sent to be priced, however it arrived.
+   *
+   * The area-wise link splits a job by room and the plain link does not, but
+   * they are the same request and they are priced on the same page, so they
+   * are not worth two lists in the sidebar.
+   */
   get requests(): CustomerQuotation[] {
-    return this.quotations.filter(q => q.items && q.items.length);
+    return this.quotations.filter(q =>
+      (q.items && q.items.length) || (q.areas && q.areas.length));
   }
 
   /** Quotes from elsewhere, uploaded to be beaten. */
@@ -61,6 +68,11 @@ export class QuotationsPage implements OnInit {
   /** Jobs sent in from the area-wise link, already split by room. */
   get areaRequests(): CustomerQuotation[] {
     return this.quotations.filter(q => q.areas && q.areas.length);
+  }
+
+  /** Every piece on a request that arrived as one list. */
+  itemPieces(q: CustomerQuotation): number {
+    return (q.items || []).reduce((n, item) => n + (item.quantity || 0), 0);
   }
 
   /** How many areas a request carries, for the row. */
@@ -95,7 +107,7 @@ export class QuotationsPage implements OnInit {
    * line, more products added, a discount, and the PDF that goes back.
    */
   openQuotation(q: CustomerQuotation) {
-    this.router.navigate(['/admin/quotations/requests', q.id]);
+    this.router.navigate(['/admin/quotations/areas', q.id]);
   }
 
   // ---- The link to an uploaded quotation ----
@@ -149,20 +161,17 @@ export class QuotationsPage implements OnInit {
 
   get heading(): string {
     if (this.view === 'compare') return 'Compare Quotation';
-    if (this.view === 'areas') return 'Area Quotation';
     return 'Request Quotation';
   }
 
   get subheading(): string {
     if (this.view === 'compare') return 'Quotes customers uploaded from the catalogue link.';
-    if (this.view === 'areas') return 'Jobs sent from the area-wise link, area by area.';
     return 'Lists customers built in the catalogue and asked to be priced.';
   }
 
   /** The count shown beside the title — whichever list is on screen. */
   get visibleCount(): number {
     if (this.view === 'compare') return this.uploads.length;
-    if (this.view === 'areas') return this.areaRequests.length;
     return this.requests.length;
   }
 

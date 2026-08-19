@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ProductService, Product, ProductVariant } from '../product.service';
-import { QuotationArea } from '../quotation.service';
+import { QuotationArea, QuotationItem } from '../quotation.service';
 import { QuotationDraftService, QuoteLine } from './quotation-draft.service';
 
 /** One area of the job being priced, with its own lines. */
@@ -81,6 +81,27 @@ export class AreaQuoteDraftService {
       name: (area?.name || '').trim() || `Area ${index + 1}`,
       lines: (area?.items || []).map(item => this.base.lineFromItem(item))
     }));
+    this.seeded = true;
+  }
+
+  /**
+   * Fill the draft from a customer's request, however it arrived.
+   *
+   * A request from the area-wise link comes split by room; one from the plain
+   * catalogue link comes as a single list. They are the same job either way —
+   * a flat request is one asked for in a single unnamed space — so both open
+   * here rather than on two pages that priced the same thing twice.
+   */
+  seedFromRequest(request: { areas?: QuotationArea[]; items?: QuotationItem[] } | undefined) {
+    if (request?.areas?.length) {
+      this.seedFrom(request.areas);
+      return;
+    }
+    this.groups = [{
+      id: 'g0',
+      name: 'All items',
+      lines: (request?.items || []).map(item => this.base.lineFromItem(item))
+    }];
     this.seeded = true;
   }
 

@@ -139,7 +139,7 @@ export class QuotationAreasPage implements OnInit {
     // the next snapshot.
     effect(() => {
       const q = this.quotationService.quotations.find(item => item.id === this.id);
-      if (q && !this.draft.isSeeded) this.draft.seedFrom(q.areas);
+      if (q && !this.draft.isSeeded) this.draft.seedFromRequest(q);
     });
   }
 
@@ -659,6 +659,6 @@ export class QuotationAreasPage implements OnInit {
   }
 
   back() {
-    this.router.navigate(['/admin/quotations/areas']);
+    this.router.navigate(['/admin/quotations/requests']);
   }
 }

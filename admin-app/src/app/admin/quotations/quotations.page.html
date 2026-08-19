@@ -17,13 +17,20 @@
          The public catalogue shows no prices, so these are customers asking
          what a list of products costs. The list is the whole record — there is
          no amount on it to display. -->
-    <section class="table-section-card" *ngIf="view === 'requests'">
+    <!-- ============ QUOTATION REQUESTS ============
+         One list, however the request arrived. A job sent from the area-wise
+         link comes split by room and one from the plain link does not, but
+         both are the same thing — a list a customer wants priced — and both
+         open on the same page, so two lists only made the console look like
+         it had two features. -->
+    <section class="table-section-card" *ngIf="view === 'requests' || view === 'areas'">
       <div class="table-scroll-container">
       <table class="inventory-table compact">
         <thead>
           <tr>
             <th class="th-name">Customer</th>
             <th class="th-mobile">Mobile</th>
+            <th class="th-areas">What they sent</th>
             <th class="th-time">Received</th>
             <th class="th-actions">Actions</th>
           </tr>
@@ -40,8 +47,18 @@
               <a class="mobile-link" [href]="callHref(q.mobile)">{{ formatMobile(q.mobile) }}</a>
             </td>
 
-            <!-- What they asked for is not repeated here: the List button opens
-                 the same products in full, and the row stays readable. -->
+            <td class="td-areas" data-label="What they sent">
+              <span class="area-count-chip">
+                <ng-container *ngIf="areaCount(q)">
+                  {{ areaCount(q) }} {{ areaCount(q) === 1 ? 'area' : 'areas' }} · {{ areaPieces(q) }} pcs
+                </ng-container>
+                <ng-container *ngIf="!areaCount(q)">
+                  {{ itemPieces(q) }} pcs
+                </ng-container>
+              </span>
+              <span class="area-names" *ngIf="areaCount(q)">{{ areaNames(q) }}</span>
+              <span class="area-names" *ngIf="!areaCount(q)">one list</span>
+            </td>
 
             <td class="td-time" data-label="Received">
               <span class="time-text">{{ timeAgo(q.createdAt) }}</span>
@@ -49,13 +66,11 @@
 
             <td class="td-actions">
               <div class="actions-group">
-                <!-- Opens the request in full: every line priced, products
-                     added, a discount applied, and the PDF built from it. -->
                 <button class="view-btn" (click)="openQuotation(q)" title="Open and price this quotation">
                   <svg class="row-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10" />
                   </svg>
-                  <span>Open List</span>
+                  <span>Open</span>
                 </button>
                 <button class="delete-btn" (click)="removeQuotation(q, $event)" title="Delete request">
                   <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,77 +83,10 @@
           </tr>
 
           <tr *ngIf="requests.length === 0">
-            <td colspan="4" class="td-empty">
-              No quotation requests yet. They arrive here the moment a customer
-              builds a list in a shared catalogue link and sends it over.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-    </section>
-
-    <!-- ============ AREA QUOTATION ============
-         The same kind of request, sent from the area-wise link and already
-         split by room. The row says how many areas and which, and opening it
-         goes to the page where each area is priced. -->
-    <section class="table-section-card" *ngIf="view === 'areas'">
-      <div class="table-scroll-container">
-      <table class="inventory-table compact">
-        <thead>
-          <tr>
-            <th class="th-name">Customer</th>
-            <th class="th-mobile">Mobile</th>
-            <th class="th-areas">Areas</th>
-            <th class="th-time">Received</th>
-            <th class="th-actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let q of areaRequests; let last = last; trackBy: trackById" [class.last-row-border]="last">
-
-            <td class="td-name">
-              <span class="customer-name">{{ q.name }}</span>
-              <span class="customer-ref" *ngIf="q.ref">via link {{ q.ref }}</span>
-            </td>
-
-            <td class="td-mobile" data-label="Mobile">
-              <a class="mobile-link" [href]="callHref(q.mobile)">{{ formatMobile(q.mobile) }}</a>
-            </td>
-
-            <td class="td-areas" data-label="Areas">
-              <span class="area-count-chip">
-                {{ areaCount(q) }} {{ areaCount(q) === 1 ? 'area' : 'areas' }} · {{ areaPieces(q) }} pcs
-              </span>
-              <span class="area-names">{{ areaNames(q) }}</span>
-            </td>
-
-            <td class="td-time" data-label="Received">
-              <span class="time-text">{{ timeAgo(q.createdAt) }}</span>
-            </td>
-
-            <td class="td-actions">
-              <div class="actions-group">
-                <button class="view-btn" (click)="openAreaQuotation(q)" title="Open and price this job area by area">
-                  <svg class="row-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10" />
-                  </svg>
-                  <span>Open Areas</span>
-                </button>
-                <button class="delete-btn" (click)="removeQuotation(q, $event)" title="Delete request">
-                  <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  <span class="delete-btn-text">Delete</span>
-                </button>
-              </div>
-            </td>
-          </tr>
-
-          <tr *ngIf="areaRequests.length === 0">
             <td colspan="5" class="td-empty">
-              Nothing here yet. Area-wise jobs arrive the moment a customer fills
-              their areas in a Share Catalogue (Area Wise) link and sends it over.
+              No quotation requests yet. They arrive here the moment a customer
+              builds a list in a shared catalogue link — by room or as one list —
+              and sends it over.
             </td>
           </tr>
         </tbody>
