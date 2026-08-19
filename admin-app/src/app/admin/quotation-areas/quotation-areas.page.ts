@@ -6,6 +6,7 @@ import { IonContent } from '@ionic/angular/standalone';
 import { QuotationService, CustomerQuotation } from '../quotation.service';
 import { QuoteLine } from '../quotations/quotation-draft.service';
 import { AreaQuoteDraftService, AreaGroup, MergedLine } from '../quotations/area-draft.service';
+import { orderableBodyColours } from '../body-colours';
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { CategoryService, Category } from '../category.service';
 import { orderRefDigits } from '../order-ref';
@@ -490,8 +491,8 @@ export class QuotationAreasPage implements OnInit {
     if (!colours.length) return this.quantityOf(product, tab.variant);
     return colours.reduce((sum, c) => sum + this.quantityOf(product, tab.variant, c), 0);
   }
-  variantLabel(v: ProductVariant): string {
-    return this.draft.variantLabel(v);
+  variantLabel(v: ProductVariant, omitBodyColour = false): string {
+    return this.draft.variantLabel(v, omitBodyColour);
   }
 
   unitPrice(product: Product, variant?: ProductVariant, lightColour?: string): number {
@@ -500,17 +501,48 @@ export class QuotationAreasPage implements OnInit {
 
   quantityOf(product: Product, variant?: ProductVariant, lightColour?: string): number {
     const group = this.pickGroup;
-    return group ? this.draft.quantityOf(group, product, variant, lightColour) : 0;
+    return group ? this.draft.quantityOf(group, product, variant, lightColour, this.activeBodyColour(product)) : 0;
   }
 
   addProduct(product: Product, variant?: ProductVariant, lightColour?: string) {
     const group = this.pickGroup;
-    if (group) this.draft.add(group, product, variant, lightColour);
+    if (group) this.draft.add(group, product, variant, lightColour, this.activeBodyColour(product));
   }
 
   removeProduct(product: Product, variant?: ProductVariant, lightColour?: string) {
     const group = this.pickGroup;
-    if (group) this.draft.remove(group, product, variant, lightColour);
+    if (group) this.draft.remove(group, product, variant, lightColour, this.activeBodyColour(product));
+  }
+
+  // ---- Body colour ----
+  //
+  // The finish is chosen once per product, above its wattage tabs, and every
+  // quantity stepped underneath belongs to whichever finish is open — the same
+  // order the customer meets on the catalogue card.
+  private openBodyColourByProduct: { [productId: string]: string } = {};
+
+  trackByBodyColour = (_: number, colour: string) => colour;
+
+  /** The finishes this product is sold in — empty when there is no choice. */
+  productBodyColours(product: Product): string[] {
+    const colours = orderableBodyColours(product);
+    return colours.length > 1 ? colours : [];
+  }
+
+  /** Undefined when there is no choice, which keeps the line exactly as before. */
+  activeBodyColour(product: Product): string | undefined {
+    const colours = this.productBodyColours(product);
+    if (!colours.length) return undefined;
+    const open = this.openBodyColourByProduct[product.id];
+    return open && colours.includes(open) ? open : colours[0];
+  }
+
+  isBodyColourOpen(product: Product, colour: string): boolean {
+    return this.activeBodyColour(product) === colour;
+  }
+
+  selectBodyColour(product: Product, colour: string) {
+    this.openBodyColourByProduct[product.id] = colour;
   }
 
   // ---- Small helpers ----

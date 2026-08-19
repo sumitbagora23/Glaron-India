@@ -57,6 +57,14 @@ export interface Product {
   // A colour with no entry is sold at the option's own price, so this stays
   // empty unless a shade is genuinely priced differently.
   lightColourPrice?: { [colour: string]: number };
+  // The housing finishes this product is sold in ("Black", "White",
+  // "BK/GBK"). Typed free-hand on the product form. A body colour NEVER moves
+  // the price — that is the whole difference between it and a light colour —
+  // but it does go on the line, so black and white are quoted separately. Left
+  // empty on a product that has never been edited, in which case the finishes
+  // are read off the variants' imported `bodyColour` text instead. See
+  // orderableBodyColours() in body-colours.ts.
+  bodyColours?: string[];
   variants?: ProductVariant[];
 }
 

@@ -453,6 +453,17 @@
                screen show: the wattages as tabs, the size and the rest of the
                sheet behind the ⓘ, and a quantity against every shade. -->
           <div class="qa-pick-variants">
+            <!-- The finish, above the wattage tabs: the coarser choice, and
+                 everything stepped below belongs to whichever one is open. -->
+            <div class="body-colour-row" *ngIf="productBodyColours(product).length">
+              <button type="button" class="body-colour-tab"
+                      *ngFor="let bc of productBodyColours(product); trackBy: trackByBodyColour"
+                      [class.is-open]="isBodyColourOpen(product, bc)"
+                      (click)="selectBodyColour(product, bc)">
+                <span class="bc-text">{{ bc }}</span>
+              </button>
+            </div>
+
             <ng-container *ngIf="specTabs(product).length; else pickBase">
               <div class="qa-pick-tab-row">
                 <button type="button" class="qa-pick-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"

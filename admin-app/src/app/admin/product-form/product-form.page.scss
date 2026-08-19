@@ -1073,3 +1073,39 @@
   font-weight: 600;
   color: #1C1B1B;
 }
+
+/* ---- Body colour ----
+   Typed free-hand, so what will actually be stored is echoed back underneath as
+   chips: the sheet's punctuation splits in ways that are not obvious from the
+   text ("BK/WH + GBK/RG" is two finishes, not four), and the admin should see
+   the split before saving rather than discover it on a card. */
+.bc-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.bc-preview-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--g-text-soft);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.bc-preview-chip {
+  padding: 3px 10px;
+  border: 1.5px solid var(--g-border-strong);
+  border-radius: 999px;
+  background: var(--g-surface-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--g-text);
+}
+.bc-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--g-text-soft);
+}

@@ -1,0 +1,74 @@
+/* The finish pills shown above a product's wattage tabs.
+
+   Kept apart from _product-card.scss because the admin's area picker needs
+   them without the rest of the card: that page lists products as plain rows,
+   but the finish is chosen there the same way, so it has to look the same. */
+
+/* ---- The finish, above the wattage tabs ----
+
+   The outer of the two choices, and drawn so it cannot be mistaken for the
+   inner one: full pills sitting clear of the sheet, where the wattage tabs are
+   square-shouldered and joined to it. Reading down the card you pick the
+   finish, then the wattage inside it, then the shade — coarse to fine.
+
+   Only ever drawn when a product is sold in more than one finish. */
+.body-colour-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+  /* Same rule as the wattage row: more finishes than the card is wide scroll
+     sideways rather than wrapping onto a second line. */
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar { display: none; }
+}
+.body-colour-tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 5px 13px;
+  border: 1.5px solid var(--g-border-strong);
+  border-radius: 999px;
+  background: var(--g-surface-3);
+  color: var(--g-text-soft);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+
+  &:active { background: var(--g-border); }
+
+  /* Open: filled rather than outlined, so the chosen finish reads at a glance
+     from across the card and never competes with the open wattage tab below. */
+  &.is-open {
+    background: var(--g-primary);
+    border-color: var(--g-primary);
+    color: #fff;
+  }
+}
+.bc-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Everything on order in this finish, across every wattage and shade under it. */
+.bc-qty {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--g-gold);
+  color: var(--g-text);
+  font-size: 10px;
+  font-weight: 800;
+}
+

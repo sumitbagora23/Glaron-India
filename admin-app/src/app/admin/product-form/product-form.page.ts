@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/standalone';
 import { Product, ProductService, ProductVariant } from '../product.service';
 import { CategoryService, Category } from '../category.service';
 import { LightColourService } from '../light-colour.service';
 import { NO_COLOUR, lightColourSwatch } from '../light-colours';
+import { orderableBodyColours, readBodyColourInput } from '../body-colours';
 import { buildSpecTabs } from '../product-spec-tabs';
 
 @Component({
@@ -17,6 +18,7 @@ import { buildSpecTabs } from '../product-spec-tabs';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     IonContent
   ]
 })
@@ -49,6 +51,21 @@ export class ProductFormPage implements OnInit {
   // the reactive form like the categories above, for the same checkbox handling.
   // Every catalogue card reads these back behind the wattage / dimension tabs.
   selectedLightColours: string[] = [];
+
+  /**
+   * The finishes this product is sold in, as the admin types them.
+   *
+   * Free text rather than a picker: the finishes vary too much by range to be
+   * worth a managed list the way light colours are. A comma separates them, and
+   * so does the "|" the price sheet uses, so a cell can be pasted in whole.
+   * What is stored is the parsed list — see readBodyColourInput().
+   */
+  bodyColoursText = '';
+
+  /** What the typed text will actually be stored as, shown back as chips. */
+  get bodyColourPreview(): string[] {
+    return readBodyColourInput(this.bodyColoursText);
+  }
   lightColourDropdownOpen = false;
   // What each shade costs, keyed by colour name. An absolute price, not a
   // surcharge. Blank means that shade is sold at the option's own price.
@@ -617,6 +634,12 @@ export class ProductFormPage implements OnInit {
       this.selectedLightColours = product.lightColours ? [...product.lightColours] : [];
       this.lightColourPrices = { ...(product.lightColourPrice || {}) };
 
+      // A product that has never been edited has no list of its own yet, so the
+      // finishes are read back off whatever the import left on its variants.
+      // The admin sees them already filled in and can correct them in place —
+      // which is also how the imported text gets replaced by a real list.
+      this.bodyColoursText = orderableBodyColours(product).join(', ');
+
       this.imagePreview = product.image || null;
 
       this.variantsArray.clear();
@@ -703,6 +726,11 @@ export class ProductFormPage implements OnInit {
     });
     const lightColourPrice = Object.keys(prices).length ? prices : undefined;
 
+    // The finishes, as typed. Left off the document when there are none, so a
+    // product with nothing to choose quotes exactly as it did before.
+    const parsedBodyColours = readBodyColourInput(this.bodyColoursText);
+    const bodyColours = parsedBodyColours.length ? parsedBodyColours : undefined;
+
     try {
       if (this.isEditMode) {
         const existing = this.productService.getProductById(this.productId);
@@ -716,6 +744,7 @@ export class ProductFormPage implements OnInit {
             categories,
             lightColours,
             lightColourPrice,
+            bodyColours,
             image: imageUrl,
             variants: cleanedVariants.length > 0 ? cleanedVariants : undefined
           });
@@ -730,6 +759,7 @@ export class ProductFormPage implements OnInit {
           categories,
           lightColours,
           lightColourPrice,
+          bodyColours,
           stock: 999,
           image: imageUrl,
           previewType: 'panel',

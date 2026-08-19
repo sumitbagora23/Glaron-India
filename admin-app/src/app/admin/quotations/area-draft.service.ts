@@ -86,8 +86,8 @@ export class AreaQuoteDraftService {
 
   // ---- Editing ----
 
-  variantLabel(variant: ProductVariant): string {
-    return this.base.variantLabel(variant);
+  variantLabel(variant: ProductVariant, omitBodyColour = false): string {
+    return this.base.variantLabel(variant, omitBodyColour);
   }
 
   unitPrice(product: Product, variant?: ProductVariant, lightColour?: string): number {
@@ -113,19 +113,19 @@ export class AreaQuoteDraftService {
     this.groups = this.groups.filter(g => g !== group);
   }
 
-  key(product: Product, variant?: ProductVariant, lightColour?: string): string {
-    return this.base.key(product, variant, lightColour);
+  key(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): string {
+    return this.base.key(product, variant, lightColour, bodyColour);
   }
 
   /** How many of this exact line are in this area already. */
-  quantityOf(group: AreaGroup, product: Product, variant?: ProductVariant, lightColour?: string): number {
-    const key = this.key(product, variant, lightColour);
+  quantityOf(group: AreaGroup, product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): number {
+    const key = this.key(product, variant, lightColour, bodyColour);
     return group.lines.find(l => l.key === key)?.quantity || 0;
   }
 
   /** Put one more of this line into this area, or start it at one. */
-  add(group: AreaGroup, product: Product, variant?: ProductVariant, lightColour?: string) {
-    const key = this.key(product, variant, lightColour);
+  add(group: AreaGroup, product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
+    const key = this.key(product, variant, lightColour, bodyColour);
     const line = group.lines.find(l => l.key === key);
     if (line) {
       line.quantity += 1;
@@ -137,7 +137,7 @@ export class AreaQuoteDraftService {
       name: product.name,
       // The shade rides along with the option, so an area line reads
       // "7W · Warm White" the same way a request line does.
-      variant: this.base.lineLabel(variant, lightColour),
+      variant: this.base.lineLabel(variant, lightColour, bodyColour),
       sku: product.id,
       image: product.image || '',
       mrp: price,
@@ -149,8 +149,8 @@ export class AreaQuoteDraftService {
   }
 
   /** One fewer, and out of the area entirely at zero. */
-  remove(group: AreaGroup, product: Product, variant?: ProductVariant, lightColour?: string) {
-    const key = this.key(product, variant, lightColour);
+  remove(group: AreaGroup, product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string) {
+    const key = this.key(product, variant, lightColour, bodyColour);
     const index = group.lines.findIndex(l => l.key === key);
     if (index < 0) return;
     if (group.lines[index].quantity > 1) group.lines[index].quantity -= 1;

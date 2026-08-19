@@ -126,6 +126,26 @@
                 </div>
               </div>
 
+              <!-- Body Colour: the finishes the housing comes in. Free text,
+                   because the finishes vary too much by range to be worth a
+                   managed list. A finish never moves the price — that is what
+                   separates it from the light colour below — but it does part
+                   the quotation lines, so black and white are quoted apart. -->
+              <div class="input-form-group">
+                <label class="input-field-label">Body Colour <span class="optional-tag">(Optional)</span></label>
+                <input type="text" class="text-input-field" [(ngModel)]="bodyColoursText"
+                       [ngModelOptions]="{ standalone: true }"
+                       placeholder="Black, White — or paste a sheet cell like BK/WH + GBK/RG" />
+                <div class="bc-preview" *ngIf="bodyColourPreview.length">
+                  <span class="bc-preview-label">Sold in</span>
+                  <span class="bc-preview-chip" *ngFor="let bc of bodyColourPreview">{{ bc }}</span>
+                </div>
+                <span class="bc-hint">
+                  Separate them with a comma. "|" and the sheet's "+" and "/" are understood too,
+                  so BK/WH + GBK/RG reads as BK/GBK and WH/RG.
+                </span>
+              </div>
+
               <!-- Light Colour field (multi-select) -->
               <div class="input-form-group">
                 <div class="lc-label-row">
