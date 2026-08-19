@@ -479,15 +479,16 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   get tabIndex(): number {
     if (this.activeTab === 'products') return 1;
+    // 'area' is no longer a tab of its own — it is the range opened with a room
+    // held, reached from that room on the list — so it sits under the list.
     if (this.activeTab === 'area') return 2;
-    if (this.activeTab === 'cart') return this.areaAllowed ? 3 : 2;
-    if (this.activeTab === 'compare') return this.areaAllowed ? 4 : 3;
+    if (this.activeTab === 'cart') return 2;
+    if (this.activeTab === 'compare') return 3;
     return 0;
   }
 
-  /** Two on a dealer's link, four on the office's, five on the area-wise one. */
+  /** Two on a dealer's link, four on either of the office's. */
   get tabCount(): number {
-    if (this.areaAllowed) return 5;
     return this.quotationsAllowed ? 4 : 2;
   }
 
@@ -1123,10 +1124,35 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.scrollTop();
   }
 
-  /** Done adding — back to the rooms. */
+  /**
+   * Open the range with this room held, so everything added lands in it.
+   *
+   * This was the Areas tab. A customer's picks lived in two places — rooms on
+   * one tab, the list on another, each explaining the other — so the rooms
+   * moved onto the list and filling one starts from the room itself.
+   */
+  fillArea(area: PublicArea) {
+    this.activeTab = 'area';
+    this.activeAreaId = area.id;
+    this.areaStep = 'browse';
+    this.searchQuery = '';
+    this.scrollTop();
+  }
+
+  /**
+   * Done adding — back to the room on the list, where it was opened from.
+   *
+   * The rooms live on the list now, so there is nowhere else to return to:
+   * leaving the browser on the old 'area' tab would land on a tab that is no
+   * longer in the bar.
+   */
   finishBrowsing() {
+    const area = this.activeArea;
     this.activeAreaId = null;
     this.areaStep = 'list';
+    this.activeTab = 'cart';
+    if (area) this.openListArea(area);
+    else this.cartStep = 'list';
     this.scrollTop();
   }
 
