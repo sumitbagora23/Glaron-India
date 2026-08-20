@@ -56,8 +56,12 @@ export class ShareCataloguePage {
   async shareLink() {
     if (this.sharing) return;
     this.sharing = true;
+    // The area-wise link, which is now the only one. It could always do
+    // everything the plain office link could — see isOfficeRef, which is true
+    // for both prefixes — and adds areas on top, so sharing it takes nothing
+    // away from a customer who only ever wants one flat list.
     const outcome = await this.catalogShare.share('', {
-      office: true,
+      area: true,
       origin: this.devOrigin
     });
     this.sharing = false;

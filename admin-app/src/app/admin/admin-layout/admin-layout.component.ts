@@ -45,7 +45,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { name: 'Posts', icon: 'image' },
     { name: 'Activity Logs', icon: 'activity' },
     { name: 'Share Catalogue', icon: 'share' },
-    { name: 'Share Catalogue (Area)', icon: 'share-area' },
     { name: 'Settings', icon: 'settings' }
   ];
 
@@ -223,8 +222,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.activeMenu = 'Posts';
     } else if (url.includes('/admin/logs')) {
       this.activeMenu = 'Activity Logs';
-    } else if (url.includes('/admin/share-catalogue-area')) {
-      this.activeMenu = 'Share Catalogue (Area)';
     } else if (url.includes('/admin/share-catalogue')) {
       this.activeMenu = 'Share Catalogue';
     } else if (url.includes('/admin/settings')) {
@@ -261,8 +258,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/logs']);
     } else if (menu === 'Share Catalogue') {
       this.router.navigate(['/admin/share-catalogue']);
-    } else if (menu === 'Share Catalogue (Area)') {
-      this.router.navigate(['/admin/share-catalogue-area']);
     } else if (menu === 'Settings') {
       this.router.navigate(['/admin/settings']);
     }

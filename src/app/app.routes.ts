@@ -342,9 +342,11 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/share-catalogue/share-catalogue.page').then((m) => m.ShareCataloguePage),
       },
       {
-        // The same link with the Areas tab on it.
+        // One share page now — the link it hands out is the area-wise one,
+        // which could always do everything the plain one could. The old address
+        // stays so a bookmark still lands on the page that shares the link.
         path: 'share-catalogue-area',
-        loadComponent: () => import('./admin/share-catalogue-area/share-catalogue-area.page').then((m) => m.ShareCatalogueAreaPage),
+        redirectTo: 'share-catalogue',
       },
       {
         path: 'settings',
