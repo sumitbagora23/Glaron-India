@@ -66,6 +66,49 @@
 /* The row actions are links now, not buttons — they open the file itself. */
 a.view-btn { text-decoration: none; }
 
+/* The name is the row's own link. A button rather than an anchor: it opens a
+   view inside the console, so there is no href a middle-click could usefully
+   follow, and a button is what a keyboard already knows how to press. */
+.customer-name-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .customer-name,
+  &:focus-visible .customer-name {
+    color: var(--ad-gold-strong);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &:hover .customer-name-go,
+  &:focus-visible .customer-name-go { opacity: 1; transform: none; }
+}
+
+/* Something has to say the name is a way in, now that the Open button that used
+   to say it is gone. On a mouse the hover does that and the chevron slides in
+   with it; on a touch screen there is no hover to do it with, so the chevron is
+   simply always there. */
+.customer-name-go {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  color: var(--ad-gold-strong);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+@media (hover: none) {
+  .customer-name-go { opacity: 1; transform: none; }
+}
+
 .customer-name {
   display: block;
   font-family: 'Outfit';
@@ -73,6 +116,7 @@ a.view-btn { text-decoration: none; }
   font-size: 14px;
   line-height: 20px;
   color: #170338;
+  transition: color .15s ease;
 }
 
 .customer-ref,
@@ -109,8 +153,9 @@ a.view-btn { text-decoration: none; }
   white-space: nowrap;
 }
 
+/* Delete alone now that Open has moved onto the name. */
 .th-actions,
-.td-actions { width: 190px; white-space: nowrap; }
+.td-actions { width: 120px; white-space: nowrap; }
 
 .row-icon { width: 14px; height: 14px; }
 
