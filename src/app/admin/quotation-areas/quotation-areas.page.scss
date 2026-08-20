@@ -38,7 +38,7 @@
   font-size: 14px;
   color: #94A3B8;
   background: #FFFFFF;
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 10px;
 }
 
@@ -79,7 +79,7 @@
   gap: 10px;
   padding: 8px 12px;
   background: #FFFFFF;
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 12px;
 }
 
@@ -90,7 +90,7 @@
   align-items: center;
   gap: 8px;
   padding: 11px 18px;
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 10px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -232,7 +232,7 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   background: #FFFFFF;
   overflow: hidden;
@@ -285,7 +285,7 @@
   gap: 2px;
   height: 36px;
   padding: 0 8px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   background: #FFFFFF;
 
@@ -314,7 +314,7 @@
   display: inline-flex;
   align-items: center;
   height: 36px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   background: #FFFFFF;
   overflow: hidden;
@@ -388,7 +388,7 @@
   width: 118px;
   height: 38px;
   padding: 0 12px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   outline: none;
   font-family: 'Outfit';
@@ -418,7 +418,7 @@
   gap: 12px;
   padding: 12px 24px;
   background: #FFFFFF;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid var(--ad-border);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
   z-index: 10;
 }
@@ -431,7 +431,7 @@
 
 .qd-back {
   padding: 11px 18px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -440,7 +440,7 @@
   color: #1C1B1B;
   cursor: pointer;
 
-  &:hover { background: #F8F9FA; }
+  &:hover { background: var(--ad-surface-2); }
 }
 
 .qd-pdf {
@@ -493,18 +493,11 @@
    products are picked into.
    ============================================================================ */
 
-/* ---- Naming an area the customer left out ---- */
-.qa-add-area {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  margin-bottom: 18px;
-}
 .qa-area-input {
   flex: 1;
   min-width: 0;
   padding: 12px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -517,45 +510,99 @@
   &:focus { border-color: #170338; box-shadow: 0 0 0 3px rgba(23, 3, 56, .07); }
 }
 
-/* ---- One card per area ---- */
-.qa-area-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
+/* Fold every room, or unfold them. A quieter button than the ones beside it:
+   it changes what is on screen, not what is on the quotation. */
+.qa-fold-btn {
+  white-space: nowrap;
+  svg { color: #8B8394; }
 }
-.qa-area-card {
-  position: relative;
+
+/* ---- The rooms, stacked and open ----
+   One panel per room: a head that names it and carries the two things ever done
+   to it, and its products immediately underneath. The head is a real sticky
+   header — it holds against the page while the list below it scrolls, so on a
+   job of a dozen rooms the row being edited is never orphaned from the room it
+   belongs to. Cards in a grid were tried first and had space for a name and a
+   count and nothing else, which is exactly what forced the drill-down. */
+.qa-rooms {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 14px;
   width: 100%;
-  padding: 16px 18px;
-  border: 1px solid #E7E1E9;
-  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.qa-room {
+  width: 100%;
+  border: 1px solid var(--ad-border);
+  border-radius: 14px;
   background: #FFFFFF;
-  box-shadow: 0 2px 10px rgba(23, 3, 56, .05);
+  box-shadow: 0 1px 2px rgba(23, 3, 56, .05);
+  overflow: hidden;
+  transition: box-shadow .2s ease, border-color .2s ease;
+
+  &:hover { border-color: #DCD4E2; }
+
+  /* Folded: the head is the whole panel, so the seam under it goes. */
+  &.is-shut .qa-room-head { border-bottom-color: transparent; }
+}
+
+.qa-room-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #EFEAF0;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FCFAFB 100%);
+}
+
+/* The name, the count and the fold are one target, because they are one idea. */
+.qa-room-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 4px 2px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease;
 
-  &:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(23, 3, 56, .10); border-color: #D8CFE0; }
+  &:hover { background: rgba(23, 3, 56, .035); }
+  &:focus-visible { outline: 2px solid rgba(23, 3, 56, .35); outline-offset: 2px; }
 }
-.qa-area-mark {
+
+.qa-room-chev {
   flex-shrink: 0;
-  width: 46px;
-  height: 46px;
+  width: 16px;
+  height: 16px;
+  color: #8B8394;
+  transition: transform .2s ease;
+
+  .qa-room.is-shut & { transform: rotate(-90deg); }
+}
+
+.qa-room-mark {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 13px;
+  border-radius: 11px;
   background: linear-gradient(150deg, #37215f 0%, #170338 100%);
   color: #FEB300;
   font-family: 'Outfit';
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
 }
-.qa-area-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.qa-area-name {
+
+.qa-room-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.qa-room-name {
   font-family: 'Outfit';
   font-size: 15.5px;
   font-weight: 700;
@@ -564,119 +611,62 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.qa-area-meta { font-family: 'Outfit'; font-size: 12.5px; color: #64748B; }
+.qa-room-meta { font-family: 'Outfit'; font-size: 12.5px; font-weight: 500; color: #64748B; }
 
-.qa-area-total { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.qa-area-amount { font-family: 'Outfit'; font-size: 16px; font-weight: 700; color: #170338; }
-.qa-area-mrp {
+.qa-room-acts { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+
+/* Every room carries its own Add products, so a product cannot land in the
+   wrong one: the button that was pressed names where it goes. */
+.qa-room-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid #E2DCE6;
+  border-radius: 999px;
+  background: #FFFFFF;
   font-family: 'Outfit';
-  font-size: 12px;
-  color: #94A3B8;
-  text-decoration: line-through;
+  font-size: 13px;
+  font-weight: 700;
+  color: #170338;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+
+  svg { width: 15px; height: 15px; }
+
+  &:hover {
+    background: #FFF8E9;
+    border-color: #F3D89A;
+    box-shadow: 0 2px 8px rgba(126, 87, 0, .12);
+  }
 }
 
-.qa-area-del {
+.qa-room-del {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  color: #94A3B8;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #A29BAA;
+  cursor: pointer;
+  transition: color .16s ease, background .16s ease;
 
   svg { width: 17px; height: 17px; }
   &:hover { color: #DC2626; background: rgba(220, 38, 38, .08); }
 }
 
-/* ---- The figures read before either PDF is built ---- */
-.qa-summary {
-  padding: 20px 22px;
-  border: 1px solid #E7E1E9;
-  border-radius: 12px;
-  background: linear-gradient(160deg, #FFFDF9 0%, #FFF7EC 100%);
-  margin-bottom: 20px;
-}
-.qa-summary-title {
-  margin: 0 0 14px;
-  font-family: 'Outfit';
-  font-size: 15px;
-  font-weight: 700;
-  color: #170338;
-}
-.qa-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-}
-.qa-sum-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-  border: 1px solid #F2E7D8;
-  border-radius: 10px;
-  background: #FFFFFF;
+/* The list sits flush inside the panel — the panel IS the card, so the table
+   must not draw a second one around itself. */
+.qa-room-body {
+  width: 100%;
 
-  &.is-off { border-color: #FAD9B7; background: #FFF6EB; }
-  &.is-total {
-    border-color: #FEB300;
-    background: linear-gradient(135deg, #FEB300 0%, #F5941D 100%);
-    .qa-sum-label { color: rgba(23, 3, 56, .72); }
-    .qa-sum-value { color: #170338; }
-  }
+  .inventory-table thead tr { background: #FBF9FA; }
+  .inventory-table tbody tr:last-child { border-bottom: none; }
 }
-.qa-sum-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Outfit';
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: .3px;
-  text-transform: uppercase;
-  color: #7A7383;
-}
-.qa-sum-chip {
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(254, 179, 0, .2);
-  color: #7E5700;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: none;
-}
-.qa-sum-value { font-family: 'Outfit'; font-size: 18px; font-weight: 700; color: #170338; }
-.qa-summary-note {
-  margin: 12px 0 0;
-  font-family: 'Outfit';
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: #6B7280;
-}
-
-/* ---- One area, opened ---- */
-.qa-area-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.qa-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  svg { width: 15px; height: 15px; }
-}
-.qa-area-title {
-  margin: 0;
-  font-family: 'Outfit';
-  font-size: 19px;
-  font-weight: 700;
-  color: #170338;
-}
-.qa-area-sub { font-family: 'Outfit'; font-size: 13px; color: #64748B; }
 
 .qa-line-off {
   margin-left: 6px;
@@ -751,7 +741,7 @@
 .qa-pick-title { font-family: 'Outfit'; font-size: 18px; font-weight: 700; color: #170338; }
 .qa-pick-close {
   width: 34px; height: 34px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 9px;
   background: #FFFFFF;
   display: grid; place-items: center;
@@ -759,7 +749,7 @@
   line-height: 1;
   color: #64748B;
   cursor: pointer;
-  &:hover { background: #F8F9FA; }
+  &:hover { background: var(--ad-surface-2); }
 }
 /* ---- Search + filter, above the scrolling list ----
    Both sit outside .qa-pick-list, so a few hundred products can go past
@@ -774,7 +764,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 9px;
   background: #FFFFFF;
   transition: border-color .16s ease;
@@ -807,7 +797,7 @@
   cursor: pointer;
   padding: 0;
   svg { width: 12px; height: 12px; }
-  &:hover { background: #E2E8F0; color: #170338; }
+  &:hover { background: var(--ad-border); color: #170338; }
 }
 
 /* Icon only. The name of what is filtered lives on the chip below it. */
@@ -815,7 +805,7 @@
   position: relative;
   flex-shrink: 0;
   width: 42px; height: 42px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 9px;
   background: #FFFFFF;
   color: #334155;
@@ -825,7 +815,7 @@
   transition: background .16s ease, border-color .16s ease, color .16s ease;
 
   svg { width: 19px; height: 19px; }
-  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+  &:hover { background: var(--ad-surface-2); border-color: #CBD5E1; }
 
   &.on {
     background: #170338;
@@ -923,7 +913,7 @@
 .qa-cat-search {
   display: flex;
   align-items: center;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 9px;
   background: #FFFFFF;
   margin-bottom: 14px;
@@ -961,7 +951,7 @@
   gap: 12px;
   padding: 10px 13px;
   margin-bottom: 14px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 11px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -969,7 +959,7 @@
   cursor: pointer;
   transition: border-color .16s ease, background .16s ease;
 
-  &:hover { background: #F8F9FA; }
+  &:hover { background: var(--ad-surface-2); }
   &.selected { border-color: #170338; background: rgba(23, 3, 56, .04); }
 
   .qa-cat-all-icon {
@@ -997,7 +987,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 11px;
   background: #FFFFFF;
   overflow: hidden;
@@ -1064,7 +1054,7 @@
 .qa-cat-clear {
   flex: 1;
   padding: 12px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 9px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -1072,7 +1062,7 @@
   font-weight: 600;
   color: #170338;
   cursor: pointer;
-  &:hover:not(:disabled) { background: #F8F9FA; }
+  &:hover:not(:disabled) { background: var(--ad-surface-2); }
   &:disabled { opacity: .45; cursor: default; }
 }
 .qa-cat-done {
@@ -1164,9 +1154,6 @@
 }
 
 @media (max-width: 700px) {
-  .qa-add-area { flex-direction: column; }
-  .qa-area-grid { grid-template-columns: 1fr; }
-  .qa-summary { padding: 16px; }
   .qd-footer-actions { flex-wrap: wrap; }
   .qa-list-pdf, .qd-pdf { flex: 1; justify-content: center; }
   /* Three buttons will not sit on one phone-width row, so the pair that make
@@ -1188,7 +1175,7 @@
   align-items: center;
   gap: 9px;
   padding: 12px 20px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 10px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -1199,7 +1186,7 @@
   transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
 
   svg { width: 17px; height: 17px; }
-  &:hover { background: #F8F9FA; }
+  &:hover { background: var(--ad-surface-2); }
 
   &.active {
     border-color: transparent;
@@ -1219,21 +1206,6 @@
   font-size: 11.5px;
   font-weight: 800;
   text-align: center;
-}
-
-/* The room a flattened row belongs to, above its name. */
-.qa-row-area {
-  align-self: flex-start;
-  margin-bottom: 3px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(23, 3, 56, .07);
-  font-family: 'Outfit';
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: .4px;
-  text-transform: uppercase;
-  color: #170338;
 }
 
 .qa-final-foot { background: linear-gradient(135deg, #FFFDF9 0%, #FFF3E4 100%); }
@@ -1263,7 +1235,7 @@
   flex: 1;
   min-width: 0;
   padding: 10px 14px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 9px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -1324,93 +1296,14 @@
   text-align: right;
 }
 
-/* Four rooms to a row, which is how a plan is read. */
-.qa-area-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-@media (max-width: 1400px) { .qa-area-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 1050px) { .qa-area-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) {
-  .qa-area-grid { grid-template-columns: 1fr; }
   .qa-tools { justify-content: stretch; min-width: 0; }
   .qa-tools .qa-area-input { max-width: none; flex: 1; }
   .qa-applied-line { text-align: left; }
+
+  /* The head wraps rather than crushing the name: on a phone the actions drop
+     under it and keep their full targets. */
+  .qa-room-head { flex-wrap: wrap; row-gap: 10px; }
+  .qa-room-acts { width: 100%; justify-content: flex-end; }
+  .qa-room-add { flex: 1; justify-content: center; }
 }
-
-/* ---- The other rooms, above the open one's list ----
-   Pills rather than the square switches at the top of the page: this is the
-   second level of the same choice, and it should not compete with the first. */
-.qa-area-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 14px;
-  padding-bottom: 4px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-
-  /* Both lines are load-bearing. The page canvas is a fixed-height flex column,
-     and a row that scrolls sideways has an automatic minimum height of zero —
-     so once the areas ran past one screen the flex algorithm crushed this row
-     to its own padding and, since overflow-x forces overflow-y to match, the
-     pills inside were sliced in half rather than spilling out. */
-  flex-shrink: 0;
-  min-height: 41px;
-
-  &::-webkit-scrollbar { height: 4px; }
-  &::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 999px; }
-}
-.qa-area-tab {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 220px;
-  padding: 9px 15px;
-  border: 1px solid #E2E8F0;
-  border-radius: 999px;
-  background: #FFFFFF;
-  font-family: 'Outfit';
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #4B5563;
-  cursor: pointer;
-  transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
-
-  &:hover { background: #F8F9FA; border-color: #D8CFE0; }
-
-  &.active {
-    border-color: transparent;
-    background: linear-gradient(135deg, #170338 0%, #37215f 100%);
-    color: #FFFFFF;
-    box-shadow: 0 6px 16px rgba(23, 3, 56, .20);
-
-    .qa-area-tab-count { background: rgba(254, 179, 0, .95); color: #170338; }
-  }
-}
-.qa-area-tab-name {
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.qa-area-tab-count {
-  flex-shrink: 0;
-  min-width: 20px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: #F1EDF4;
-  color: #6B7280;
-  font-size: 11px;
-  font-weight: 800;
-  text-align: center;
-}
-
-/* The card is narrower at four across, so it stacks its own contents. */
-.qa-area-card {
-  gap: 12px;
-  padding: 14px;
-}
-.qa-area-mark { width: 40px; height: 40px; border-radius: 12px; font-size: 16px; }
-.qa-area-name { font-size: 14.5px; }
-.qa-area-meta { font-size: 12px; }
-

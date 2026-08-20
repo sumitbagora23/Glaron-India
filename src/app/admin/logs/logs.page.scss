@@ -1,6 +1,6 @@
 /* Activity Logs page — the admin-side record of dealer and agent behaviour.
    Colours, radii and type follow the rest of the console: #170338 headings,
-   #E2E8F0 hairlines, #6B7280 secondary text, 'Outfit' throughout. */
+   var(--ad-border) hairlines, #6B7280 secondary text, 'Outfit' throughout. */
 
 .page-subtitle {
   margin: 4px 0 0;
@@ -20,13 +20,13 @@
   gap: 8px;
   height: 40px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
 
-  &:hover:not(:disabled) { background: #F8F9FA; border-color: #CBD5E1; }
+  &:hover:not(:disabled) { background: var(--ad-surface-2); border-color: #CBD5E1; }
   &:disabled { opacity: 0.6; cursor: default; }
 }
 
@@ -68,8 +68,8 @@
   gap: 4px;
   padding: 16px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ad-border);
+  box-shadow: var(--ad-shadow-2);
   border-radius: 8px;
   box-sizing: border-box;
 }
@@ -110,8 +110,8 @@
   width: 100%;
   padding: 16px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ad-border);
+  box-shadow: var(--ad-shadow-2);
   border-radius: 8px;
   box-sizing: border-box;
 }
@@ -134,8 +134,8 @@
   align-items: center;
   width: 100%;
   height: 40px;
-  background: #F8F9FA;
-  border: 1px solid #E2E8F0;
+  background: var(--ad-surface-2);
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 
@@ -184,7 +184,7 @@
   color: #6B7280;
   cursor: pointer;
 
-  &:hover { background: #E2E8F0; color: #170338; }
+  &:hover { background: var(--ad-border); color: #170338; }
 }
 
 .filter-chips {
@@ -195,8 +195,8 @@
 
 .chip {
   padding: 8px 16px;
-  background: #F8F9FA;
-  border: 1px solid #E2E8F0;
+  background: var(--ad-surface-2);
+  border: 1px solid var(--ad-border);
   border-radius: 20px;
   font-family: 'Outfit';
   font-weight: 600;
@@ -246,7 +246,7 @@
   max-width: 240px;
   padding: 0 10px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   font-family: 'Outfit';
   font-size: 14px;

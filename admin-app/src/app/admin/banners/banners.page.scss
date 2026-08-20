@@ -51,8 +51,8 @@
   width: 100%;
   padding: 18px 20px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ad-border);
+  box-shadow: var(--ad-shadow-2);
   border-radius: 8px;
   flex-shrink: 0;
 }
@@ -153,7 +153,7 @@
   max-width: 320px;
   height: 88px;
   background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -172,13 +172,13 @@
   width: 30px;
   height: 30px;
   background: transparent;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   color: #49454E;
   cursor: pointer;
   transition: all 0.15s ease;
 
-  &:not(:disabled):hover { background: #F8F9FA; border-color: #CBD5E1; color: #170338; }
+  &:not(:disabled):hover { background: var(--ad-surface-2); border-color: #CBD5E1; color: #170338; }
   &:disabled { opacity: 0.35; cursor: default; }
 }
 

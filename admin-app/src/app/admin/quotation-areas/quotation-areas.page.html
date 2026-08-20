@@ -1,14 +1,12 @@
 <ion-content [scrollY]="true">
   <main class="content-canvas">
 
+    <!-- Two crumbs, and there is nowhere deeper to go: the rooms are on this
+         page rather than behind it. -->
     <div class="breadcrumbs-row">
       <span class="breadcrumb-item" (click)="back()" style="cursor:pointer;">Quotations</span>
       <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item" [class.active]="view === 'areas'" (click)="backToAreas()" style="cursor:pointer;">{{ quoteRef }}</span>
-      <ng-container *ngIf="view === 'area' && openGroup">
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-item active">{{ openGroup?.name }}</span>
-      </ng-container>
+      <span class="breadcrumb-item active">{{ quoteRef }}</span>
     </div>
 
     <div class="page-header-row">
@@ -51,7 +49,9 @@
           <span class="qa-switch-count">{{ draft.lineCount }}</span>
         </button>
 
-        <!-- Naming an area, on the summary side. -->
+        <!-- Naming an area, on the summary side. Beside it, the one control
+             the stacked rooms need: shutting them all when a long job has to be
+             skimmed, and opening them again. -->
         <div class="qa-tools" *ngIf="view !== 'final'">
           <input type="text" class="qa-area-input" [(ngModel)]="newAreaName"
                  placeholder="Add an area — Balcony, Store…"
@@ -61,6 +61,14 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
             </svg>
             <span>Add Area</span>
+          </button>
+
+          <button class="qd-edit-price qa-fold-btn" *ngIf="groups.length > 1" (click)="toggleAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    [attr.d]="allShut ? 'M8 9l4-4 4 4M8 15l4 4 4-4' : 'M8 5l4 4 4-4M8 19l4-4 4 4'" />
+            </svg>
+            <span>{{ allShut ? 'Expand all' : 'Collapse all' }}</span>
           </button>
         </div>
 
@@ -94,87 +102,65 @@
       <p class="qd-applied qa-applied-line" *ngIf="applied && view === 'final'">{{ applied }}</p>
 
       <!-- ============ THE AREAS ============
-           The screen this page opens on: one card per room, what is in it, and
-           what it comes to. Tapping one opens it. -->
+           Every room of the job on one screen, opened out.
+
+           This was a grid of cards that had to be tapped into: a room's
+           products lived on a screen of their own, so reading a quotation meant
+           card, in, back, card, in, back — and two rooms could never be seen at
+           once, only remembered. Nothing about a room is worth hiding behind a
+           tap, so nothing is hidden any more. The rooms are stacked, each open,
+           each with its products beneath it. A room can be shut when a long job
+           needs the room, and that is the only navigation left on the screen. -->
       <ng-container *ngIf="view === 'areas'">
 
-        <div class="qa-area-grid">
-          <button class="qa-area-card" *ngFor="let group of groups; trackBy: trackByGroupId" (click)="openArea(group)">
-            <span class="qa-area-mark">{{ group.name.charAt(0).toUpperCase() }}</span>
+        <div class="qa-rooms">
 
-            <span class="qa-area-text">
-              <span class="qa-area-name">{{ group.name }}</span>
-              <span class="qa-area-meta">
-                {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }}
-                · {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
-              </span>
-            </span>
+          <section class="qa-room" *ngFor="let group of groups; trackBy: trackByGroupId"
+                   [class.is-shut]="isShut(group)">
 
-            <span class="qa-area-del" (click)="removeArea(group, $event)" title="Remove this area">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </span>
-          </button>
+            <!-- The head is the room itself: what it is called, what is in it,
+                 and the two things ever done to it. -->
+            <header class="qa-room-head">
+              <button type="button" class="qa-room-toggle" (click)="toggleArea(group)"
+                      [attr.aria-expanded]="!isShut(group)"
+                      [title]="isShut(group) ? 'Show what is in ' + group.name : 'Hide what is in ' + group.name">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="qa-room-chev">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+                </svg>
 
-          <div class="qd-empty-card" *ngIf="groups.length === 0">
-            No areas on this request. Add one above to start building the quotation.
-          </div>
-        </div>
+                <span class="qa-room-mark">{{ group.name.charAt(0).toUpperCase() }}</span>
 
-        <!-- No money on this screen at all. The area summary answers "what is
-             going where" — the sheet it makes is the one checked against the
-             site — and a rate in the corner only starts the other conversation
-             early. Pricing lives on the Final Quotation tab, where it belongs. -->
-      </ng-container>
+                <span class="qa-room-text">
+                  <span class="qa-room-name">{{ group.name }}</span>
+                  <span class="qa-room-meta">
+                    {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }}
+                    · {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
+                  </span>
+                </span>
+              </button>
 
-      <!-- ============ ONE AREA, IN FULL ============ -->
-      <ng-container *ngIf="view === 'area' && openGroup as group">
+              <div class="qa-room-acts">
+                <button type="button" class="qa-room-add" (click)="openPicker(group)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                  <span>Add products</span>
+                </button>
 
-        <div class="qa-area-head">
-          <button class="qd-back qa-back-btn" (click)="backToAreas()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>All areas</span>
-          </button>
-          <h3 class="qa-area-title">{{ group.name }}</h3>
-          <span class="qa-area-sub">
-            {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }} ·
-            {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
-          </span>
-        </div>
+                <button type="button" class="qa-room-del" (click)="removeArea(group, $event)"
+                        title="Remove this area" aria-label="Remove this area">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </header>
 
-        <!-- The rest of the job, kept on screen. Opening one room used to hide
-             every other one, so moving from Kitchen to Bedroom meant going back
-             to the summary and in again. The areas stay here as tabs, above the
-             list they switch — the same bar the summary itself is switched
-             with, one level down. -->
-        <div class="qa-area-tabs" *ngIf="groups.length > 1">
-          <button class="qa-area-tab" *ngFor="let g of groups; trackBy: trackByGroupId"
-                  [class.active]="g.id === openGroupId" (click)="openArea(g)"
-                  [title]="g.name">
-            <span class="qa-area-tab-name">{{ g.name }}</span>
-            <span class="qa-area-tab-count">{{ draft.groupCount(g) }}</span>
-          </button>
-        </div>
-
-        <!-- One control here, and it is the one this screen is for: putting
-             products into this room. -->
-        <div class="qd-actions-bar">
-          <button class="qd-add-product" (click)="openPicker()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-            </svg>
-            <span>Add Product to {{ group.name }}</span>
-          </button>
-        </div>
-
-        <p class="qd-error" *ngIf="error">{{ error }}</p>
-
-        <div class="qd-body">
-          <div class="qd-lines">
-            <section class="table-section-card">
+            <!-- What is in it. No money on this side of the page at all: the
+                 area sheet answers "what is going where", and is the one checked
+                 against the site. A rate in the corner here would only start
+                 the other conversation early — pricing is the Final Quotation. -->
+            <div class="qa-room-body" *ngIf="!isShut(group)">
               <div class="table-scroll-container">
                 <table class="inventory-table compact qd-table">
                   <thead>
@@ -186,7 +172,8 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let line of group.lines; let i = index; let last = last; trackBy: trackByKey" [class.last-row-border]="last">
+                    <tr *ngFor="let line of group.lines; let i = index; let last = last; trackBy: trackByKey"
+                        [class.last-row-border]="last">
 
                       <td class="qd-td-no" data-label="#">
                         <span class="qd-no">{{ i + 1 }}</span>
@@ -216,7 +203,7 @@
                       </td>
 
                       <td class="qd-td-remove">
-                        <button class="delete-btn qd-remove" (click)="removeLine(line)" title="Remove this line">
+                        <button class="delete-btn qd-remove" (click)="removeLine(group, line)" title="Remove this line">
                           <svg class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
@@ -226,22 +213,17 @@
 
                     <tr *ngIf="group.lines.length === 0">
                       <td colspan="4" class="td-empty">
-                        Nothing in {{ group.name }} yet. Use Add Product to put products in it.
+                        Nothing in {{ group.name }} yet — use <strong>Add products</strong> above.
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-            </section>
-
-            <!-- Pieces, not rupees. This side of the page never prices anything. -->
-            <div class="qa-area-foot">
-              <span class="qa-foot-label">{{ group.name }}</span>
-              <span class="qa-foot-total">
-                {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }} ·
-                {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
-              </span>
             </div>
+          </section>
+
+          <div class="qd-empty-card" *ngIf="groups.length === 0">
+            No areas on this request. Add one above to start building the quotation.
           </div>
         </div>
       </ng-container>

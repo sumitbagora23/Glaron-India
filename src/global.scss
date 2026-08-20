@@ -69,6 +69,79 @@ ion-content {
 }
 
 /* ==========================================================================
+   Admin console — design tokens
+   --------------------------------------------------------------------------
+   The console was built one page at a time and every page picked its own
+   greys: #E2E8F0 next to #E7E1E9 next to #CBC4D0, four border radii, and a
+   drop shadow per author. It reads as a set of screens rather than one tool.
+
+   These name the console's surfaces, lines, radii and elevations once. The
+   palette itself is unchanged — the same deep purple #170338 and gold #FEB300
+   the brand has always used — and the neutrals are the ones already in the
+   file, reconciled to a single scale rather than replaced.
+
+   Radii step 8 / 12 / 16 and elevation steps in three, both small enough to be
+   held in the head. A page that wants something outside the scale is telling
+   you the scale is wrong, not that it is special.
+   ========================================================================== */
+:root {
+  /* Ink */
+  --ad-ink:           #170338;   /* headings, primary text */
+  --ad-ink-2:         #49454E;   /* body, nav at rest */
+  --ad-ink-3:         #6B6673;   /* secondary text */
+  --ad-ink-4:         #928C9B;   /* meta, placeholders, disabled */
+
+  /* Surfaces */
+  --ad-bg:            #F7F5F8;   /* the canvas behind the cards */
+  --ad-surface:       #FFFFFF;   /* cards, tables, the sidebar */
+  --ad-surface-2:     #FBFAFC;   /* table heads, striped rows, hovers */
+  --ad-surface-3:     #F1EDF4;   /* pressed / selected fills */
+
+  /* Lines — two, and only two: one you are meant to see, one you are not. */
+  --ad-border:        #E7E3EC;
+  --ad-border-strong: #D6D0DD;
+
+  /* Accents */
+  --ad-gold:          #FEB300;
+  --ad-gold-strong:   #7E5700;
+  --ad-gold-wash:     #FFF8E9;
+  --ad-danger:        #DC2626;
+  --ad-danger-wash:   rgba(220, 38, 38, .08);
+  --ad-success:       #0F9B72;
+
+  /* Radii */
+  --ad-r-sm:  8px;
+  --ad-r:     12px;
+  --ad-r-lg:  16px;
+  --ad-r-pill: 999px;
+
+  /* Elevation. Two layers each: a tight contact shadow that anchors the edge,
+     and a wide soft one that lifts it. One layer alone reads as either a
+     sticker or a smudge. */
+  --ad-shadow-1: 0 1px 2px rgba(23, 3, 56, .05);
+  --ad-shadow-2: 0 1px 2px rgba(23, 3, 56, .05), 0 6px 16px rgba(23, 3, 56, .06);
+  --ad-shadow-3: 0 2px 4px rgba(23, 3, 56, .06), 0 14px 32px rgba(23, 3, 56, .10);
+
+  /* One ring, everywhere something takes focus from the keyboard. */
+  --ad-ring: 0 0 0 3px rgba(23, 3, 56, .12);
+}
+
+/* Every control in the console answers the keyboard the same way. Focus-visible
+   and not focus, so a mouse click does not leave a ring behind it. */
+.dashboard-wrapper {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid rgba(23, 3, 56, .45);
+    outline-offset: 2px;
+    border-radius: var(--ad-r-sm);
+  }
+}
+
+/* ==========================================================================
    Admin Panel Shared Layout Styles
    ========================================================================== */
 
@@ -82,7 +155,7 @@ ion-content {
   height: 100vh;
   padding-left: 280px;
   box-sizing: border-box;
-  background: linear-gradient(0deg, #FCF9F8, #FCF9F8), #FFFFFF;
+  background: var(--ad-bg);
   overflow: hidden;
 }
 
@@ -92,14 +165,14 @@ ion-content {
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 24px 0px;
+  padding: 22px 0px 18px;
   position: absolute;
   width: 280px;
   height: 100%;
   left: 0px;
   top: 0px;
-  background: #FCF9F8;
-  border-right: 1px solid #CBC4D0;
+  background: var(--ad-surface);
+  border-right: 1px solid var(--ad-border);
   z-index: 10;
   /* Fourteen nav entries plus the footer button run past a laptop's viewport,
      and the wrapper clips at 100vh — without this the last tabs simply could
@@ -112,7 +185,7 @@ ion-content {
    the list fits. */
 .sidebar-container::-webkit-scrollbar { width: 6px; }
 .sidebar-container::-webkit-scrollbar-thumb {
-  background: rgba(23, 3, 56, 0.18);
+  background: rgba(23, 3, 56, 0.14);
   border-radius: 3px;
 }
 .sidebar-container::-webkit-scrollbar-track { background: transparent; }
@@ -159,38 +232,51 @@ ion-content {
 .nav-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 0px;
+  align-items: stretch;
+  padding: 0px 12px;
   margin: 0px;
   width: 100%;
+  gap: 2px;
   list-style: none;
+  box-sizing: border-box;
 }
 
+/* A nav entry is a pill, not a stripe.
+
+   The active tab used to be a full-width band with a 4px rule down its left
+   edge — a pattern from a decade of admin themes, and one that fights the
+   rounded cards it sits beside: the tab bleeds into the sidebar's own edges
+   while everything to its right is inset and rounded. As a pill it belongs to
+   the same drawing as the rest of the console, and the rule is not needed to
+   say which tab is on, because the fill already says it. */
 .nav-item {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 12px 16px 12px 24px;
+  padding: 10px 14px;
   width: 100%;
-  height: 44px;
+  height: 42px;
+  border-radius: var(--ad-r);
   cursor: pointer;
-  border-left: 4px solid transparent;
-  color: #49454E;
-  transition: all 0.2s ease;
+  color: var(--ad-ink-2);
+  transition: background-color .18s ease, color .18s ease;
 
   &:hover {
-    background-color: rgba(234, 231, 231, 0.5);
+    background-color: var(--ad-surface-3);
+    color: var(--ad-ink);
   }
 
   &.active {
-    background: #EAE7E7;
-    border-left: 4px solid #7E5700;
-    color: #7E5700;
-    font-weight: 600;
+    background: linear-gradient(135deg, #170338 0%, #37215f 100%);
+    color: #FFFFFF;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(23, 3, 56, .22);
+
+    &:hover { color: #FFFFFF; }
 
     .nav-svg-icon {
-      color: #7E5700;
+      color: var(--ad-gold);
     }
   }
 }
@@ -205,11 +291,13 @@ ion-content {
 }
 
 .nav-svg-icon {
-  width: 20px;
-  height: 20px;
-  color: #49454E;
+  width: 19px;
+  height: 19px;
+  color: var(--ad-ink-3);
   transition: color 0.2s ease;
 }
+
+.nav-item:hover .nav-svg-icon { color: var(--ad-ink); }
 
 .nav-text {
   font-weight: 600;
@@ -222,9 +310,11 @@ ion-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0px 24px;
+  padding: 14px 20px 0px;
+  margin-top: 8px;
   width: 100%;
   box-sizing: border-box;
+  border-top: 1px solid var(--ad-border);
 }
 
 .new-order-btn {
@@ -236,15 +326,19 @@ ion-content {
   gap: 8px;
   width: 100%;
   height: 44px;
-  background: #FEB300;
+  background: var(--ad-gold);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--ad-r);
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(254, 179, 0, .28);
+  transition: background .2s ease, box-shadow .2s ease, transform .12s ease;
 
   &:hover {
     background: #E09E00;
+    box-shadow: 0 6px 18px rgba(254, 179, 0, .36);
   }
+
+  &:active { transform: translateY(1px); }
 }
 
 .btn-plus-icon {
@@ -267,14 +361,16 @@ ion-content {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 0px 24px;
+  padding: 0px 28px;
   position: absolute;
   width: calc(100% - 280px);
   height: 64px;
   right: 0px;
   top: 0px;
-  background: #FFFFFF;
-  border-bottom: 1px solid #CBC4D0;
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--ad-border);
   z-index: 9;
 }
 
@@ -342,9 +438,9 @@ ion-content {
   width: 100%;
   height: 34px;
   box-sizing: border-box;
-  background: #F6F3F2;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
+  background: var(--ad-surface-2);
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-r-pill);
   padding: 7px 16px 7px 40px;
   font-weight: 600;
   font-size: 14px;
@@ -358,9 +454,9 @@ ion-content {
   }
 
   &:focus {
-    background: #FFFFFF;
-    border-color: #170338;
-    box-shadow: 0 0 0 2px rgba(23, 3, 56, 0.05);
+    background: var(--ad-surface);
+    border-color: var(--ad-border-strong);
+    box-shadow: var(--ad-ring);
   }
 }
 
@@ -377,7 +473,7 @@ ion-content {
   padding: 8px;
   margin: 0;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: var(--ad-r);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,8 +481,8 @@ ion-content {
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #F3F4F6;
-    color: #170338;
+    background-color: var(--ad-surface-3);
+    color: var(--ad-ink);
   }
 }
 
@@ -432,8 +528,8 @@ ion-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 24px;
-  gap: 24px;
+  padding: 26px 30px 36px;
+  gap: 22px;
   width: 100%;
   height: 100%;
   margin-top: 0px;
@@ -450,14 +546,17 @@ ion-content {
 }
 
 .breadcrumb-item {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 12px;
   line-height: 16px;
-  color: #49454E;
+  color: var(--ad-ink-4);
+  transition: color .15s ease;
+
+  &:hover { color: var(--ad-ink-2); }
 
   &.active {
     font-weight: 700;
-    color: #7E5700;
+    color: var(--ad-gold-strong);
   }
 }
 
@@ -465,7 +564,7 @@ ion-content {
   font-weight: 500;
   font-size: 12px;
   line-height: 16px;
-  color: #49454E;
+  color: var(--ad-ink-4);
 }
 
 .page-header-row {
@@ -479,11 +578,13 @@ ion-content {
 
 .page-title {
   margin: 0px;
-  font-weight: 600;
-  font-size: 32px;
-  line-height: 40px;
-  letter-spacing: -0.32px;
-  color: #170338;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 36px;
+  /* Tighter the larger it gets: at 28px the default tracking reads loose, and
+     a heading is the one place on the page where that shows. */
+  letter-spacing: -0.7px;
+  color: var(--ad-ink);
 }
 
 /* Global required-field marker (red asterisk) */
@@ -964,10 +1065,15 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   align-items: flex-start;
   padding: 0px;
   width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
+  background: var(--ad-surface);
+  border: 1px solid var(--ad-border);
+  box-shadow: var(--ad-shadow-2);
+  border-radius: var(--ad-r-lg);
+  /* Stays `visible`, deliberately — see the scroll model above. As a flex child
+     of .content-canvas an `overflow: hidden` here lets flexbox squash the card
+     to the viewport and the rows below the fold vanish. The corners are cut on
+     the head and foot cells instead, which gets the same drawing without
+     handing the card a clip it cannot afford. */
   overflow: visible;
   flex-shrink: 0;
   margin-bottom: 16px;
@@ -984,35 +1090,42 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   text-align: left;
 
   thead tr {
-    height: 44px;
-    background: #F8F9FA;
-    border-bottom: 1px solid #E2E8F0;
+    height: 46px;
+    background: var(--ad-surface-2);
+    border-bottom: 1px solid var(--ad-border);
   }
 
   th {
-    padding: 10px 16px;
+    padding: 12px 18px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 16px;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
-    color: #170338;
+    color: var(--ad-ink-3);
     white-space: nowrap;
   }
 
   tbody tr {
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid var(--ad-border);
     transition: background-color 0.15s ease;
 
-    &:hover { background-color: rgba(248, 249, 250, 0.5); }
+    &:hover { background-color: var(--ad-surface-2); }
+    &:last-child { border-bottom: none; }
     &.last-row-border { border-bottom: none; }
   }
 
   td {
-    padding: 10px 16px;
+    padding: 13px 18px;
     vertical-align: middle;
   }
 }
+
+/* The rounding the card cannot clip for itself. */
+.table-section-card > .table-scroll-container:first-child .inventory-table thead tr th:first-child,
+.table-section-card > .inventory-table thead tr th:first-child { border-top-left-radius: var(--ad-r-lg); }
+.table-section-card > .table-scroll-container:first-child .inventory-table thead tr th:last-child,
+.table-section-card > .inventory-table thead tr th:last-child { border-top-right-radius: var(--ad-r-lg); }
 
 /* Actions always sit on the right of the row and read as links, not buttons. */
 .th-actions,
@@ -1080,11 +1193,11 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
 }
 
 .td-empty {
-  padding: 32px 16px;
+  padding: 38px 18px;
   text-align: center;
   font-family: 'Outfit';
   font-size: 14px;
-  color: #94A3B8;
+  color: var(--ad-ink-4);
 }
 
 /* Row count strip under a table. */
@@ -1095,11 +1208,11 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   width: 100%;
-  background: #F8F9FA;
-  border-top: 1px solid #E2E8F0;
-  border-radius: 0 0 8px 8px;
+  background: var(--ad-surface-2);
+  border-top: 1px solid var(--ad-border);
+  border-radius: 0 0 var(--ad-r-lg) var(--ad-r-lg);
 }
 
 .summary-text {
@@ -1108,7 +1221,7 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   font-size: 12px;
   line-height: 16px;
   letter-spacing: 0.2px;
-  color: #49454E;
+  color: var(--ad-ink-3);
 }
 
 /* Status pill with a dropdown inside it (dealers, agents, orders). */
@@ -1116,10 +1229,10 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 8px 4px 10px;
-  border-radius: 999px;
-  border: 1px solid #E2E8F0;
-  background: #F1F5F9;
+  padding: 5px 9px 5px 11px;
+  border-radius: var(--ad-r-pill);
+  border: 1px solid var(--ad-border);
+  background: var(--ad-surface-3);
   max-width: 100%;
 
   .status-dot {
@@ -1178,8 +1291,8 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
    ========================================================================== */
 @media (max-width: 900px) {
   .content-canvas {
-    padding: 16px 14px 28px;
-    gap: 16px;
+    padding: 16px 14px 32px;
+    gap: 18px;
   }
 
   /* Title and its action buttons stop fitting on one line well before this. */
@@ -1190,8 +1303,9 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   }
 
   .page-title {
-    font-size: 24px;
-    line-height: 32px;
+    font-size: 22px;
+    line-height: 30px;
+    letter-spacing: -0.5px;
   }
 
   .page-subtitle {
@@ -1214,7 +1328,8 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
   /* Cards lose their desktop insets so content keeps its width. */
   .table-section-card {
     padding: 10px;
-    border-radius: 12px;
+    border-radius: var(--ad-r);
+    box-shadow: var(--ad-shadow-1);
   }
 
   /* A wide table stops being wide down here — it becomes cards. */
@@ -1247,9 +1362,9 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
     height: auto;
     padding: 12px;
     margin: 0 0 10px;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    background: #FFFFFF;
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-r);
+    background: var(--ad-surface);
 
     &:last-child { margin-bottom: 0; }
   }

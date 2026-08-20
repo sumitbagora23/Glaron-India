@@ -36,7 +36,7 @@
   font-size: 14px;
   color: #94A3B8;
   background: #FFFFFF;
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 10px;
 }
 
@@ -77,7 +77,7 @@
   gap: 10px;
   padding: 8px 12px;
   background: #FFFFFF;
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 12px;
 }
 
@@ -88,7 +88,7 @@
   align-items: center;
   gap: 8px;
   padding: 11px 18px;
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 10px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -230,7 +230,7 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   background: #FFFFFF;
   overflow: hidden;
@@ -283,7 +283,7 @@
   gap: 2px;
   height: 36px;
   padding: 0 8px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   background: #FFFFFF;
 
@@ -312,7 +312,7 @@
   display: inline-flex;
   align-items: center;
   height: 36px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   background: #FFFFFF;
   overflow: hidden;
@@ -386,7 +386,7 @@
   width: 118px;
   height: 38px;
   padding: 0 12px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   outline: none;
   font-family: 'Outfit';
@@ -416,7 +416,7 @@
   gap: 12px;
   padding: 12px 24px;
   background: #FFFFFF;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid var(--ad-border);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
   z-index: 10;
 }
@@ -429,7 +429,7 @@
 
 .qd-back {
   padding: 11px 18px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   background: #FFFFFF;
   font-family: 'Outfit';
@@ -438,7 +438,7 @@
   color: #1C1B1B;
   cursor: pointer;
 
-  &:hover { background: #F8F9FA; }
+  &:hover { background: var(--ad-surface-2); }
 }
 
 .qd-pdf {

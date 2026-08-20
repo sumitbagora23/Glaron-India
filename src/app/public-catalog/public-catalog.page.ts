@@ -556,16 +556,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.scrollTop();
   }
 
-  showAreas() {
-    if (!this.areaAllowed) return;
-    this.activeTab = 'area';
-    this.homeCategory = null;
-    // Coming back to the tab always lands on the list of areas, never inside
-    // whichever room happened to be open last time.
-    this.areaStep = 'list';
-    this.scrollTop();
-  }
-
   openCategory(name: string) {
     this.homeCategory = name;
     this.scrollTop();
@@ -602,12 +592,13 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Inside the Areas tab, back means: stop filling this room, and go back to
-    // the rooms.
+    // Filling a room: back means stop filling it, and it lands where Done
+    // lands — on the room, on the list. It used to drop the browser on the old
+    // Areas tab, which is no longer a screen at all: the rooms were folded into
+    // the list, so leaving activeTab on 'area' with nothing open now renders
+    // nothing.
     if (this.activeTab === 'area' && this.areaStep === 'browse') {
-      this.activeAreaId = null;
-      this.areaStep = 'list';
-      this.scrollTop();
+      this.finishBrowsing();
       return;
     }
 
@@ -1177,6 +1168,9 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     if (this.activeAreaId === area.id) {
       this.activeAreaId = null;
       this.areaStep = 'list';
+      // The room being filled is the room that just went. There is nowhere
+      // inside it to stand, so come out to the list.
+      if (this.activeTab === 'area') this.activeTab = 'cart';
     }
     if (this.listAreaId === area.id) {
       this.listAreaId = null;

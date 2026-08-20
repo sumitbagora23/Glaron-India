@@ -43,7 +43,7 @@
   max-width: 520px;
   height: 44px;
   padding: 0 14px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   outline: none;
   font-family: 'Outfit';
@@ -69,7 +69,7 @@
 }
 
 .qa-card {
-  border: 1px solid #E7E1E9;
+  border: 1px solid var(--ad-border);
   border-radius: 12px;
   overflow: hidden;
   background: #FFFFFF;
@@ -84,8 +84,8 @@
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
-  background: #F8F9FA;
-  border: 1px solid #E5E7EB;
+  background: var(--ad-surface-2);
+  border: 1px solid var(--ad-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,7 +158,7 @@
 .qa-stepper {
   display: flex;
   align-items: center;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--ad-border);
   border-radius: 7px;
   height: 28px;
   background: #FFFFFF;
@@ -216,7 +216,7 @@
   gap: 12px;
   padding: 12px 24px;
   background: #FFFFFF;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid var(--ad-border);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
   z-index: 10;
 }
@@ -263,7 +263,7 @@
   flex: 0 0 auto;
   min-height: 30px;
   padding: 6px 12px;
-  border: 1.5px solid #E5E7EB;
+  border: 1.5px solid var(--ad-border);
   border-radius: 999px;
   background: #fff;
   color: #49454E;

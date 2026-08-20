@@ -335,80 +335,6 @@
         </div>
       </section>
 
-      <!-- ============ AREAS ============
-           The area-wise link's own tab. A job is thought about room by room —
-           kitchen, lobby, bedroom — so the list is built that way and the
-           quotation comes back reading the same way. Still no price anywhere:
-           this is the office's link, and a visitor has no rate. -->
-      <section class="area-panel" *ngIf="areaAllowed && activeTab === 'area'">
-
-        <!-- STEP 1 — name the areas, and see them all -->
-        <ng-container *ngIf="areaStep === 'list'">
-          <div class="cart-head">
-            <h2 class="catalog-heading">Your areas</h2>
-            <p class="catalog-subheading">
-              Name each space of your job, then fill it with the lights you want.
-              We quote it back area by area.
-            </p>
-          </div>
-
-          <div class="area-add-row">
-            <input type="text" class="area-input" [(ngModel)]="newAreaName" name="newAreaName"
-                   placeholder="Area name — Kitchen, Lobby, Bedroom…" maxlength="40"
-                   (keyup.enter)="addArea()" />
-            <button type="button" class="area-add-btn" (click)="addArea()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="add-ic">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-              </svg>
-              <span>Add area</span>
-            </button>
-          </div>
-
-          <p class="quote-error" *ngIf="areaError">{{ areaError }}</p>
-
-          <div class="area-empty" *ngIf="areas.length === 0">
-            <span class="cart-empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10" />
-              </svg>
-            </span>
-            <h2 class="cart-empty-title">No areas yet</h2>
-            <p class="cart-empty-text">
-              Start with one — "Kitchen", say — and add the lights that belong in it.
-              Add as many areas as your job has.
-            </p>
-          </div>
-
-          <div class="area-list" *ngIf="areas.length > 0">
-            <button class="area-row" *ngFor="let area of areas; trackBy: trackByAreaId" (click)="openArea(area)">
-              <span class="area-row-mark">{{ area.name.charAt(0).toUpperCase() }}</span>
-              <span class="area-row-text">
-                <span class="area-row-name">{{ area.name }}</span>
-                <span class="area-row-count">
-                  {{ area.items.length }} {{ area.items.length === 1 ? 'product' : 'products' }}
-                  <ng-container *ngIf="area.items.length"> · {{ pieceCountIn(area) }} {{ pieceCountIn(area) === 1 ? 'piece' : 'pieces' }}</ng-container>
-                </span>
-              </span>
-              <span class="area-row-del" (click)="removeArea(area, $event)" aria-label="Remove area">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="area-row-chev">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Where the picked products actually live. This tab names rooms and
-               fills them; the List tab is where the job is read over and sent. -->
-          <p class="area-hint" *ngIf="areaPieceCount > 0">
-            {{ areaPieceCount }} {{ areaPieceCount === 1 ? 'piece' : 'pieces' }} picked so far —
-            open the <strong>List</strong> tab to look them over and ask for a quotation.
-          </p>
-        </ng-container>
-      </section>
-
       <!-- The bar that closes the catalogue when it was opened to fill a room. -->
       <div class="area-browse-bar" *ngIf="areaAllowed && activeTab === 'area' && areaStep === 'browse'">
         <span class="area-browse-text">
@@ -539,6 +465,17 @@
                     {{ pieceCountIn(area) }} {{ pieceCountIn(area) === 1 ? 'piece' : 'pieces' }}
                   </span>
                 </span>
+
+                <!-- Deleting a room is done from the row it is on, the way a
+                     product is deleted from the row it is on. It was lost when
+                     the Areas tab was folded into this one, and without it a
+                     room named by mistake could never be got rid of. -->
+                <span class="area-row-del" (click)="removeArea(area, $event)" aria-label="Remove this room">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </span>
+
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="area-row-chev">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
@@ -652,6 +589,9 @@
                  Areas tab used to be for. -->
             <button class="quote-submit-btn" (click)="fillArea(area)">Add lights to {{ area.name }}</button>
             <button class="quote-ghost-btn" (click)="topBarBack()">Back to my list</button>
+            <!-- The room is open and being read; this is exactly where somebody
+                 decides it should not be on the list at all. -->
+            <button class="quote-danger-btn" (click)="removeArea(area)">Remove {{ area.name }}</button>
           </div>
         </ng-container>
       </section>

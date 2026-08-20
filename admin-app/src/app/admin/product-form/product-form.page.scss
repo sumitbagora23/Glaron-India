@@ -28,13 +28,13 @@
   width: 94.14px;
   height: 38px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: #F8F9FA;
+    background-color: var(--ad-surface-2);
     border-color: #CBD5E1;
   }
 }
@@ -117,8 +117,8 @@
   gap: 24px;
   width: 100%;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ad-border);
+  box-shadow: var(--ad-shadow-2);
   border-radius: 8px;
 }
 
@@ -130,7 +130,7 @@
   padding: 0px 0px 16px;
   gap: 8px;
   width: 100%;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--ad-border);
 }
 
 .header-icon-container {
@@ -215,7 +215,7 @@
   width: 100%;
   height: 50px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   font-family: 'Outfit';
   font-style: normal;
@@ -249,7 +249,7 @@
   height: 120px;
   min-height: 120px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   font-family: 'Outfit';
   font-style: normal;
@@ -298,13 +298,13 @@
   gap: 4px;
   width: 100%;
   height: 140px;
-  border: 2px dashed #CBC4D0;
+  border: 2px dashed var(--ad-border-strong);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: #F8F9FA;
+    background-color: var(--ad-surface-2);
     border-color: #7E5700;
   }
 }
@@ -315,7 +315,7 @@
   align-items: center;
   width: 44px;
   height: 32px;
-  color: #CBC4D0;
+  color: var(--ad-border-strong);
 }
 
 .cloud-svg-icon {
@@ -355,7 +355,7 @@
   box-sizing: border-box;
   width: 78.44px;
   height: 78.44px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 2px;
   overflow: hidden;
   display: flex;
@@ -369,12 +369,12 @@
 
   &.placeholder-box {
     background: #F0EDED;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--ad-border);
     cursor: pointer;
-    color: #CBC4D0;
+    color: var(--ad-border-strong);
 
     &:hover {
-      background-color: #E2E8F0;
+      background-color: var(--ad-border);
       color: #7D7585;
     }
   }
@@ -404,7 +404,7 @@
   width: 100%;
   height: 50px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   transition: all 0.2s ease;
 
@@ -466,7 +466,7 @@
   width: 100%;
   height: 96px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   box-shadow: 0px 4px 12px rgba(26, 26, 26, 0.04);
   margin-top: 12px;
@@ -512,13 +512,13 @@
   width: 115.97px;
   height: 46px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: #F8F9FA;
+    background-color: var(--ad-surface-2);
     border-color: #CBD5E1;
   }
 }
@@ -620,7 +620,7 @@
 /* --- Compact Horizontal Form Rows --- */
 .variant-horizontal-form-row {
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   padding: 10px 14px;
   margin-bottom: 10px;
@@ -758,7 +758,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(23, 3, 56, 0.06);
   padding: 6px;
@@ -775,7 +775,7 @@
   font-size: 14px;
   color: #1C1B1B;
 
-  &:hover { background: #F8F9FA; }
+  &:hover { background: var(--ad-surface-2); }
 
   input { width: 16px; height: 16px; accent-color: #170338; cursor: pointer; }
 }
@@ -865,7 +865,7 @@
   gap: 6px;
   padding: 6px 12px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -876,7 +876,7 @@
   color: #170338;
   white-space: nowrap;
 
-  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+  &:hover { background: var(--ad-surface-2); border-color: #CBD5E1; }
 }
 
 .lc-manage-icon {
@@ -902,7 +902,7 @@
   gap: 6px;
   padding: 5px 12px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -954,7 +954,7 @@
   margin-top: 8px;
   padding: 6px 12px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -964,7 +964,7 @@
   line-height: 17px;
   color: #64748B;
 
-  &:hover { background: #F8F9FA; border-color: #CBD5E1; color: #170338; }
+  &:hover { background: var(--ad-surface-2); border-color: #CBD5E1; color: #170338; }
 }
 
 /* The clear row that opens the list — it sits above the ticks and is ruled off
@@ -978,7 +978,7 @@
   padding: 9px 12px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--ad-border);
   cursor: pointer;
   text-align: left;
   font-family: 'Outfit';
@@ -1033,7 +1033,7 @@
   gap: 4px;
   padding: 4px 8px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
 }
 
@@ -1162,7 +1162,7 @@ $v-grid: 34px minmax(110px, 1.2fr) minmax(90px, 1fr) 92px 92px 152px 30px;
   text-align: center;
   padding: 22px 18px;
   color: #6b7280;
-  border: 1px dashed #e5e7eb;
+  border: 1px dashed var(--ad-border);
   border-radius: 8px;
   font-size: 12.5px;
   line-height: 1.5;
@@ -1176,7 +1176,7 @@ $v-grid: 34px minmax(110px, 1.2fr) minmax(90px, 1fr) 92px 92px 152px 30px;
 .lc-grid-wrap {
   margin-top: 10px;
   overflow-x: auto;
-  border: 1px solid var(--g-border, #e5e7eb);
+  border: 1px solid var(--g-border, var(--ad-border));
   border-radius: 8px;
 }
 .lc-grid {

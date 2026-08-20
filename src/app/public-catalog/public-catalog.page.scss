@@ -682,6 +682,24 @@ ion-content { --background: var(--g-bg); }
   cursor: pointer;
   &:active { background: var(--g-surface-2); }
 }
+
+/* Deleting the room being read. Outlined and not filled, and last of the three
+   buttons: it is the one action here that cannot be undone, so it is offered
+   without being the thing the thumb lands on. */
+.quote-danger-btn {
+  margin-top: 2px;
+  border: 1.5px solid rgba(198, 40, 40, .35);
+  background: transparent;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #c62828;
+  cursor: pointer;
+  &:active { background: rgba(198, 40, 40, .08); }
+}
+
 /* The three plain steps under the compare headline. Numbers rather than
    prose: whoever opens this link has never seen the page before. */
 .compare-steps {

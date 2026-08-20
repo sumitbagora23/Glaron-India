@@ -20,7 +20,7 @@
     width: 44px;
     height: 44px;
     border-radius: 8px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--ad-border);
     background: #FFFFFF;
     color: #170338;
     display: flex;
@@ -31,7 +31,7 @@
 
     svg { width: 20px; height: 20px; }
 
-    &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+    &:hover { background: var(--ad-surface-2); border-color: #CBD5E1; }
   }
 
   .title-container {
@@ -50,7 +50,7 @@
 .cancel-btn {
   height: 42px;
   padding: 0 22px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ad-border);
   border-radius: 8px;
   background: #FFFFFF;
   color: #170338;
@@ -60,7 +60,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover { background: #F8F9FA; border-color: #CBD5E1; }
+  &:hover { background: var(--ad-surface-2); border-color: #CBD5E1; }
 }
 
 .save-btn {
@@ -97,8 +97,8 @@
   gap: 16px;
   width: 100%;
   padding: 14px 20px;
-  background: #F8F9FA;
-  border-bottom: 1px solid #E2E8F0;
+  background: var(--ad-surface-2);
+  border-bottom: 1px solid var(--ad-border);
   border-radius: 8px 8px 0 0;
   flex-wrap: wrap;
 
@@ -112,7 +112,7 @@
     height: 42px;
     padding: 0 14px;
     background: #FFFFFF;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--ad-border);
     border-radius: 8px;
 
     .search-icon { width: 18px; height: 18px; color: #94A3B8; flex-shrink: 0; }
@@ -176,7 +176,7 @@
   align-items: center;
   gap: 14px;
   padding: 12px 20px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--ad-border);
   cursor: pointer;
   transition: background-color 0.15s ease;
 
@@ -256,8 +256,8 @@
   gap: 16px;
   width: 100%;
   padding: 12px 20px;
-  background: #F8F9FA;
-  border-top: 1px solid #E2E8F0;
+  background: var(--ad-surface-2);
+  border-top: 1px solid var(--ad-border);
   border-radius: 0 0 8px 8px;
   flex-wrap: wrap;
 

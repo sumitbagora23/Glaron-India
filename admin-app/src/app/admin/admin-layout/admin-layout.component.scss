@@ -15,7 +15,7 @@
   top: 48px;
   right: 0;
   background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--ad-border);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(23, 3, 56, 0.12);
   padding: 6px;
@@ -51,7 +51,7 @@
 
 /* Sidebar footer override to match gold/purple Direct button */
 .sidebar-footer {
-  border-top: 1px solid #CBC4D0;
+  border-top: 1px solid var(--ad-border-strong);
   padding: 24px 24px 0px;
   margin-top: auto;
   width: 100%;
@@ -251,10 +251,11 @@
     }
   }
 
-  /* Bigger tap targets once this is a touch surface. */
+  /* Bigger tap targets once this is a touch surface. The pill keeps its even
+     insets — a taller box, not a lopsided one. */
   .nav-item {
     height: 50px;
-    padding-left: 20px;
+    padding: 12px 14px;
   }
 
   .menu-btn,
