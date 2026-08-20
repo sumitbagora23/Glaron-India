@@ -70,27 +70,29 @@ export class QuotationAreasPage implements OnInit {
   /**
    * Which of the two screens is on.
    *
-   *   • areas — the job room by room: every area stacked open, its products
-   *             under it, nothing priced
+   *   • areas — the job room by room: the rooms as tabs, the open one's
+   *             products under them, nothing priced
    *   • final — every product of every area in one table, which is the
    *             Request Quotation page exactly
    *
    * There used to be a third — one room, alone, on a screen of its own, reached
    * by tapping its card and left by a Back button. Reading a quotation meant
-   * walking in and out of it once per room, and two rooms could never be on
-   * screen together. The rooms are on the summary itself now, so the two
-   * buttons at the top are the whole of the navigation.
+   * walking in and out of it once per room. The rooms are a tab strip on the
+   * summary now, open on the first, so moving from Kitchen to Bedroom is one
+   * tap and there is nothing to come back from.
    */
   view: 'areas' | 'final' = 'areas';
 
   /**
-   * The rooms that are folded shut.
+   * The room whose products are showing.
    *
-   * Shut, not open, is what is recorded: a room is open unless somebody says
-   * otherwise, so an area added — or arriving from the customer — is open the
-   * moment it appears, without anything having to remember to open it.
+   * Empty means "the first one", which is what makes the page work before
+   * anything has been clicked and after the room that was open is deleted: the
+   * tab strip always has one tab lit, and it is never lit on a room that is no
+   * longer there. See activeGroup below — the id is a preference, the getter is
+   * the truth.
    */
-  private shutIds = new Set<string>();
+  activeGroupId = '';
 
   /** Which area the picker is adding into. */
   pickGroupId = '';
@@ -205,32 +207,27 @@ export class QuotationAreasPage implements OnInit {
     this.applied = '';
   }
 
-  // ---- Folding a room away ----
-
-  isShut(group: AreaGroup): boolean {
-    return this.shutIds.has(group.id);
-  }
-
-  toggleArea(group: AreaGroup) {
-    if (this.shutIds.has(group.id)) this.shutIds.delete(group.id);
-    else this.shutIds.add(group.id);
-  }
-
-  /** True only when every room is folded, so the button can say which it does. */
-  get allShut(): boolean {
-    return this.groups.length > 0 && this.groups.every(g => this.shutIds.has(g.id));
-  }
+  // ---- The room being looked at ----
 
   /**
-   * Fold the lot, or unfold it.
+   * Which room's products are on screen.
    *
-   * A job of a dozen rooms is a long page, and skimming which rooms exist is a
-   * real thing to want; so is having every product in front of you again
-   * afterwards. One button does both, and says which one it is about to do.
+   * Falls back to the first room rather than to nothing. A page that can show
+   * "no room selected" has a state nobody asked for and has to be got out of;
+   * with the fallback there is no such state — the strip opens on the first
+   * tab, and deleting the open room simply lights the one that took its place.
    */
-  toggleAll() {
-    if (this.allShut) this.shutIds.clear();
-    else this.shutIds = new Set(this.groups.map(g => g.id));
+  get activeGroup(): AreaGroup | undefined {
+    const groups = this.groups;
+    return groups.find(g => g.id === this.activeGroupId) || groups[0];
+  }
+
+  isActiveArea(group: AreaGroup): boolean {
+    return this.activeGroup?.id === group.id;
+  }
+
+  selectArea(group: AreaGroup) {
+    this.activeGroupId = group.id;
   }
 
   /**
@@ -264,7 +261,9 @@ export class QuotationAreasPage implements OnInit {
     if (!name) return;
     const group = this.draft.addGroup(name);
     this.newAreaName = '';
-    this.shutIds.delete(group.id);
+    // Named and opened in one step: the new tab is the one showing, because
+    // naming a room is only ever the beginning of filling it.
+    this.activeGroupId = group.id;
     this.view = 'areas';
     this.applied = '';
   }
@@ -274,7 +273,9 @@ export class QuotationAreasPage implements OnInit {
     const count = this.draft.groupCount(group);
     if (count > 0 && !confirm(`Remove ${group.name} and the ${count} ${count === 1 ? 'piece' : 'pieces'} in it from this quotation?`)) return;
     this.draft.removeGroup(group);
-    this.shutIds.delete(group.id);
+    // Nothing to choose here: activeGroup falls back to the first room on its
+    // own, so the strip is never left pointing at a room that has gone.
+    if (this.activeGroupId === group.id) this.activeGroupId = '';
     if (this.pickGroupId === group.id) this.picking = false;
   }
 
@@ -371,8 +372,7 @@ export class QuotationAreasPage implements OnInit {
     // Opened from a room's own button it fills that room, and the room is
     // unfolded so what lands in it can be seen landing. From the final list
     // there is no room in context, so the sheet asks for one.
-    this.pickGroupId = group?.id || this.draft.groups[0].id;
-    if (group) this.shutIds.delete(group.id);
+    this.pickGroupId = group?.id || this.activeGroup?.id || this.draft.groups[0].id;
     this.productSearch = '';
     this.selectedCategory = 'All Categories';
     this.picking = true;

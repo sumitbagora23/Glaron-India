@@ -49,9 +49,7 @@
           <span class="qa-switch-count">{{ draft.lineCount }}</span>
         </button>
 
-        <!-- Naming an area, on the summary side. Beside it, the one control
-             the stacked rooms need: shutting them all when a long job has to be
-             skimmed, and opening them again. -->
+        <!-- Naming an area, on the summary side. -->
         <div class="qa-tools" *ngIf="view !== 'final'">
           <input type="text" class="qa-area-input" [(ngModel)]="newAreaName"
                  placeholder="Add an area — Balcony, Store…"
@@ -61,14 +59,6 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
             </svg>
             <span>Add Area</span>
-          </button>
-
-          <button class="qd-edit-price qa-fold-btn" *ngIf="groups.length > 1" (click)="toggleAll()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                    [attr.d]="allShut ? 'M8 9l4-4 4 4M8 15l4 4 4-4' : 'M8 5l4 4 4-4M8 19l4-4 4 4'" />
-            </svg>
-            <span>{{ allShut ? 'Expand all' : 'Collapse all' }}</span>
           </button>
         </div>
 
@@ -102,49 +92,52 @@
       <p class="qd-applied qa-applied-line" *ngIf="applied && view === 'final'">{{ applied }}</p>
 
       <!-- ============ THE AREAS ============
-           Every room of the job on one screen, opened out.
+           The rooms as a tab strip, open on the first.
 
            This was a grid of cards that had to be tapped into: a room's
-           products lived on a screen of their own, so reading a quotation meant
-           card, in, back, card, in, back — and two rooms could never be seen at
-           once, only remembered. Nothing about a room is worth hiding behind a
-           tap, so nothing is hidden any more. The rooms are stacked, each open,
-           each with its products beneath it. A room can be shut when a long job
-           needs the room, and that is the only navigation left on the screen. -->
+           products lived on a screen of their own, reached by tapping its card
+           and left by a Back button, so reading a quotation meant card, in,
+           back, card, in, back. The strip is always on screen and always shows
+           every room, so moving from Kitchen to Bedroom is one tap and there is
+           nothing to come back from. The first tab is open the moment the page
+           is, because a quotation with rooms in it should never open on
+           nothing. -->
       <ng-container *ngIf="view === 'areas'">
 
-        <div class="qa-rooms">
+        <div class="qa-rooms" *ngIf="groups.length">
 
-          <section class="qa-room" *ngFor="let group of groups; trackBy: trackByGroupId"
-                   [class.is-shut]="isShut(group)">
+          <!-- Every room, always. The count rides on the tab so which rooms are
+               still empty can be read without opening any of them. -->
+          <div class="qa-tabstrip" role="tablist">
+            <button type="button" class="qa-tab" *ngFor="let group of groups; trackBy: trackByGroupId"
+                    role="tab" [attr.aria-selected]="isActiveArea(group)"
+                    [class.is-open]="isActiveArea(group)" (click)="selectArea(group)"
+                    [title]="group.name">
+              <span class="qa-tab-mark">{{ group.name.charAt(0).toUpperCase() }}</span>
+              <span class="qa-tab-name">{{ group.name }}</span>
+              <span class="qa-tab-count">{{ draft.groupCount(group) }}</span>
+            </button>
+          </div>
 
-            <!-- The head is the room itself: what it is called, what is in it,
-                 and the two things ever done to it. -->
+          <section class="qa-room" *ngIf="activeGroup as group">
+
+            <!-- The head names the room the tab opened and carries the two
+                 things ever done to it. -->
             <header class="qa-room-head">
-              <button type="button" class="qa-room-toggle" (click)="toggleArea(group)"
-                      [attr.aria-expanded]="!isShut(group)"
-                      [title]="isShut(group) ? 'Show what is in ' + group.name : 'Hide what is in ' + group.name">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="qa-room-chev">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                </svg>
-
-                <span class="qa-room-mark">{{ group.name.charAt(0).toUpperCase() }}</span>
-
-                <span class="qa-room-text">
-                  <span class="qa-room-name">{{ group.name }}</span>
-                  <span class="qa-room-meta">
-                    {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }}
-                    · {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
-                  </span>
+              <span class="qa-room-text">
+                <span class="qa-room-name">{{ group.name }}</span>
+                <span class="qa-room-meta">
+                  {{ group.lines.length }} {{ group.lines.length === 1 ? 'product' : 'products' }}
+                  · {{ draft.groupCount(group) }} {{ draft.groupCount(group) === 1 ? 'piece' : 'pieces' }}
                 </span>
-              </button>
+              </span>
 
               <div class="qa-room-acts">
                 <button type="button" class="qa-room-add" (click)="openPicker(group)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
                   </svg>
-                  <span>Add products</span>
+                  <span>Add products to {{ group.name }}</span>
                 </button>
 
                 <button type="button" class="qa-room-del" (click)="removeArea(group, $event)"
@@ -160,7 +153,7 @@
                  area sheet answers "what is going where", and is the one checked
                  against the site. A rate in the corner here would only start
                  the other conversation early — pricing is the Final Quotation. -->
-            <div class="qa-room-body" *ngIf="!isShut(group)">
+            <div class="qa-room-body">
               <div class="table-scroll-container">
                 <table class="inventory-table compact qd-table">
                   <thead>
@@ -221,10 +214,10 @@
               </div>
             </div>
           </section>
+        </div>
 
-          <div class="qd-empty-card" *ngIf="groups.length === 0">
-            No areas on this request. Add one above to start building the quotation.
-          </div>
+        <div class="qd-empty-card" *ngIf="groups.length === 0">
+          No areas on this request. Add one above to start building the quotation.
         </div>
       </ng-container>
 

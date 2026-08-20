@@ -510,101 +510,135 @@
   &:focus { border-color: #170338; box-shadow: 0 0 0 3px rgba(23, 3, 56, .07); }
 }
 
-/* Fold every room, or unfold them. A quieter button than the ones beside it:
-   it changes what is on screen, not what is on the quotation. */
-.qa-fold-btn {
-  white-space: nowrap;
-  svg { color: #8B8394; }
-}
-
-/* ---- The rooms, stacked and open ----
-   One panel per room: a head that names it and carries the two things ever done
-   to it, and its products immediately underneath. The head is a real sticky
-   header — it holds against the page while the list below it scrolls, so on a
-   job of a dozen rooms the row being edited is never orphaned from the room it
-   belongs to. Cards in a grid were tried first and had space for a name and a
-   count and nothing else, which is exactly what forced the drill-down. */
+/* ---- The rooms, as tabs ----
+   A strip of every room above one panel of products. Cards in a grid were tried
+   first and had space for a name and a count and nothing else, which is what
+   forced the drill-down: a room's products ended up on a screen of their own,
+   entered by tapping the card and left by a Back button. The strip is always on
+   screen and always shows every room, so switching rooms is one tap and there
+   is nothing to come back from. */
 .qa-rooms {
   display: flex;
   flex-direction: column;
-  gap: 14px;
   width: 100%;
   margin-bottom: 20px;
 }
 
+.qa-tabstrip {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  width: 100%;
+  /* The first tab starts inboard of the panel's corner radius, so a square
+     tab bottom never sits over a curved panel edge. */
+  padding: 0 4px 0 16px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+
+  /* Both lines are load-bearing. The canvas is a fixed-height flex column, and
+     a row that scrolls sideways has an automatic minimum height of zero — so
+     once the rooms ran past one screen the flex algorithm crushed this strip to
+     its own padding and, since overflow-x forces overflow-y to match, the tabs
+     inside were sliced across rather than spilling out. */
+  flex-shrink: 0;
+  min-height: 48px;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: var(--ad-border); border-radius: 999px; }
+}
+
+/* A tab, joined to the panel below it.
+
+   Square-bottomed and overlapping the panel's top border by a pixel, so the
+   open one reads as the front of the folder rather than as a pill that happens
+   to be dark. That join is the whole point of tabs: it says the products below
+   belong to THIS room, which is exactly what the old card grid could not. */
+.qa-tab {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 240px;
+  margin-bottom: -1px;
+  padding: 10px 15px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--ad-r) var(--ad-r) 0 0;
+  background: transparent;
+  font-family: 'Outfit';
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ad-ink-3);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease, border-color .16s ease;
+
+  &:hover { background: rgba(23, 3, 56, .04); color: var(--ad-ink); }
+
+  &.is-open {
+    border-color: var(--ad-border);
+    background: var(--ad-surface);
+    color: var(--ad-ink);
+    font-weight: 700;
+
+    .qa-tab-mark { background: linear-gradient(150deg, #37215f 0%, #170338 100%); color: var(--ad-gold); }
+    .qa-tab-count { background: var(--ad-gold); color: #170338; }
+  }
+}
+
+.qa-tab-mark {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--ad-surface-3);
+  color: var(--ad-ink-3);
+  font-size: 12px;
+  font-weight: 800;
+  transition: background .16s ease, color .16s ease;
+}
+
+.qa-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qa-tab-count {
+  flex-shrink: 0;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-surface-3);
+  color: var(--ad-ink-3);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* The panel the open tab belongs to, joined to it along the top edge. */
 .qa-room {
   width: 100%;
   border: 1px solid var(--ad-border);
-  border-radius: 14px;
-  background: #FFFFFF;
-  box-shadow: 0 1px 2px rgba(23, 3, 56, .05);
-  overflow: hidden;
-  transition: box-shadow .2s ease, border-color .2s ease;
-
-  &:hover { border-color: #DCD4E2; }
-
-  /* Folded: the head is the whole panel, so the seam under it goes. */
-  &.is-shut .qa-room-head { border-bottom-color: transparent; }
+  border-radius: var(--ad-r-lg);
+  background: var(--ad-surface);
+  box-shadow: var(--ad-shadow-2);
 }
 
 .qa-room-head {
-  position: sticky;
-  top: 0;
-  z-index: 3;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid #EFEAF0;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FCFAFB 100%);
-}
-
-/* The name, the count and the fold are one target, because they are one idea. */
-.qa-room-toggle {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 4px 6px 4px 2px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover { background: rgba(23, 3, 56, .035); }
-  &:focus-visible { outline: 2px solid rgba(23, 3, 56, .35); outline-offset: 2px; }
-}
-
-.qa-room-chev {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  color: #8B8394;
-  transition: transform .2s ease;
-
-  .qa-room.is-shut & { transform: rotate(-90deg); }
-}
-
-.qa-room-mark {
-  flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  background: linear-gradient(150deg, #37215f 0%, #170338 100%);
-  color: #FEB300;
-  font-family: 'Outfit';
-  font-size: 16px;
-  font-weight: 800;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ad-border);
 }
 
 .qa-room-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .qa-room-name {
   font-family: 'Outfit';
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 700;
   color: #1C1B1B;
   white-space: nowrap;
@@ -615,15 +649,15 @@
 
 .qa-room-acts { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
 
-/* Every room carries its own Add products, so a product cannot land in the
-   wrong one: the button that was pressed names where it goes. */
+/* The button names the room it fills, so a product cannot land in the wrong
+   one by the admin having lost track of which tab is open. */
 .qa-room-add {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 14px;
+  padding: 9px 15px;
   border: 1px solid #E2DCE6;
-  border-radius: 999px;
+  border-radius: var(--ad-r-pill);
   background: #FFFFFF;
   font-family: 'Outfit';
   font-size: 13px;
@@ -636,7 +670,7 @@
   svg { width: 15px; height: 15px; }
 
   &:hover {
-    background: #FFF8E9;
+    background: var(--ad-gold-wash);
     border-color: #F3D89A;
     box-shadow: 0 2px 8px rgba(126, 87, 0, .12);
   }
@@ -656,16 +690,20 @@
   transition: color .16s ease, background .16s ease;
 
   svg { width: 17px; height: 17px; }
-  &:hover { color: #DC2626; background: rgba(220, 38, 38, .08); }
+  &:hover { color: var(--ad-danger); background: var(--ad-danger-wash); }
 }
 
+/* The list sits flush inside the panel — the panel IS the card, so the table
+   must not draw a second one around itself. */
 /* The list sits flush inside the panel — the panel IS the card, so the table
    must not draw a second one around itself. */
 .qa-room-body {
   width: 100%;
 
-  .inventory-table thead tr { background: #FBF9FA; }
+  .inventory-table thead tr { background: var(--ad-surface-2); }
   .inventory-table tbody tr:last-child { border-bottom: none; }
+  .inventory-table tbody tr:last-child td:first-child { border-bottom-left-radius: var(--ad-r-lg); }
+  .inventory-table tbody tr:last-child td:last-child { border-bottom-right-radius: var(--ad-r-lg); }
 }
 
 .qa-line-off {
@@ -1297,8 +1335,42 @@
 }
 
 @media (max-width: 700px) {
-  .qa-tools { justify-content: stretch; min-width: 0; }
-  .qa-tools .qa-area-input { max-width: none; flex: 1; }
+  /* The bar becomes a grid rather than a wrapping row.
+
+     Flex-wrapped with `justify-content: flex-end` it came apart on a phone:
+     each control kept its natural width, wrapped where it happened to run out
+     of room and then sat hard right, so the two switches, the name box and the
+     two buttons landed on four ragged lines with nothing lining up. As a grid
+     every control is on a track and the rows are even. */
+  .qa-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .qa-switch-btn { justify-content: center; padding: 11px 12px; }
+
+  .qa-tools {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    min-width: 0;
+
+    /* The name box and the discount box each take the full width: one is typed
+       into at length, the other is read as a sentence with its % on the end. */
+    .qa-area-input,
+    .qd-discount-bar { grid-column: 1 / -1; max-width: none; }
+    .qd-add-product,
+    .qd-edit-price,
+    .qd-apply { justify-content: center; }
+
+    /* On the summary side Add Area is the last control, and a half-width
+       button with an empty track beside it reads as a mistake. On the priced
+       side the last control is Apply, which pairs with Edit Price — so the
+       selector matches the one case and not the other. */
+    > .qd-add-product:last-child { grid-column: 1 / -1; }
+  }
   .qa-applied-line { text-align: left; }
 
   /* The head wraps rather than crushing the name: on a phone the actions drop
@@ -1306,4 +1378,17 @@
   .qa-room-head { flex-wrap: wrap; row-gap: 10px; }
   .qa-room-acts { width: 100%; justify-content: flex-end; }
   .qa-room-add { flex: 1; justify-content: center; }
+
+  /* The strip scrolls sideways on a phone rather than shrinking its tabs to
+     initials — a room is chosen by reading its name. */
+  .qa-tabstrip { padding: 0 2px 0 12px; min-height: 44px; }
+  .qa-tab { max-width: 170px; padding: 9px 12px; }
+  .qa-tab-mark { display: none; }
+}
+
+/* Same breakpoint the shared table→cards rule uses. The row number is a
+   position in a list you can already see the shape of; as its own labelled
+   field on a card it is the first thing read and the least worth reading. */
+@media (max-width: 900px) {
+  .qa-room-body .inventory-table td.qd-td-no { display: none; }
 }

@@ -1218,12 +1218,18 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   // ---- Requesting a quotation for that list ----
 
   /**
-   * Whether any room has been named and filled. What splits the List tab in
-   * two: with no rooms the flat list is simply the quotation and is titled that
-   * way, and the visitor is never shown the word "area" at all.
+   * Whether any room has been named. What splits the List tab in two: with no
+   * rooms the flat list is simply the quotation and is titled that way, and the
+   * visitor is never shown the word "area" at all.
+   *
+   * Named, not filled. It used to require a room with something IN it, which
+   * meant that between naming a room and putting the first light in it the flat
+   * list below still called itself "Your quotation list" — the same words the
+   * rooms above it were already using. Two blocks, one heading, and no way to
+   * tell which list the products at the bottom were in.
    */
   get hasRooms(): boolean {
-    return this.areaAllowed && this.filledAreas.length > 0;
+    return this.areaAllowed && this.areas.length > 0;
   }
 
   /** Anything at all to send: rooms with something in them, loose lines, or both. */

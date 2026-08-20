@@ -448,10 +448,10 @@
                or it could never be filled. -->
           <ng-container *ngIf="areaAllowed && areas.length > 0">
             <div class="cart-head">
-              <h2 class="catalog-heading">Your quotation list</h2>
+              <h2 class="catalog-heading">Your rooms</h2>
               <p class="catalog-subheading">
-                {{ filledAreas.length }} {{ filledAreas.length === 1 ? 'area' : 'areas' }} ·
-                {{ areaPieceCount }} {{ areaPieceCount === 1 ? 'piece' : 'pieces' }}. Tap an area to see what is in it.
+                {{ areas.length }} {{ areas.length === 1 ? 'room' : 'rooms' }} ·
+                {{ areaPieceCount }} {{ areaPieceCount === 1 ? 'piece' : 'pieces' }}. Tap one to see what is in it.
               </p>
             </div>
 
