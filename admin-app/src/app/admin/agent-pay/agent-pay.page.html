@@ -5,6 +5,8 @@
     <div class="breadcrumbs-row">
       <span class="breadcrumb-item link" (click)="goBack()">Agents</span>
       <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item link" (click)="openLedger()">{{ agentName }}</span>
+      <span class="breadcrumb-separator">/</span>
       <span class="breadcrumb-item active">Pay Commission</span>
     </div>
 
@@ -22,7 +24,7 @@
             <h2 class="page-title">Pay {{ agentName }}</h2>
             <p class="page-subtitle">
               <span class="agent-mobile">+91 {{ agent?.phone || '—' }}</span>
-              <span class="link-chip" (click)="openCommission()">View commission entries</span>
+              <span class="link-chip" (click)="openLedger()">View transactions</span>
             </p>
           </div>
         </div>
@@ -92,51 +94,9 @@
       </div>
     </section>
 
-    <!-- Payments already made -->
-    <section class="table-section-card">
-      <header class="card-head">
-        <h3 class="card-title">Payments Made</h3>
-        <span class="card-sub">{{ agentName }} sees these in the Commission tab of their app.</span>
-      </header>
-
-      <div class="table-scroll-container">
-        <table class="payments-table">
-          <thead>
-            <tr>
-              <th class="th-date">Date</th>
-              <th class="th-amount">Amount Paid</th>
-              <th class="th-note">Note</th>
-              <th class="th-act"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let payment of payments; trackBy: trackByPaymentId">
-              <td class="td-date">{{ payment.date | date:'mediumDate' }}</td>
-              <td class="td-amount">₹{{ payment.amount | number:'1.0-2' }}</td>
-              <td class="td-note">{{ payment.note || '—' }}</td>
-              <td class="td-act">
-                <button class="row-delete-btn" (click)="deletePayment(payment)" title="Delete payment">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </td>
-            </tr>
-
-            <tr *ngIf="payments.length === 0">
-              <td colspan="4" class="td-empty">No payments recorded yet.</td>
-            </tr>
-          </tbody>
-          <tfoot *ngIf="payments.length">
-            <tr>
-              <td class="tf-label">Total paid</td>
-              <td class="tf-amount">₹{{ totalPaid | number:'1.0-2' }}</td>
-              <td colspan="2"></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </section>
+    <!-- No history below the form — see the note on the commission page. The
+         payouts are lines of the agent's account, beside the commission they
+         settle, on the account screen. -->
 
   </main>
 </ion-content>

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/standalone';
 import { AgentService, Agent } from '../agent.service';
-import { AgentCommissionService, CommissionPayment } from '../agent-commission.service';
+import { AgentCommissionService } from '../agent-commission.service';
 
 /**
  * Pay an agent's commission.
@@ -85,14 +85,6 @@ export class AgentPayPage implements OnInit {
     return Math.round((this.remaining - amount) * 100) / 100;
   }
 
-  get payments(): CommissionPayment[] {
-    return this.commissions.paymentsFor(this.agentId);
-  }
-
-  trackByPaymentId(_index: number, payment: CommissionPayment): string {
-    return payment.id;
-  }
-
   private num(value: number | null): number {
     const n = Number(value);
     return isFinite(n) && n > 0 ? n : 0;
@@ -147,6 +139,9 @@ export class AgentPayPage implements OnInit {
       this.form = { date: this.today(), amount: null, note: '' };
       this.savedMessage = `Payment recorded. ₹${this.remaining} remaining.`;
       setTimeout(() => { this.savedMessage = ''; }, 4000);
+      // Settled in full: there is nothing more to record here, and the account
+      // is where the payout can be seen against what it cleared.
+      if (this.remaining <= 0) setTimeout(() => this.openLedger(), 900);
     } catch (e) {
       console.error('Add payment error:', e);
       this.error = 'Could not save the payment. Please check your connection and try again.';
@@ -155,13 +150,9 @@ export class AgentPayPage implements OnInit {
     }
   }
 
-  deletePayment(payment: CommissionPayment) {
-    if (!confirm(`Delete the ₹${payment.amount} payment dated ${payment.date}? It will go back onto the agent's outstanding balance.`)) return;
-    this.commissions.deletePayment(payment.id);
-  }
-
-  openCommission() {
-    this.router.navigate(['/admin/agents/commission', this.agentId]);
+  /** The account this payout lands on — where the rows live now. */
+  openLedger() {
+    this.router.navigate(['/admin/agents/ledger', this.agentId]);
   }
 
   goBack() {

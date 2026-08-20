@@ -1,5 +1,5 @@
-/* Agent Pay Commission Page SCSS — balance, composer, payout history.
-   Shares the shapes of the Set Commission page so the two read as one flow. */
+/* Agent account (ledger) page SCSS — the header and tiles are the same shapes
+   the Add Commission and Record Payment screens use, so the three read as one. */
 
 .breadcrumb-item.link {
   cursor: pointer;
@@ -185,166 +185,63 @@
   color: #6B7280;
 }
 
+
 /* -------------------------------------------------------------
- * Composer
+ * Adding to the account, from the account
  * ------------------------------------------------------------- */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 0 24px;
-}
+.header-buttons { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-.span-2 { grid-column: span 2; }
-
-.admin-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.admin-label {
-  font-weight: 600;
-  font-size: 13px;
-  color: #49454E;
-}
-
-.admin-input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--ad-border);
-  border-radius: 8px;
-  background: #F8FAFC;
-  font-family: 'Outfit';
-  font-size: 15px;
-  font-weight: 500;
-  color: #170338;
-  outline: none;
-  transition: border-color .15s ease, background .15s ease;
-
-  &::placeholder { color: #9CA3AF; font-weight: 400; }
-  &:focus { border-color: #170338; background: #FFFFFF; }
-
-  &.bare {
-    border: none;
-    background: transparent;
-    padding-left: 0;
-    &:focus { background: transparent; }
-  }
-}
-
-.admin-input-wrap {
-  display: flex;
+.ledger-add-btn,
+.ledger-pay-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding-left: 14px;
-  border: 1px solid var(--ad-border);
-  border-radius: 8px;
-  background: #F8FAFC;
-  transition: border-color .15s ease, background .15s ease;
-
-  &:focus-within { border-color: #170338; background: #FFFFFF; }
-}
-
-.admin-input-prefix {
-  font-weight: 700;
-  font-size: 15px;
-  color: #49454E;
-  border-right: 1px solid #CBD5E1;
-  padding-right: 10px;
-}
-
-.fill-remaining-btn {
-  align-self: flex-start;
-  padding: 4px 0;
-  border: none;
-  background: transparent;
-  color: #0F9B72;
-  font-family: 'Outfit';
-  font-weight: 700;
-  font-size: 12.5px;
-  cursor: pointer;
-
-  &:hover { color: #0A7355; text-decoration: underline; }
-  &:disabled { color: #94A3B8; cursor: default; text-decoration: none; }
-}
-
-.balance-preview {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 24px;
-  padding: 13px 16px;
-  border: 1px dashed #CBD5E1;
+  gap: 8px;
+  padding: 11px 18px;
   border-radius: 10px;
-  background: #F8FAFC;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, box-shadow .16s ease, opacity .16s ease;
+
+  svg { width: 16px; height: 16px; }
 }
 
-.bp-label {
-  font-weight: 600;
-  font-size: 13.5px;
-  color: #49454E;
-}
-
-.bp-value {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.3px;
-  color: #0F9B72;
-
-  &.negative { color: #DC2626; }
-}
-
-.admin-error,
-.admin-success {
-  margin: 0 24px;
-  padding: 11px 14px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-
-.admin-error { background: #FEF2F2; color: #DC2626; }
-.admin-success { background: #F0FDF4; color: #16A34A; }
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 24px;
-}
-
-.modal-save-btn {
-  padding: 13px 30px;
+.ledger-add-btn {
   border: none;
-  border-radius: 8px;
   background: #170338;
   color: #FFFFFF;
-  font-family: 'Outfit';
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all .15s ease;
+  box-shadow: 0 4px 12px rgba(23, 3, 56, .18);
 
   &:hover { background: #2D145A; }
-  &:disabled { opacity: .6; cursor: default; }
+}
+
+.ledger-pay-btn {
+  border: 1px solid var(--ad-border);
+  background: #FFFFFF;
+  color: #0F9B72;
+
+  &:hover:not(:disabled) { background: #F0FDF9; border-color: #A7F3D0; }
+
+  /* Nothing outstanding is not an error, so it is dimmed rather than hidden —
+     the button still says what this screen can do. */
+  &:disabled { opacity: .45; cursor: not-allowed; }
 }
 
 /* -------------------------------------------------------------
- * Payments table
+ * The account
  * ------------------------------------------------------------- */
 .table-scroll-container {
   width: 100%;
   overflow-x: auto;
 }
 
-.payments-table {
+.ledger-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 560px;
+  min-width: 720px;
 
   thead tr {
     background: var(--ad-surface-2);
@@ -352,26 +249,26 @@
   }
 
   th {
-    padding: 16px 24px;
+    padding: 14px 24px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    color: #170338;
+    color: #6B7280;
   }
 
   tbody tr {
     border-bottom: 1px solid #F1F5F9;
     transition: background-color 0.15s ease;
-    &:hover { background-color: rgba(248, 249, 250, 0.6); }
+    &:hover { background-color: var(--ad-surface-2); }
     &:last-child { border-bottom: none; }
   }
 
   td {
-    padding: 15px 24px;
+    padding: 14px 24px;
     vertical-align: middle;
     font-weight: 500;
-    font-size: 15.5px;
+    font-size: 15px;
     color: #1C1B1B;
   }
 
@@ -383,18 +280,69 @@
   tfoot td {
     padding: 14px 24px;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
     color: #170338;
   }
 }
 
+.th-amount, .td-amount,
+.th-balance, .td-balance,
+.tf-amount, .tf-balance { text-align: right; }
+
+.th-date, .td-date { width: 140px; white-space: nowrap; }
+.th-amount, .td-amount { width: 130px; white-space: nowrap; }
+.th-balance, .td-balance { width: 130px; white-space: nowrap; }
+
 .td-date { font-weight: 700; }
-.td-amount { font-weight: 700; color: #0F9B72; }
-.td-note { color: #6B7280; font-weight: 400; }
-.tf-amount { color: #0F9B72; }
 
-.td-act { text-align: right; width: 56px; }
+/* Which kind of line this is, said in one word and one colour. It carries the
+   whole distinction now that the two are interleaved. */
+.td-what { display: flex; align-items: flex-start; gap: 12px; }
 
+.kind-chip {
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(254, 179, 0, .18);
+  color: #7E5700;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  white-space: nowrap;
+
+  &.paid { background: rgba(16, 185, 129, .14); color: #0F9B72; }
+}
+
+.what-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.what-title { font-weight: 700; font-size: 15px; color: #170338; }
+.what-detail { font-size: 12.5px; font-weight: 600; color: #6B7280; }
+.what-note { font-size: 12.5px; font-weight: 400; color: #94A3B8; }
+
+/* Signed, in one column. Earned adds, paid takes away — the sign is the whole
+   difference, and two separate money columns hid it behind a blank cell. */
+.amount {
+  font-weight: 700;
+  font-size: 15px;
+  color: #7E5700;
+
+  &.out { color: #0F9B72; }
+}
+
+.balance {
+  font-weight: 700;
+  font-size: 15px;
+  color: #94A3B8;
+
+  &.due { color: #170338; }
+}
+
+.tf-balance.due { color: #7E5700; }
+
+.td-act { text-align: right; width: 92px; }
+.row-actions { display: inline-flex; align-items: center; gap: 4px; }
+
+.row-edit-btn,
 .row-delete-btn {
   display: inline-grid;
   place-items: center;
@@ -403,17 +351,25 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #DC2626;
   cursor: pointer;
   transition: background .15s ease;
 
   svg { width: 16px; height: 16px; }
+}
+
+.row-edit-btn {
+  color: #7E5700;
+  &:hover { background: #FFF8E9; }
+}
+
+.row-delete-btn {
+  color: #DC2626;
   &:hover { background: #FEF2F2; }
 }
 
 .td-empty {
   text-align: center;
-  padding: 34px !important;
+  padding: 40px !important;
   font-size: 15px;
   color: #94A3B8;
   font-weight: 400;
@@ -429,41 +385,50 @@
 
 @media (max-width: 820px) {
   .stat-card { width: 100%; }
-  .form-grid { grid-template-columns: 1fr; }
-  .span-2 { grid-column: span 1; }
 
-  .payments-table {
+  /* One card per transaction. No column arrangement survives a phone, and
+     dropping columns would drop the balance — which is the reason to read
+     this screen at all. */
+  .ledger-table {
     display: block;
     min-width: 0;
+
     thead { display: none; }
     tbody, tfoot { display: block; }
 
     tbody tr {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 2px 12px;
+      gap: 4px 12px;
       padding: 14px 16px;
     }
 
-    td { padding: 3px 0; font-size: 15px; }
+    td { padding: 0; }
 
-    .td-amount { grid-row: 1; grid-column: 2; text-align: right; }
-    .td-act { grid-column: 2; grid-row: 2; }
+    .td-date { grid-column: 1; font-size: 12.5px; color: #6B7280; }
+    .td-what { grid-column: 1 / -1; grid-row: 2; }
+    .td-amount { grid-column: 2; grid-row: 1; text-align: right; }
+    .td-balance {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      text-align: left;
+      font-size: 12.5px;
 
-    tfoot tr { display: flex; justify-content: space-between; padding: 14px 16px; }
+      &::before { content: 'Balance after: '; color: #94A3B8; font-weight: 600; }
+    }
+    .td-act { grid-column: 2; grid-row: 3; text-align: right; }
+
+    tfoot tr { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; padding: 14px 16px; }
     tfoot td { padding: 0; }
   }
 
   .card-head { padding: 16px 16px 14px; }
-  .form-grid, .form-actions { padding: 0 16px; }
-  .admin-error, .admin-success, .balance-preview { margin: 0 16px; }
-  .modal-save-btn { width: 100%; }
+  .header-buttons { width: 100%; }
+  .ledger-add-btn, .ledger-pay-btn { flex: 1; justify-content: center; }
 }
 
 /* The shell puts a Back in the top bar on mobile (see admin-layout). Two back
-   buttons on one screen is one too many, and the top-left one is where a
-   phone user looks for it — so this page's own steps aside there. Desktop,
-   where the top bar has no Back, keeps it. */
+   buttons on one screen is one too many. */
 @media (max-width: 900px) {
   .back-btn { display: none; }
 }

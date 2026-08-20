@@ -5,7 +5,9 @@
     <div class="breadcrumbs-row">
       <span class="breadcrumb-item link" (click)="goBack()">Agents</span>
       <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item active">Add Commission</span>
+      <span class="breadcrumb-item link" (click)="openLedger()">{{ agentName }}</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">{{ editingId ? 'Edit Commission' : 'Add Commission' }}</span>
     </div>
 
     <!-- Agent header -->
@@ -23,18 +25,17 @@
             <p class="page-subtitle">
               <span class="agent-mobile">+91 {{ agent?.phone || '—' }}</span>
               <span class="agent-status-chip" [class.off]="agent?.status !== 'Active'">{{ agent?.status || 'Unknown' }}</span>
+              <span class="link-chip" (click)="openLedger()">View transactions</span>
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Roll-ups -->
+    <!-- Where the account stands. Not history — these are what tells the admin
+         the entry they just typed landed, and they move the moment it does. The
+         line-by-line record is on the account screen. -->
     <div class="stats-row">
-      <div class="stat-card">
-        <span class="stat-label">ENTRIES</span>
-        <h3 class="stat-value">{{ entries.length }}</h3>
-      </div>
       <div class="stat-card">
         <span class="stat-label">TOTAL SALES</span>
         <h3 class="stat-value">₹{{ totalSales | number:'1.0-0' }}</h3>
@@ -44,11 +45,7 @@
         <h3 class="stat-value">₹{{ totalCommission | number:'1.0-2' }}</h3>
       </div>
       <div class="stat-card">
-        <span class="stat-label">PAID</span>
-        <h3 class="stat-value">₹{{ totalPaid | number:'1.0-2' }}</h3>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">REMAINING</span>
+        <span class="stat-label">OUTSTANDING</span>
         <h3 class="stat-value" [class.due]="remaining > 0">₹{{ remaining | number:'1.0-2' }}</h3>
       </div>
     </div>
@@ -120,68 +117,11 @@
       </div>
     </section>
 
-    <!-- Everything recorded so far, newest first. This sits BELOW the form:
-         the admin comes here to add an entry, and reads back what is already
-         recorded underneath it. -->
-    <section class="table-section-card">
-      <header class="card-head">
-        <h3 class="card-title">Sales &amp; Commission Entries</h3>
-        <span class="card-sub">Every sales amount and the commission it earned. {{ agentName }} sees the commission side of this in their app.</span>
-      </header>
-
-      <div class="table-scroll-container">
-        <table class="commission-table">
-          <thead>
-            <tr>
-              <th class="th-date">Date</th>
-              <th class="th-client">Client</th>
-              <th class="th-sales">Sales Amount</th>
-              <th class="th-pct">Percentage</th>
-              <th class="th-amount">Commission</th>
-              <th class="th-note">Note</th>
-              <th class="th-act"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let entry of entries; trackBy: trackByEntryId" [class.is-editing]="editingId === entry.id">
-              <td class="td-date">{{ entry.date | date:'mediumDate' }}</td>
-              <td class="td-client">{{ entry.clientName || '—' }}</td>
-              <td class="td-sales">₹{{ entry.salesAmount | number:'1.0-0' }}</td>
-              <td class="td-pct"><span class="pct-chip">{{ entry.percentage | number:'1.0-2' }}%</span></td>
-              <td class="td-amount">₹{{ entry.commissionAmount | number:'1.0-2' }}</td>
-              <td class="td-note">{{ entry.note || '—' }}</td>
-              <td class="td-act">
-                <div class="row-actions">
-                  <button class="row-edit-btn" (click)="editEntry(entry)" title="Edit entry">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button class="row-delete-btn" (click)="deleteEntry(entry)" title="Delete entry">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <tr *ngIf="entries.length === 0">
-              <td colspan="7" class="td-empty">Nothing recorded yet. Add the first entry above.</td>
-            </tr>
-          </tbody>
-          <tfoot *ngIf="entries.length">
-            <tr>
-              <td class="tf-label" colspan="2">Totals</td>
-              <td class="tf-sales">₹{{ totalSales | number:'1.0-0' }}</td>
-              <td></td>
-              <td class="tf-amount">₹{{ totalCommission | number:'1.0-2' }}</td>
-              <td colspan="2"></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </section>
+    <!-- No history below the form. The account — commission and payouts
+         interleaved, with a running balance — is one screen of its own, opened
+         by the agent's name on the list. Half of it used to be here and the
+         other half on the Pay page, and neither could answer what had actually
+         happened on the account. -->
 
   </main>
 </ion-content>

@@ -119,6 +119,11 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/agents/agents.page').then((m) => m.AgentsPage),
       },
       {
+        // One agent's account: commission and payouts as a single statement.
+        path: 'agents/ledger/:id',
+        loadComponent: () => import('./admin/agent-ledger/agent-ledger.page').then((m) => m.AgentLedgerPage),
+      },
+      {
         path: 'agents/commission/:id',
         loadComponent: () => import('./admin/agent-commission/agent-commission.page').then((m) => m.AgentCommissionPage),
       },

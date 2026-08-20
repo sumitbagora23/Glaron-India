@@ -75,10 +75,6 @@ export class AgentsPage {
 
   // ---- Per-agent commission roll-ups (shown in the list) ----
 
-  entryCount(agent: Agent): number {
-    return this.commissions.entriesFor(agent.id || '').length;
-  }
-
   totalSales(agent: Agent): number {
     return this.commissions.totalSales(agent.id || '');
   }
@@ -97,6 +93,33 @@ export class AgentsPage {
   }
 
   // ---- Row actions ----
+
+  /**
+   * The agent's account: commission and payouts as one statement.
+   *
+   * Opened by the name, the way a quotation is opened by its customer's. The
+   * row is about this agent, so the agent is the way in.
+   */
+  openLedger(agent: Agent, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!agent.id) return;
+    this.router.navigate(['/admin/agents/ledger', agent.id]);
+  }
+
+  /**
+   * How many lines an agent's account has — what decides whether they can be
+   * deleted, and what the row's tooltip says when they cannot.
+   */
+  transactionCount(agent: Agent): number {
+    return agent.id ? this.commissions.transactionCount(agent.id) : 0;
+  }
+
+  deleteBlockedReason(agent: Agent): string {
+    const n = this.transactionCount(agent);
+    if (!n) return '';
+    return `${agent.name} has ${n} transaction${n === 1 ? '' : 's'} on their account. `
+         + `Delete those first if this agent really should be removed.`;
+  }
 
   // Opens the agent's own commission page: everything recorded so far at the
   // top, the "add entry" form under it.
@@ -129,11 +152,27 @@ export class AgentsPage {
     }
   }
 
+  /**
+   * Delete an agent — only one with nothing on their account.
+   *
+   * This used to delete the commission entries and payouts along with the
+   * agent, which quietly destroyed a record of money: what was earned, what was
+   * paid, and what was still owed, gone on one confirm. An account with history
+   * in it is a record, not a fixture, so the history has to be dealt with
+   * deliberately before the agent can go. The button says so rather than
+   * failing on the click.
+   */
   deleteAgent(agent: Agent, event?: Event) {
     if (event) event.stopPropagation();
     if (!agent.id) return;
-    if (!confirm(`Delete agent "${agent.name}"? Their commission entries are removed too. This cannot be undone.`)) return;
-    this.commissions.deleteForAgent(agent.id);
+
+    const blocked = this.deleteBlockedReason(agent);
+    if (blocked) {
+      alert(blocked);
+      return;
+    }
+
+    if (!confirm(`Delete agent "${agent.name}"? Their account is empty, so nothing is lost — but this cannot be undone.`)) return;
     this.agentService.deleteAgent(agent.id);
   }
 

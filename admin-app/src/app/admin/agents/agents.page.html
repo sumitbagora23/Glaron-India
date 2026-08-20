@@ -60,8 +60,18 @@
                     <span class="circle-text">{{ agent.initial }}</span>
                   </div>
                   <div class="agent-name-block">
-                    <span class="agent-fullname">{{ agent.name }}</span>
-                    <span class="agent-entries-tag" *ngIf="entryCount(agent)">{{ entryCount(agent) }} entries</span>
+                    <!-- The name opens the agent's account, the way a customer's
+                         name opens their quotation. -->
+                    <button type="button" class="agent-name-btn" (click)="openLedger(agent, $event)"
+                            [title]="'Open ' + agent.name + '\'s transactions'">
+                      <span class="agent-fullname">{{ agent.name }}</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="agent-name-go">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <span class="agent-entries-tag" *ngIf="transactionCount(agent)">
+                      {{ transactionCount(agent) }} {{ transactionCount(agent) === 1 ? 'transaction' : 'transactions' }}
+                    </span>
                   </div>
                 </div>
               </td>
@@ -114,7 +124,12 @@
                     </svg>
                     <span>Pay</span>
                   </button>
-                  <button class="delete-btn" (click)="deleteAgent(agent, $event)" title="Delete agent">
+                  <!-- Dimmed, not hidden, while the account has history on it: a
+                       missing button is a puzzle, a disabled one with a reason
+                       on it is an answer. -->
+                  <button class="delete-btn" (click)="deleteAgent(agent, $event)"
+                          [class.is-blocked]="transactionCount(agent)"
+                          [title]="deleteBlockedReason(agent) || 'Delete agent'">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>

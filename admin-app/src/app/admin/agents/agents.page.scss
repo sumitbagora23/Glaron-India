@@ -127,11 +127,59 @@
   min-width: 0;
 }
 
+/* The name is the row's way into the agent's account — the same shape the
+   quotations list uses for a customer's name. */
+.agent-name-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .agent-fullname,
+  &:focus-visible .agent-fullname {
+    color: var(--ad-gold-strong);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &:hover .agent-name-go,
+  &:focus-visible .agent-name-go { opacity: 1; transform: none; }
+}
+
 .agent-fullname {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
   color: #170338;
+  transition: color .15s ease;
+}
+
+/* On a mouse the hover says the name is a way in; on a touch screen there is
+   no hover to say it with, so the chevron is simply always there. */
+.agent-name-go {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  color: var(--ad-gold-strong);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+@media (hover: none) {
+  .agent-name-go { opacity: 1; transform: none; }
+}
+
+/* An agent with money on their account cannot be deleted, and the button says
+   so before it is pressed rather than after. */
+.delete-btn.is-blocked {
+  opacity: .38;
+  cursor: not-allowed;
 }
 
 .agent-entries-tag {

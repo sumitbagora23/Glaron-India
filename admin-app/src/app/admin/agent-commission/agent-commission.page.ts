@@ -49,6 +49,15 @@ export class AgentCommissionPage implements OnInit {
 
   ngOnInit() {
     this.agentId = this.route.snapshot.paramMap.get('id') || '';
+
+    // Opened from a row on the account screen: that entry is loaded into the
+    // form. The form is the only place an entry is ever written, so correcting
+    // one and adding one are the same screen and cannot drift apart.
+    const entryId = this.route.snapshot.queryParamMap.get('entry');
+    if (entryId) {
+      const entry = this.commissions.entriesFor(this.agentId).find(e => e.id === entryId);
+      if (entry) this.editEntry(entry);
+    }
   }
 
   private today(): string {
@@ -65,11 +74,7 @@ export class AgentCommissionPage implements OnInit {
     return this.agent?.name || 'Agent';
   }
 
-  // ---- Ledger (shown above the form) ----
-
-  get entries(): CommissionEntry[] {
-    return this.commissions.entriesFor(this.agentId);
-  }
+  // ---- Roll-ups, kept: they are the answer to "did that save" ----
 
   get totalSales(): number {
     return this.commissions.totalSales(this.agentId);
@@ -86,10 +91,6 @@ export class AgentCommissionPage implements OnInit {
   // Earned less paid — the same balance the Pay page settles against.
   get remaining(): number {
     return this.commissions.remaining(this.agentId);
-  }
-
-  trackByEntryId(_index: number, entry: CommissionEntry): string {
-    return entry.id;
   }
 
   // ---- Two-way rate/amount derivation ----
@@ -142,8 +143,6 @@ export class AgentCommissionPage implements OnInit {
     };
     this.error = '';
     this.savedMessage = '';
-    // The composer sits above the ledger — bring it back into view.
-    setTimeout(() => document.getElementById('commission-composer')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
 
   cancelEdit() {
@@ -204,6 +203,9 @@ export class AgentCommissionPage implements OnInit {
         await this.commissions.updateEntry(this.editingId, payload);
         this.editingId = null;
         this.savedMessage = 'Entry updated — the agent sees the new figures straight away.';
+        // Came here from a row on the account; go back to it, where the change
+        // can actually be seen against the balance.
+        setTimeout(() => this.openLedger(), 700);
       } else {
         await this.commissions.addEntry({
           agentId: agent.id,
@@ -223,12 +225,9 @@ export class AgentCommissionPage implements OnInit {
     }
   }
 
-  deleteEntry(entry: CommissionEntry) {
-    if (!confirm(`Delete the ₹${entry.commissionAmount} commission entry dated ${entry.date}?`)) return;
-    // Editing the row that is being removed would leave the form pointing at a
-    // document that no longer exists.
-    if (this.editingId === entry.id) this.cancelEdit();
-    this.commissions.deleteEntry(entry.id);
+  /** The account this entry belongs to — where the rows live now. */
+  openLedger() {
+    this.router.navigate(['/admin/agents/ledger', this.agentId]);
   }
 
   goBack() {

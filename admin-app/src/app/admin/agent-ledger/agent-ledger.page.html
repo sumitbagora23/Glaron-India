@@ -1,0 +1,160 @@
+<ion-content [scrollY]="true">
+  <main class="content-canvas">
+
+    <div class="breadcrumbs-row">
+      <span class="breadcrumb-item link" (click)="goBack()">Agents</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">{{ agentName }}</span>
+    </div>
+
+    <div class="page-header-row">
+      <div class="title-container">
+        <div class="agent-head-row">
+          <button class="back-btn" (click)="goBack()" aria-label="Back to agents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div class="agent-avatar">{{ agent?.initial || 'A' }}</div>
+          <div class="agent-head-text">
+            <h2 class="page-title">{{ agentName }}</h2>
+            <p class="page-subtitle">
+              <span class="agent-mobile">+91 {{ agent?.phone || '—' }}</span>
+              <span class="agent-status-chip" [class.off]="agent?.status !== 'Active'">{{ agent?.status || 'Unknown' }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- The two ways to add to the account, from the account itself. -->
+      <div class="header-buttons">
+        <button class="ledger-add-btn" (click)="addCommission()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Add Commission</span>
+        </button>
+        <button class="ledger-pay-btn" (click)="recordPayment()" [disabled]="remaining <= 0"
+                [title]="remaining > 0 ? 'Record a payout against the balance' : 'Nothing outstanding to pay'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h4M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+          </svg>
+          <span>Record Payment</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">TOTAL SALES</span>
+        <h3 class="stat-value">₹{{ totalSales | number:'1.0-0' }}</h3>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">EARNED</span>
+        <h3 class="stat-value">₹{{ totalEarned | number:'1.0-2' }}</h3>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">PAID</span>
+        <h3 class="stat-value">₹{{ totalPaid | number:'1.0-2' }}</h3>
+      </div>
+      <div class="stat-card accent" [class.settled]="remaining <= 0">
+        <span class="stat-label">OUTSTANDING</span>
+        <h3 class="stat-value">₹{{ remaining | number:'1.0-2' }}</h3>
+      </div>
+    </div>
+
+    <!-- ============ THE ACCOUNT ============
+         Commission and payouts in one list, newest first, with the balance
+         after each line. They were two tables on two screens, and the question
+         an admin actually asks — "what has happened on this account" — could
+         not be answered by either of them alone. -->
+    <section class="table-section-card">
+      <header class="card-head">
+        <h3 class="card-title">Transactions</h3>
+        <span class="card-sub">
+          Everything on {{ agentName }}'s account — commission earned and money paid — newest first.
+          {{ agentName }} sees the same history in the Commission tab of their app.
+        </span>
+      </header>
+
+      <div class="table-scroll-container">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th class="th-date">Date</th>
+              <th class="th-what">Transaction</th>
+              <th class="th-amount">Amount</th>
+              <th class="th-balance">Balance</th>
+              <th class="th-act"></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let row of rows; trackBy: trackByRowId" [class.is-payment]="row.kind === 'payment'">
+              <td class="td-date" data-label="Date">{{ row.date | date:'mediumDate' }}</td>
+
+              <td class="td-what" data-label="Transaction">
+                <span class="kind-chip" [class.paid]="row.kind === 'payment'">
+                  {{ row.kind === 'commission' ? 'Commission' : 'Payment' }}
+                </span>
+                <span class="what-text">
+                  <span class="what-title">{{ title(row) }}</span>
+                  <span class="what-detail" *ngIf="detail(row)">{{ detail(row) }}</span>
+                  <span class="what-note" *ngIf="note(row)">{{ note(row) }}</span>
+                </span>
+              </td>
+
+              <!-- One column for both, signed. Two money columns with a blank
+                   in each row is how the split tables read, and it made the two
+                   kinds look like different quantities rather than opposite
+                   directions of the same one. -->
+              <td class="td-amount" data-label="Amount">
+                <span class="amount" [class.out]="row.signed < 0">
+                  {{ row.signed < 0 ? '−' : '+' }}₹{{ (row.signed < 0 ? -row.signed : row.signed) | number:'1.0-2' }}
+                </span>
+              </td>
+
+              <td class="td-balance" data-label="Balance">
+                <span class="balance" [class.due]="row.balance > 0">₹{{ row.balance | number:'1.0-2' }}</span>
+              </td>
+
+              <td class="td-act">
+                <div class="row-actions">
+                  <!-- Only commission can be corrected; see the class comment. -->
+                  <button class="row-edit-btn" *ngIf="row.kind === 'commission'"
+                          (click)="editEntry(row)" title="Edit this commission entry">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button class="row-delete-btn" (click)="deleteRow(row)"
+                          [title]="row.kind === 'commission' ? 'Delete this commission entry' : 'Delete this payment'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="rows.length === 0">
+              <td colspan="5" class="td-empty">
+                Nothing on this account yet. Add a commission entry to start it.
+              </td>
+            </tr>
+          </tbody>
+
+          <tfoot *ngIf="rows.length">
+            <tr>
+              <td class="tf-label" colspan="2">Earned ₹{{ totalEarned | number:'1.0-2' }} · paid ₹{{ totalPaid | number:'1.0-2' }}</td>
+              <td class="tf-amount">Outstanding</td>
+              <td class="tf-balance" [class.due]="remaining > 0">₹{{ remaining | number:'1.0-2' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</ion-content>

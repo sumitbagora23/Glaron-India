@@ -84,6 +84,11 @@
   flex-direction: row;
   gap: 16px;
   width: 100%;
+  /* The canvas is a fixed-height flex column, and a row with no shrink guard
+     is squashed to nothing once the page below it overflows — the tiles were
+     rendering at zero height on a phone, on a page tall enough to scroll. Same
+     rule the cards below already follow: the PAGE scrolls, not its parts. */
+  flex-shrink: 0;
   box-sizing: border-box;
 }
 

@@ -52,6 +52,32 @@ export interface CommissionPayment {
   createdAt: string;
 }
 
+/**
+ * One line of an agent's account, whichever side of it the line is on.
+ *
+ * Commission and payouts live in two collections because they are two different
+ * records — one is business done, the other is money moved — but an agent's
+ * account is a single running story and was being told as two tables on two
+ * screens, each showing half of it. Neither could answer "what happened in
+ * October", because the answer was split across both.
+ *
+ * `signed` is what the balance arithmetic uses: commission adds to what is
+ * owed, a payout takes away from it. It is the one field that makes the two
+ * kinds comparable, and the reason they can share a column.
+ */
+export type LedgerRow = {
+  id: string;
+  kind: 'commission' | 'payment';
+  date: string;
+  createdAt: string;
+  /** Positive for commission earned, negative for money paid out. */
+  signed: number;
+  /** Running balance after this line, oldest to newest. */
+  balance: number;
+  entry?: CommissionEntry;
+  payment?: CommissionPayment;
+};
+
 @Injectable({ providedIn: 'root' })
 export class AgentCommissionService {
   private STORAGE_KEY = 'glaron_agent_commissions_v1';
@@ -210,6 +236,70 @@ export class AgentCommissionService {
     const balance = this.totalCommission(agentId) - this.totalPaid(agentId);
     // Guard the float dust that ₹x.xx arithmetic leaves behind.
     return Math.round(balance * 100) / 100;
+  }
+
+  // ---------------- The account, as one list ----------------
+
+  /**
+   * Every commission entry and every payout for an agent, in one list.
+   *
+   * Sorted by the date the line belongs to, newest first, with `createdAt`
+   * breaking ties — the same order both halves were already kept in, so a
+   * reader who knew either table finds the merged one in the order they expect.
+   * Two entries recorded on the same day appear in the order they were typed.
+   *
+   * The running balance is accumulated OLDEST first and the result reversed,
+   * because a balance is only meaningful read forwards: each line's balance is
+   * what the agent was owed once that line had happened.
+   */
+  ledgerFor(agentId: string): LedgerRow[] {
+    if (!agentId) return [];
+
+    const rows: LedgerRow[] = [
+      ...this.entriesFor(agentId).map(entry => ({
+        id: entry.id,
+        kind: 'commission' as const,
+        date: entry.date || '',
+        createdAt: entry.createdAt || '',
+        signed: entry.commissionAmount || 0,
+        balance: 0,
+        entry
+      })),
+      ...this.paymentsFor(agentId).map(payment => ({
+        id: payment.id,
+        kind: 'payment' as const,
+        date: payment.date || '',
+        createdAt: payment.createdAt || '',
+        signed: -(payment.amount || 0),
+        balance: 0,
+        payment
+      }))
+    ];
+
+    const oldestFirst = rows.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.createdAt.localeCompare(b.createdAt);
+    });
+
+    let running = 0;
+    for (const row of oldestFirst) {
+      running = Math.round((running + row.signed) * 100) / 100;
+      row.balance = running;
+    }
+
+    return oldestFirst.reverse();
+  }
+
+  /**
+   * How many lines an agent's account has, of either kind.
+   *
+   * What stands between an agent and being deleted: an account with history in
+   * it is a record of money, and deleting the agent would take the record with
+   * it. See the agents list.
+   */
+  transactionCount(agentId: string): number {
+    if (!agentId) return 0;
+    return this.entriesFor(agentId).length + this.paymentsFor(agentId).length;
   }
 
   // ---------------- Writes ----------------
