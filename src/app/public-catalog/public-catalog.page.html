@@ -639,14 +639,6 @@
       </div>
     </nav>
 
-    <!-- Confirmation of a tap on a long list, so adding is never silent. -->
-    <div class="added-toast" *ngIf="addedFlash">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="toast-tick">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
-      <span>{{ addedFlash }}</span>
-    </div>
-
     <!-- Quantity keypad — the same bottom sheet the installed app uses, so a
          long quantity is typed once instead of tapped twenty times. -->
     <!-- The categories, in the same picture grid the Home browser uses, so a

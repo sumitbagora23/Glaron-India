@@ -159,10 +159,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   reqMobile = '';
   reqError = '';
   reqSending = false;
-  /** Short flash under the top bar when something is added, so a tap has a reply. */
-  addedFlash = '';
-  private addedFlashTimer: any = null;
-
   // ---- Quantity keypad ----
   // The same bottom-sheet keypad the installed app uses. Twelve taps on a
   // stepper to reach 12 pieces is how a list gets abandoned; tapping the
@@ -255,11 +251,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return this.activeTab === 'area' ? this.activeArea : null;
   }
 
-  /** Name of the room being filled, for the toast. Empty off the Areas tab. */
-  get areaTargetName(): string {
-    return this.fillingArea?.name || '';
-  }
-
   ngOnInit() {
     this.ref = this.route.snapshot.paramMap.get('ref') || '';
     // The catalogue site's own address carries no link code, and a ref-less
@@ -283,7 +274,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.updateTimer) clearInterval(this.updateTimer);
-    if (this.addedFlashTimer) clearTimeout(this.addedFlashTimer);
     if (this.onVisible) document.removeEventListener('visibilitychange', this.onVisible);
   }
 
@@ -865,7 +855,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       });
     }
     this.saveCart();
-    this.flashAdded(product.name);
   }
 
   /** Step a line down, dropping it off the list at zero. */
@@ -994,17 +983,6 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.numpadTitle = '';
   }
 
-  /** A brief "added" line, so tapping + on a long page visibly does something. */
-  private flashAdded(name: string) {
-    // Filling a room, say which one — the visitor has several in mind and the
-    // wrong one is an easy mistake. Off the Areas tab no room is involved, and
-    // the plain wording is the honest one.
-    const room = this.areaTargetName;
-    this.addedFlash = room ? `${name} added to ${room}` : `${name} added to your list`;
-    if (this.addedFlashTimer) clearTimeout(this.addedFlashTimer);
-    this.addedFlashTimer = setTimeout(() => (this.addedFlash = ''), 1800);
-  }
-
   private saveCart() {
     try {
       localStorage.setItem(this.CART_KEY, JSON.stringify(this.cart));
@@ -1081,10 +1059,12 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     }
     this.areaError = '';
 
+    // Typing a name that already exists is not an error and not a second room:
+    // it is the shortest way back into the one that is already there.
     const existing = this.areas.find(a => a.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       this.newAreaName = '';
-      this.openArea(existing);
+      this.fillArea(existing);
       return;
     }
 
@@ -1092,27 +1072,18 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.areas = [...this.areas, area];
     this.newAreaName = '';
     this.saveCart();
-    // Straight into it: naming a room and then having to find it in a list is
-    // one tap too many when the next thing wanted is always to fill it.
-    this.openArea(area);
+    // Straight into the range with the room held, because the next thing wanted
+    // after naming a room is always to put lights in it.
+    //
+    // This used to call openArea, which set the step to 'browse' but left
+    // activeTab alone — and since rooms are named from the LIST tab, the tab
+    // never changed and naming a room appeared to do nothing but add a row.
+    // Filling it then took two more taps: open the room, then Add lights.
+    this.fillArea(area);
   }
 
   private newAreaId(): string {
     return 'a' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
-  }
-
-  /**
-   * Open an area, which on this tab means one thing: start filling it.
-   *
-   * There is no reading screen here on purpose. What has been picked belongs in
-   * the List tab with everything else that has been picked — this tab is for
-   * naming rooms and putting lights in them.
-   */
-  openArea(area: PublicArea) {
-    this.activeAreaId = area.id;
-    this.areaStep = 'browse';
-    this.searchQuery = '';
-    this.scrollTop();
   }
 
   /**

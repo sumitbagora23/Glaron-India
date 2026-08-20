@@ -860,29 +860,6 @@ ion-content { --background: var(--g-bg); }
 }
 
 /* ============ Added-to-list toast ============ */
-.added-toast {
-  position: fixed;
-  left: 50%;
-  bottom: calc(84px + var(--g-safe-bottom));
-  transform: translateX(-50%);
-  z-index: 70;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: calc(100% - 40px);
-  padding: 11px 18px;
-  border-radius: 999px;
-  background: var(--g-primary);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 10px 26px rgba(23, 3, 56, .34);
-  animation: g-fade-up .24s ease;
-  pointer-events: none;
-
-  .toast-tick { width: 16px; height: 16px; flex-shrink: 0; color: var(--g-gold); }
-  span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-}
 
 /* ============ Quantity keypad (bottom sheet) ============
    Lifted wholesale from the installed app, down to the sizes: someone who uses
