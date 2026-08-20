@@ -64,7 +64,7 @@
 
       <!-- PRODUCTS TAB head: search + category filter (title is in the bar).
            The same head serves the catalogue when it is opened from inside an
-           area — it is the identical browse, it just fills a room. -->
+           area — it is the identical browse, it just fills an area. -->
       <section class="catalog-title-banner" *ngIf="activeTab === 'products' || (activeTab === 'area' && areaStep === 'browse')">
         <div class="title-text-group">
           <p class="catalog-subheading" *ngIf="activeTab === 'products'">Every piece in the Glaron India collection, in one place.</p>
@@ -335,7 +335,7 @@
         </div>
       </section>
 
-      <!-- The bar that closes the catalogue when it was opened to fill a room. -->
+      <!-- The bar that closes the catalogue when it was opened to fill an area. -->
       <div class="area-browse-bar" *ngIf="areaAllowed && activeTab === 'area' && areaStep === 'browse'">
         <span class="area-browse-text">
           <strong>{{ activeArea?.name }}</strong> ·
@@ -370,7 +370,7 @@
           <div class="request-intro">
             <h3 class="request-title">Where should we send it?</h3>
             <!-- Says back what is about to be sent, which on an area link is
-                 whichever halves were actually filled: the rooms, the loose
+                 whichever halves were actually filled: the areas, the loose
                  list, or both. -->
             <p class="request-sub">
               Leave your name and mobile number and we will call you back with the
@@ -399,7 +399,7 @@
 
         <!-- ---- The list, whichever way it was built ----
              On an area link this tab is the whole review, and it has two halves
-             because the link has two ways in: the rooms named on the Areas tab,
+             because the link has two ways in: the areas named on the Areas tab,
              and anything picked straight off the Products tab, which is a plain
              catalogue list like any other. Either half alone is a complete
              quotation; both together go over as one request. -->
@@ -417,7 +417,7 @@
             </span>
             <h2 class="cart-empty-title">{{ areaAllowed ? 'Nothing picked yet' : 'Your list is empty' }}</h2>
             <p class="cart-empty-text" *ngIf="areaAllowed">
-              Add a room below and fill it, or just add what you want priced
+              Add an area below and fill it, or just add what you want priced
               from the Products tab. Both show up here.
             </p>
             <p class="cart-empty-text" *ngIf="!areaAllowed">
@@ -428,29 +428,29 @@
             <button class="quote-ghost-btn" *ngIf="!areaAllowed" (click)="showProducts()">Browse the range</button>
           </div>
 
-          <!-- Naming a room belongs with the rooms. It used to sit on a tab of
+          <!-- Naming an area belongs with the areas. It used to sit on a tab of
                its own, which meant a customer's picks lived in two places and
                each tab had to explain the other. -->
           <div class="area-add-row" *ngIf="areaAllowed">
             <input type="text" class="area-input" [(ngModel)]="newAreaName" name="newAreaName"
-                   placeholder="Add a room — Kitchen, Lobby, Bedroom…" maxlength="40"
+                   placeholder="Add an area — Kitchen, Lobby, Bedroom…" maxlength="40"
                    (keyup.enter)="addArea()" />
             <button type="button" class="area-add-btn" (click)="addArea()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="add-ic">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
               </svg>
-              <span>Add room</span>
+              <span>Add area</span>
             </button>
           </div>
           <p class="quote-error" *ngIf="areaError">{{ areaError }}</p>
 
-          <!-- Every room, filled or not: an empty one still has to be openable
+          <!-- Every area, filled or not: an empty one still has to be openable
                or it could never be filled. -->
           <ng-container *ngIf="areaAllowed && areas.length > 0">
             <div class="cart-head">
-              <h2 class="catalog-heading">Your rooms</h2>
+              <h2 class="catalog-heading">Your areas</h2>
               <p class="catalog-subheading">
-                {{ areas.length }} {{ areas.length === 1 ? 'room' : 'rooms' }} ·
+                {{ areas.length }} {{ areas.length === 1 ? 'area' : 'areas' }} ·
                 {{ areaPieceCount }} {{ areaPieceCount === 1 ? 'piece' : 'pieces' }}. Tap one to see what is in it.
               </p>
             </div>
@@ -466,11 +466,11 @@
                   </span>
                 </span>
 
-                <!-- Deleting a room is done from the row it is on, the way a
+                <!-- Deleting an area is done from the row it is on, the way a
                      product is deleted from the row it is on. It was lost when
                      the Areas tab was folded into this one, and without it a
-                     room named by mistake could never be got rid of. -->
-                <span class="area-row-del" (click)="removeArea(area, $event)" aria-label="Remove this room">
+                     area named by mistake could never be got rid of. -->
+                <span class="area-row-del" (click)="removeArea(area, $event)" aria-label="Remove this area">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -483,16 +483,16 @@
             </div>
           </ng-container>
 
-          <!-- Half two: everything picked without a room, listed and stepped the
-               ordinary way. On an office link, and on an area link where no room
+          <!-- Half two: everything picked without an area, listed and stepped the
+               ordinary way. On an office link, and on an area link where no area
                was ever named, this is the whole quotation and is titled as such
-               — it is only "other" when there are rooms for it to be other than. -->
+               — it is only "other" when there are areas for it to be other than. -->
           <ng-container *ngIf="cart.length > 0">
             <div class="cart-head">
-              <h2 class="catalog-heading">{{ hasRooms ? 'Other items' : 'Your quotation list' }}</h2>
+              <h2 class="catalog-heading">{{ hasAreas ? 'Other items' : 'Your quotation list' }}</h2>
               <p class="catalog-subheading">
                 {{ cart.length }} {{ cart.length === 1 ? 'product' : 'products' }} ·
-                {{ cartCount }} {{ cartCount === 1 ? 'piece' : 'pieces' }}<span *ngIf="hasRooms">, not in any area</span>
+                {{ cartCount }} {{ cartCount === 1 ? 'piece' : 'pieces' }}<span *ngIf="hasAreas">, not in any area</span>
               </p>
             </div>
 
@@ -533,7 +533,7 @@
             </button>
             <p class="quote-error" *ngIf="reqError">{{ reqError }}</p>
             <p class="quote-privacy">
-              Prices are not shown here — send it and we will quote it for you<span *ngIf="hasRooms">, area by area</span>.
+              Prices are not shown here — send it and we will quote it for you<span *ngIf="hasAreas">, area by area</span>.
             </p>
           </div>
 
@@ -581,15 +581,15 @@
 
           <div class="area-empty" *ngIf="area.items.length === 0">
             <h2 class="cart-empty-title">Nothing in {{ area.name }} yet</h2>
-            <p class="cart-empty-text">Add the lights that belong in this room.</p>
+            <p class="cart-empty-text">Add the lights that belong in this area.</p>
           </div>
 
           <div class="request-block">
-            <!-- The way into the range with this room open, which is what the
+            <!-- The way into the range with this area open, which is what the
                  Areas tab used to be for. -->
             <button class="quote-submit-btn" (click)="fillArea(area)">Add lights to {{ area.name }}</button>
             <button class="quote-ghost-btn" (click)="topBarBack()">Back to my list</button>
-            <!-- The room is open and being read; this is exactly where somebody
+            <!-- The area is open and being read; this is exactly where somebody
                  decides it should not be on the list at all. -->
             <button class="quote-danger-btn" (click)="removeArea(area)">Remove {{ area.name }}</button>
           </div>

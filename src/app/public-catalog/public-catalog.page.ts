@@ -122,7 +122,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
    * Nothing is reviewed or sent from here — what has been picked is read in the
    * List tab, which is where the request goes off from. Browsing happens inside
    * an area rather than beside it, so a product tapped there can only land in
-   * the room that is open.
+   * the area that is open.
    */
   areaStep: 'list' | 'browse' = 'list';
 
@@ -171,7 +171,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   private numpadLine: Omit<PublicCartItem, 'quantity'> | null = null;
 
   // ---- Areas (the area-wise link only) ----
-  /** The rooms the visitor has named, each with what goes in it. */
+  /** The areas the visitor has named, each with what goes in it. */
   areas: PublicArea[] = [];
   /** Which one is being filled. Everything added while it is set goes into it. */
   activeAreaId: string | null = null;
@@ -227,7 +227,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
    * Whether the product cards may be added from where the visitor is standing.
    *
    * Everywhere on both links, with one exception: on the area-wise link the
-   * Areas tab is a room browser, so it adds only once a room is actually open.
+   * Areas tab is an area browser, so it adds only once an area is actually open.
    * The Products and Home tabs there add the ordinary way — see fillingArea.
    */
   get canAddProducts(): boolean {
@@ -238,13 +238,13 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /**
-   * The room being filled right now, or null when nothing is — which is every
+   * The area being filled right now, or null when nothing is — which is every
    * tab but Areas, on either kind of link.
    *
    * This is what makes the area link's Products tab behave like a plain
-   * catalogue: a light picked there belongs to no room, so it goes on the flat
+   * catalogue: a light picked there belongs to no area, so it goes on the flat
    * list exactly as it would on an office link and is sent as an ordinary
-   * quotation. Rooms are what the Areas tab is for, and a visitor who never
+   * quotation. Areas are what the Areas tab is for, and a visitor who never
    * opens that tab never has to think about them.
    */
   private get fillingArea(): PublicArea | null {
@@ -255,7 +255,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.ref = this.route.snapshot.paramMap.get('ref') || '';
     // The catalogue site's own address carries no link code, and a ref-less
     // visit is otherwise read as a dealer's share — browse only, with no list,
-    // no rooms and no compare. But this address is Glaron's, not a dealer's:
+    // no areas and no compare. But this address is Glaron's, not a dealer's:
     // someone who typed it in is Glaron's own customer and may ask Glaron for
     // a price. So the bare site stands in for the generic area-wise link,
     // which is the one that can do everything.
@@ -469,8 +469,8 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   get tabIndex(): number {
     if (this.activeTab === 'products') return 1;
-    // 'area' is no longer a tab of its own — it is the range opened with a room
-    // held, reached from that room on the list — so it sits under the list.
+    // 'area' is no longer a tab of its own — it is the range opened with an area
+    // held, reached from that area on the list — so it sits under the list.
     if (this.activeTab === 'area') return 2;
     if (this.activeTab === 'cart') return 2;
     if (this.activeTab === 'compare') return 3;
@@ -582,9 +582,9 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Filling a room: back means stop filling it, and it lands where Done
-    // lands — on the room, on the list. It used to drop the browser on the old
-    // Areas tab, which is no longer a screen at all: the rooms were folded into
+    // Filling an area: back means stop filling it, and it lands where Done
+    // lands — on the area, on the list. It used to drop the browser on the old
+    // Areas tab, which is no longer a screen at all: the areas were folded into
     // the list, so leaving activeTab on 'area' with nothing open now renders
     // nothing.
     if (this.activeTab === 'area' && this.areaStep === 'browse') {
@@ -784,7 +784,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   /**
    * What the List tab's badge counts: everything picked, wherever it was put.
-   * On an area link that is the rooms plus whatever was added straight off the
+   * On an area link that is the areas plus whatever was added straight off the
    * Products tab, because both sit on that tab and both get sent.
    */
   get listBadge(): number {
@@ -1035,7 +1035,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /**
-   * What lines picked outside any room are called once they travel inside an
+   * What lines picked outside any area are called once they travel inside an
    * area quotation. Named, not blank, so the console shows a heading rather
    * than an unlabelled block of products.
    */
@@ -1059,7 +1059,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     }
     this.areaError = '';
 
-    // Typing a name that already exists is not an error and not a second room:
+    // Typing a name that already exists is not an error and not a second area:
     // it is the shortest way back into the one that is already there.
     const existing = this.areas.find(a => a.name.toLowerCase() === name.toLowerCase());
     if (existing) {
@@ -1072,13 +1072,13 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.areas = [...this.areas, area];
     this.newAreaName = '';
     this.saveCart();
-    // Straight into the range with the room held, because the next thing wanted
-    // after naming a room is always to put lights in it.
+    // Straight into the range with the area held, because the next thing wanted
+    // after naming an area is always to put lights in it.
     //
     // This used to call openArea, which set the step to 'browse' but left
-    // activeTab alone — and since rooms are named from the LIST tab, the tab
-    // never changed and naming a room appeared to do nothing but add a row.
-    // Filling it then took two more taps: open the room, then Add lights.
+    // activeTab alone — and since areas are named from the LIST tab, the tab
+    // never changed and naming an area appeared to do nothing but add a row.
+    // Filling it then took two more taps: open the area, then Add lights.
     this.fillArea(area);
   }
 
@@ -1087,11 +1087,11 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Open the range with this room held, so everything added lands in it.
+   * Open the range with this area held, so everything added lands in it.
    *
-   * This was the Areas tab. A customer's picks lived in two places — rooms on
-   * one tab, the list on another, each explaining the other — so the rooms
-   * moved onto the list and filling one starts from the room itself.
+   * This was the Areas tab. A customer's picks lived in two places — areas on
+   * one tab, the list on another, each explaining the other — so the areas
+   * moved onto the list and filling one starts from the area itself.
    */
   fillArea(area: PublicArea) {
     this.activeTab = 'area';
@@ -1102,9 +1102,9 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Done adding — back to the room on the list, where it was opened from.
+   * Done adding — back to the area on the list, where it was opened from.
    *
-   * The rooms live on the list now, so there is nowhere else to return to:
+   * The areas live on the list now, so there is nowhere else to return to:
    * leaving the browser on the old 'area' tab would land on a tab that is no
    * longer in the bar.
    */
@@ -1139,7 +1139,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     if (this.activeAreaId === area.id) {
       this.activeAreaId = null;
       this.areaStep = 'list';
-      // The room being filled is the room that just went. There is nowhere
+      // The area being filled is the area that just went. There is nowhere
       // inside it to stand, so come out to the list.
       if (this.activeTab === 'area') this.activeTab = 'cart';
     }
@@ -1189,41 +1189,41 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
   // ---- Requesting a quotation for that list ----
 
   /**
-   * Whether any room has been named. What splits the List tab in two: with no
-   * rooms the flat list is simply the quotation and is titled that way, and the
+   * Whether any area has been named. What splits the List tab in two: with no
+   * areas the flat list is simply the quotation and is titled that way, and the
    * visitor is never shown the word "area" at all.
    *
-   * Named, not filled. It used to require a room with something IN it, which
-   * meant that between naming a room and putting the first light in it the flat
+   * Named, not filled. It used to require an area with something IN it, which
+   * meant that between naming an area and putting the first light in it the flat
    * list below still called itself "Your quotation list" — the same words the
-   * rooms above it were already using. Two blocks, one heading, and no way to
+   * areas above it were already using. Two blocks, one heading, and no way to
    * tell which list the products at the bottom were in.
    */
-  get hasRooms(): boolean {
+  get hasAreas(): boolean {
     return this.areaAllowed && this.areas.length > 0;
   }
 
-  /** Anything at all to send: rooms with something in them, loose lines, or both. */
+  /** Anything at all to send: areas with something in them, loose lines, or both. */
   get hasSomethingToSend(): boolean {
     return this.cart.length > 0 || (this.areaAllowed && this.filledAreas.length > 0);
   }
 
   /**
    * What the callback form says is being priced, in the visitor's own terms:
-   * the rooms they named, the products they picked loose, or both. Written out
+   * the areas they named, the products they picked loose, or both. Written out
    * rather than a count of "items" so what arrives matches what they built.
    */
   get sendSummary(): string {
-    const rooms = this.areaAllowed ? this.filledAreas.length : 0;
+    const areas = this.areaAllowed ? this.filledAreas.length : 0;
     const products = this.cart.length;
-    const roomText = rooms
-      ? `all ${rooms} ${rooms === 1 ? 'area' : 'areas'}`
+    const areaText = areas
+      ? `all ${areas} ${areas === 1 ? 'area' : 'areas'}`
       : '';
     const productText = products
       ? `the ${products} ${products === 1 ? 'product' : 'products'} on your list`
       : '';
-    if (roomText && productText) return `${roomText} and ${productText}`;
-    return roomText || productText;
+    if (areaText && productText) return `${areaText} and ${productText}`;
+    return areaText || productText;
   }
 
   /** The bottom button: open the callback details on their own screen. */
@@ -1281,7 +1281,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.reqSending = true;
     try {
       if (filled.length) {
-        // Room-by-room, which is what the area link exists for. Loose lines ride
+        // Area-by-area, which is what the area link exists for. Loose lines ride
         // along as one more group rather than a second document: a quotation
         // carrying both `items` and `areas` would be listed twice in the console
         // — once under Requests, once under Areas — and priced in one of them.
@@ -1294,7 +1294,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
         }
         await this.quotationService.submitAreaRequest(this.reqName.trim(), mobile, payload, this.ref);
       } else {
-        // Nothing was put in a room, so there is nothing room-wise to say. Even
+        // Nothing was put in an area, so there is nothing area-wise to say. Even
         // on an area link this goes over as an ordinary catalogue request and
         // is read in the console beside every other one.
         await this.quotationService.submitRequest(this.reqName.trim(), mobile, loose.map(asItem), this.ref);
