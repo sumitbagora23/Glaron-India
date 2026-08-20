@@ -106,24 +106,11 @@
 
               <td class="td-actions">
                 <div class="actions-group">
-                  <button class="row-action-btn is-gold" (click)="setCommission(agent)">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-9 0h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <span>Add Commission</span>
-                  </button>
-                  <button class="row-action-btn is-blue" (click)="setCustomPricing(agent, $event)" title="Set the rate this agent sees on the catalogue">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                    </svg>
-                    <span>Custom Rate</span>
-                  </button>
-                  <button class="row-action-btn is-green" (click)="payCommission(agent, $event)" title="Record a commission payout for this agent">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h4M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
-                    </svg>
-                    <span>Pay</span>
-                  </button>
+                  <!-- Commission, payouts and the custom rate all live on the
+                       agent's own screen, opened by the name. A row of a list
+                       has no space to say what any of them would do, and two of
+                       them opened pages that then had to be navigated back out
+                       of. Delete stays: it acts on the row itself. -->
                   <!-- Dimmed, not hidden, while the account has history on it: a
                        missing button is a puzzle, a disabled one with a reason
                        on it is an answer. -->

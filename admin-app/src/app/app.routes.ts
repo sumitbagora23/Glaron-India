@@ -124,12 +124,15 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/agent-ledger/agent-ledger.page').then((m) => m.AgentLedgerPage),
       },
       {
+        // Both are dialogs on the agent's account now. The addresses stay, and
+        // land on the account that opens them — an admin with either bookmarked
+        // arrives where the thing they wanted actually is.
         path: 'agents/commission/:id',
-        loadComponent: () => import('./admin/agent-commission/agent-commission.page').then((m) => m.AgentCommissionPage),
+        redirectTo: 'agents/ledger/:id',
       },
       {
         path: 'agents/pay/:id',
-        loadComponent: () => import('./admin/agent-pay/agent-pay.page').then((m) => m.AgentPayPage),
+        redirectTo: 'agents/ledger/:id',
       },
       {
         path: 'agents/pricing/:id',

@@ -121,29 +121,6 @@ export class AgentsPage {
          + `Delete those first if this agent really should be removed.`;
   }
 
-  // Opens the agent's own commission page: everything recorded so far at the
-  // top, the "add entry" form under it.
-  setCommission(agent: Agent) {
-    if (!agent.id) return;
-    this.router.navigate(['/admin/agents/commission', agent.id]);
-  }
-
-  // Opens the payout page: what is owed, what has been paid, and the form to
-  // record another payment against the balance.
-  payCommission(agent: Agent, event?: Event) {
-    if (event) event.stopPropagation();
-    if (!agent.id) return;
-    this.router.navigate(['/admin/agents/pay', agent.id]);
-  }
-
-  // Opens the pricing sheet: the rate this agent sees on the catalogue, as a
-  // catalog-wide discount plus any per-product prices typed over it.
-  setCustomPricing(agent: Agent, event?: Event) {
-    if (event) event.stopPropagation();
-    if (!agent.id) return;
-    this.router.navigate(['/admin/agents/pricing', agent.id]);
-  }
-
   changeStatus(agent: Agent, newStatus: string) {
     if (!agent.id) return;
     const status = newStatus as AgentStatus;

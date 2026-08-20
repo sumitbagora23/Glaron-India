@@ -26,7 +26,11 @@
         </div>
       </div>
 
-      <!-- The two ways to add to the account, from the account itself. -->
+      <!-- Everything done to an agent, on the agent's own screen. These used to
+           be three buttons on the row of a list, which is a strange place to
+           act on a thing from: the row has no space to say what any of them
+           would do, and two of them opened pages that then had to be navigated
+           back out of. -->
       <div class="header-buttons">
         <button class="ledger-add-btn" (click)="addCommission()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -34,6 +38,7 @@
           </svg>
           <span>Add Commission</span>
         </button>
+
         <button class="ledger-pay-btn" (click)="recordPayment()" [disabled]="remaining <= 0"
                 [title]="remaining > 0 ? 'Record a payout against the balance' : 'Nothing outstanding to pay'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -41,8 +46,18 @@
           </svg>
           <span>Record Payment</span>
         </button>
+
+        <button class="ledger-rate-btn" (click)="openPricing()"
+                title="Set the rate this agent sees on the catalogue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <span>Custom Rate</span>
+        </button>
       </div>
     </div>
+
+    <p class="ledger-saved" *ngIf="savedMessage">{{ savedMessage }}</p>
 
     <div class="stats-row">
       <div class="stat-card">
@@ -157,4 +172,139 @@
     </section>
 
   </main>
+  <!-- ============ ADD / EDIT COMMISSION ============
+       A dialog over the statement, not a page of its own. The form is four
+       short fields whose whole point is what they do to the balance behind
+       them — sending the admin somewhere else to fill it in took that balance
+       off screen at the moment it mattered most. -->
+  <div class="agent-modal-overlay" *ngIf="showCommission" (click)="closeCommission()">
+    <div class="agent-modal-card wide" (click)="$event.stopPropagation()">
+      <header class="agent-modal-head">
+        <div class="agent-modal-title-block">
+          <h3 class="agent-modal-title">{{ editingId ? 'Edit Commission' : 'Add Commission' }}</h3>
+          <p class="agent-modal-sub">
+            Type either the percentage or the commission amount — the other is worked out from the sales amount.
+          </p>
+        </div>
+        <button class="agent-modal-close" (click)="closeCommission()" aria-label="Close">&times;</button>
+      </header>
+
+      <div class="agent-modal-body">
+        <div class="modal-grid">
+          <div class="admin-field">
+            <label class="admin-label" for="cDate">Date<span class="req-star">*</span></label>
+            <input id="cDate" class="admin-input" type="date" [(ngModel)]="cForm.date" />
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="cClient">Client Name</label>
+            <input id="cClient" class="admin-input" type="text" [(ngModel)]="cForm.clientName"
+                   placeholder="Who the business was for" autocomplete="off" />
+            <span class="admin-hint">Shown to the agent with the entry.</span>
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="cSales">Sales Amount<span class="req-star">*</span></label>
+            <div class="admin-input-wrap">
+              <span class="admin-input-prefix">₹</span>
+              <input id="cSales" class="admin-input bare" type="number" inputmode="decimal" min="0"
+                     [(ngModel)]="cForm.salesAmount" (ngModelChange)="onSalesInput()" placeholder="0" />
+            </div>
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="cPct">Percentage</label>
+            <div class="admin-input-wrap">
+              <input id="cPct" class="admin-input bare pad" type="number" inputmode="decimal" min="0" step="0.01"
+                     [(ngModel)]="cForm.percentage" (ngModelChange)="onPercentInput()" placeholder="0" />
+              <span class="admin-input-suffix">%</span>
+            </div>
+            <span class="admin-hint">Fills the commission amount.</span>
+          </div>
+
+          <div class="admin-field">
+            <label class="admin-label" for="cAmount">Commission Amount</label>
+            <div class="admin-input-wrap">
+              <span class="admin-input-prefix">₹</span>
+              <input id="cAmount" class="admin-input bare" type="number" inputmode="decimal" min="0" step="0.01"
+                     [(ngModel)]="cForm.commissionAmount" (ngModelChange)="onCommissionInput()" placeholder="0" />
+            </div>
+            <span class="admin-hint">Fills the percentage.</span>
+          </div>
+
+          <div class="admin-field span-2">
+            <label class="admin-label" for="cNote">Note</label>
+            <input id="cNote" class="admin-input" type="text" [(ngModel)]="cForm.note"
+                   placeholder="Optional — e.g. October site orders" autocomplete="off" />
+          </div>
+        </div>
+
+        <span class="admin-error" *ngIf="cError">{{ cError }}</span>
+      </div>
+
+      <footer class="agent-modal-foot">
+        <button class="modal-cancel-btn" (click)="closeCommission()">Cancel</button>
+        <button class="modal-save-btn" (click)="saveCommission()" [disabled]="cSaving">
+          {{ cSaving ? 'Saving…' : (editingId ? 'Save Changes' : 'Add Commission') }}
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ============ RECORD A PAYMENT ============ -->
+  <div class="agent-modal-overlay" *ngIf="showPay" (click)="closePay()">
+    <div class="agent-modal-card" (click)="$event.stopPropagation()">
+      <header class="agent-modal-head">
+        <div class="agent-modal-title-block">
+          <h3 class="agent-modal-title">Record a Payment</h3>
+          <p class="agent-modal-sub">
+            ₹{{ remaining | number:'1.0-2' }} outstanding. Paying more than that is refused —
+            it would read as a negative balance in {{ agentName }}'s own app.
+          </p>
+        </div>
+        <button class="agent-modal-close" (click)="closePay()" aria-label="Close">&times;</button>
+      </header>
+
+      <div class="agent-modal-body">
+        <div class="admin-field">
+          <label class="admin-label" for="pDate">Date<span class="req-star">*</span></label>
+          <input id="pDate" class="admin-input" type="date" [(ngModel)]="pForm.date" />
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="pAmount">Amount Paid<span class="req-star">*</span></label>
+          <div class="admin-input-wrap">
+            <span class="admin-input-prefix">₹</span>
+            <input id="pAmount" class="admin-input bare" type="number" inputmode="decimal" min="0" step="0.01"
+                   [(ngModel)]="pForm.amount" placeholder="0" />
+          </div>
+          <button type="button" class="fill-remaining-btn" (click)="payFullRemaining()">
+            Pay full remaining (₹{{ remaining | number:'1.0-2' }})
+          </button>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="pNote">Note</label>
+          <input id="pNote" class="admin-input" type="text" [(ngModel)]="pForm.note"
+                 placeholder="Optional — e.g. NEFT ref 88213 / cash" autocomplete="off" />
+        </div>
+
+        <!-- What the typed amount does to the balance, before it is committed. -->
+        <div class="balance-preview" *ngIf="pForm.amount">
+          <span class="bp-label">Remaining after this payment</span>
+          <span class="bp-value" [class.negative]="remainingAfter < 0">₹{{ remainingAfter | number:'1.0-2' }}</span>
+        </div>
+
+        <span class="admin-error" *ngIf="pError">{{ pError }}</span>
+      </div>
+
+      <footer class="agent-modal-foot">
+        <button class="modal-cancel-btn" (click)="closePay()">Cancel</button>
+        <button class="modal-save-btn" (click)="savePayment()" [disabled]="pSaving">
+          {{ pSaving ? 'Saving…' : 'Record Payment' }}
+        </button>
+      </footer>
+    </div>
+  </div>
+
 </ion-content>

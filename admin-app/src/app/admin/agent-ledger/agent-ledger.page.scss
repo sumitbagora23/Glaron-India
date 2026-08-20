@@ -432,3 +432,280 @@
 @media (max-width: 900px) {
   .back-btn { display: none; }
 }
+
+/* -------------------------------------------------------------
+ * Custom Rate — a page, not a dialog
+ * ------------------------------------------------------------- */
+.ledger-rate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 1px solid var(--ad-border);
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #2563EB;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease;
+
+  svg { width: 16px; height: 16px; }
+  &:hover { background: #EFF6FF; border-color: #BFDBFE; }
+}
+
+/* What a dialog just wrote, said on the page it wrote it to. */
+.ledger-saved {
+  margin: 0;
+  padding: 10px 14px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #ECFDF5;
+  color: #047857;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.agent-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(23, 3, 56, 0.42);
+  backdrop-filter: blur(3px);
+  animation: agentFade .18s ease;
+}
+
+@keyframes agentFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes agentPop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.agent-modal-card {
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(23, 3, 56, 0.28);
+  animation: agentPop .22s cubic-bezier(.2,.8,.3,1);
+}
+
+.agent-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 14px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.agent-modal-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 30px;
+  color: #170338;
+}
+
+.agent-modal-sub {
+  margin: 4px 0 0;
+  font-weight: 400;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: #6B7280;
+}
+
+.agent-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0 4px;
+
+  &:hover { color: #475569; }
+}
+
+.agent-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #49454E;
+}
+
+.admin-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--ad-border);
+  border-radius: 8px;
+  background: #F8FAFC;
+  font-family: 'Outfit';
+  font-size: 15px;
+  font-weight: 500;
+  color: #170338;
+  outline: none;
+  transition: border-color .15s ease, background .15s ease;
+
+  &::placeholder { color: #9CA3AF; font-weight: 400; }
+  &:focus { border-color: #170338; background: #FFFFFF; }
+  &.bare {
+    border: none;
+    background: transparent;
+    padding-left: 0;
+    &:focus { background: transparent; }
+  }
+}
+
+.admin-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 14px;
+  border: 1px solid var(--ad-border);
+  border-radius: 8px;
+  background: #F8FAFC;
+  transition: border-color .15s ease, background .15s ease;
+
+  &:focus-within { border-color: #170338; background: #FFFFFF; }
+}
+
+.admin-input-prefix {
+  font-weight: 700;
+  font-size: 15px;
+  color: #49454E;
+  border-right: 1px solid #CBD5E1;
+  padding-right: 10px;
+}
+
+.admin-hint {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #94A3B8;
+}
+
+.admin-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #FEF2F2;
+  color: #DC2626;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.agent-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 22px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.modal-cancel-btn,
+.modal-save-btn {
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.modal-cancel-btn {
+  border: 1px solid var(--ad-border);
+  background: #FFFFFF;
+  color: #49454E;
+  &:hover { background: var(--ad-surface-2); }
+}
+
+.modal-save-btn {
+  border: none;
+  background: #170338;
+  color: #FFFFFF;
+  &:hover { background: #2D145A; }
+  &:disabled { opacity: .6; cursor: default; }
+}
+
+/* The commission dialog has five fields and pairs up on a desktop; the payment
+   dialog has three and never does. */
+.agent-modal-card.wide { width: min(680px, 100%); }
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.modal-grid .span-2 { grid-column: 1 / -1; }
+
+.admin-input.bare.pad { padding-left: 14px; }
+
+.admin-input-suffix {
+  padding-right: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  color: #49454E;
+}
+
+/* Settling the whole balance is the common case, so it is one tap rather than
+   a figure to read off the tile above and re-type. */
+.fill-remaining-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 5px 12px;
+  border: 1px dashed #F3D89A;
+  border-radius: 999px;
+  background: var(--ad-gold-wash);
+  color: #7E5700;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+
+  &:hover { background: #FFF1D6; }
+}
+
+/* The effect of what is typed, before it is committed. */
+.balance-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--ad-surface-2);
+  border: 1px solid var(--ad-border);
+}
+.bp-label { font-weight: 600; font-size: 13px; color: #49454E; }
+.bp-value {
+  font-weight: 800;
+  font-size: 18px;
+  color: #170338;
+
+  &.negative { color: #DC2626; }
+}
+
+@media (max-width: 620px) {
+  .modal-grid { grid-template-columns: 1fr; }
+  .modal-grid .span-2 { grid-column: 1; }
+  .agent-modal-foot { flex-direction: column-reverse; }
+  .modal-cancel-btn, .modal-save-btn { width: 100%; }
+}
