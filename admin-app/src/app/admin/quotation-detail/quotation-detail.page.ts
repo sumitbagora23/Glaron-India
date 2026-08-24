@@ -170,6 +170,10 @@ export class QuotationDetailPage implements OnInit {
    * price column open instead, the figures typed there are already on the
    * lines, so this closes the column and confirms them. Either way the MRP is
    * untouched.
+   *
+   * The percentage takes precedence over a figure typed by hand: it is the
+   * whole quotation's price, so applying one prices every product off its MRP
+   * again, the hand-priced ones included.
    */
   apply() {
     if (this.draft.discountPercent > 0) {

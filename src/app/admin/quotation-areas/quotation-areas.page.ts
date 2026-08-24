@@ -1,4 +1,4 @@
-import { Component, OnInit, effect, inject } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnInit, QueryList, ViewChildren, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -44,7 +44,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, IonContent]
 })
-export class QuotationAreasPage implements OnInit {
+export class QuotationAreasPage implements OnInit, AfterViewChecked {
 
   // The box of colour drawn before a light colour name. Worked out from the
   // name itself, so a shade added today is painted without a code change.
@@ -108,8 +108,22 @@ export class QuotationAreasPage implements OnInit {
 
   error = '';
 
-  /** Off by default, for the same reason as on a flat quotation. */
-  editPrices = false;
+  /**
+   * Which figure on the final list is open for typing: the product it belongs
+   * to, and whether it is the MRP or the price.
+   *
+   * There is no Edit Price mode any more. A column of boxes to switch on and
+   * off was a step in front of a one-figure change, and it put every row into a
+   * form to change one of them. The figure itself is what is tapped, and only
+   * the one tapped opens — there is only ever one caret.
+   */
+  editingKey = '';
+  editingField: 'mrp' | 'price' | '' = '';
+
+  /** Set when a figure has just been opened, so the caret lands in it. */
+  private focusOpened = false;
+
+  @ViewChildren('inlineBox') inlineBoxes!: QueryList<ElementRef<HTMLInputElement>>;
 
   /** What the last Apply did, shown beside the button until the next change. */
   applied = '';
@@ -283,26 +297,31 @@ export class QuotationAreasPage implements OnInit {
 
   inc(line: QuoteLine) {
     line.quantity += 1;
+    this.draft.save();
   }
 
   dec(line: QuoteLine) {
     if (line.quantity > 1) line.quantity -= 1;
+    this.draft.save();
   }
 
   onQtyInput(line: QuoteLine, value: string) {
     const n = Math.floor(Number(value));
     line.quantity = n > 0 ? n : 1;
+    this.draft.save();
   }
 
   /** The quoted price for one product, set by hand. The MRP beside it stands. */
   onPriceInput(line: QuoteLine, value: string) {
     const n = Math.round(Number(value));
     line.price = n > 0 ? n : 0;
+    this.draft.save();
   }
 
   onMrpInput(line: QuoteLine, value: string) {
     const n = Math.round(Number(value));
     line.mrp = n > 0 ? n : 0;
+    this.draft.save();
   }
 
   /**
@@ -335,26 +354,54 @@ export class QuotationAreasPage implements OnInit {
     this.draft.setMergedMrp(row, Number(value));
   }
 
-  toggleEditPrices() {
-    this.editPrices = !this.editPrices;
+  /** The figure was tapped: open it for typing, where it is printed. */
+  startEdit(row: MergedLine, field: 'mrp' | 'price') {
+    this.editingKey = row.key;
+    this.editingField = field;
+    this.focusOpened = true;
     this.applied = '';
   }
 
+  isEditing(row: MergedLine, field: 'mrp' | 'price'): boolean {
+    return this.editingKey === row.key && this.editingField === field;
+  }
+
+  /** Closed, and the figure prints again — in rupees, with its saving beside it. */
+  stopEdit() {
+    this.editingKey = '';
+    this.editingField = '';
+  }
+
   /**
-   * One Apply for both ways of pricing, exactly as on a flat quotation: a
-   * percentage off every MRP, or the figures typed into the price column.
+   * Put the caret in the figure that was just tapped.
+   *
+   * The box only exists once the tap has been rendered, so the focus has to
+   * wait for the view rather than happen in the click.
+   */
+  ngAfterViewChecked() {
+    if (!this.focusOpened) return;
+    const box = this.inlineBoxes?.first?.nativeElement;
+    if (!box) return;
+    this.focusOpened = false;
+    box.focus();
+    box.select();
+  }
+
+  /**
+   * The percentage, across every product in every area.
+   *
+   * It is the whole job's price, so it takes precedence over a figure typed on
+   * a row: applying one after pricing a product by hand puts that product back
+   * on the percentage with the rest, and the figure the row shows afterwards is
+   * the discounted one. Typing over it again gives that product its own price
+   * back, until the next Apply.
    */
   apply() {
-    if (this.draft.discountPercent > 0) {
-      this.draft.applyDiscount();
-      this.applied = `${this.draft.discountPercent}% applied across every area`;
-    } else if (this.editPrices) {
-      this.applied = 'Prices updated';
-    } else {
-      this.draft.applyDiscount();
-      this.applied = 'Prices reset to MRP';
-    }
-    this.editPrices = false;
+    this.stopEdit();
+    this.draft.applyDiscount();
+    this.applied = this.draft.discountPercent > 0
+      ? `${this.draft.discountPercent}% applied across every area`
+      : 'Prices reset to MRP';
   }
 
   // ---- Adding products into an area ----

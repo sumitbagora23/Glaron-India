@@ -1,6 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { ProductService, Product, ProductVariant } from '../product.service';
-import { QuotationArea, QuotationItem } from '../quotation.service';
+import { QuotationArea, QuotationItem, QuotationPricing } from '../quotation.service';
 import { QuotationDraftService, QuoteLine } from './quotation-draft.service';
 
 /** One area of the job being priced, with its own lines. */
@@ -44,30 +45,134 @@ export interface MergedLine {
  * back has to be readable room by room, and a total per room is what a customer
  * building a house actually asks about.
  *
- * Nothing here is written to Firestore. What the customer sent stays as they
- * sent it; the priced version leaves as a PDF.
+ * The priced draft is saved to Firestore, onto the quotation's own document,
+ * beside what the customer sent — never over it. That is what makes a price
+ * typed on one machine show on every other: in incognito, on another admin's
+ * device, wherever the console is open. What the customer sent stays as they
+ * sent it; the priced version also leaves as a PDF.
  */
 @Injectable({ providedIn: 'root' })
 export class AreaQuoteDraftService {
   private products = inject(ProductService);
+  private firestore = inject(Firestore, { optional: true });
   /** The pricing rules are the same as a flat quotation's, so they are shared. */
   private base = inject(QuotationDraftService);
 
   private id = '';
   private seeded = false;
+  /** Debounce handle, so typing a figure is one save, not one per keystroke. */
+  private saveTimer: any = null;
 
   groups: AreaGroup[] = [];
 
   /** One discount, as a percentage, across every product in every area. */
   discountValue = 0;
 
-  /** Point the draft at a quotation. A different one starts again. */
+  constructor() {
+    // The saved draft drops the pictures — they are data URLs and would burst
+    // the document — so as the catalogue arrives its pictures are put back on
+    // the lines that came back without one, redrawn by sku.
+    effect(() => {
+      const list = this.products.products;
+      if (!list.length || !this.groups.length) return;
+      for (const group of this.groups) {
+        for (const line of group.lines) {
+          if (!line.image) {
+            const img = this.products.getProductById(line.sku)?.image;
+            if (img) line.image = img;
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Point the draft at a quotation. A different one starts again; the draft
+   * saved for it is brought back off the live feed by the page, so a refresh in
+   * the middle of pricing — on this machine or any other — restores every
+   * product added and every price set by hand.
+   */
   use(id: string) {
     if (this.id === id) return;
     this.id = id;
-    this.seeded = false;
     this.groups = [];
     this.discountValue = 0;
+    this.seeded = false;
+  }
+
+  // ---- Saved to Firestore, onto the quotation's own document ----
+  //
+  // The priced draft is written into a `pricing` field beside what the customer
+  // sent, never over it. The console reads it back off the same live feed it
+  // reads the request from, which is what makes a price show on every device.
+  // Pictures are left off — they are data URLs, and a large job of them would
+  // burst the 1 MB document; the catalogue redraws each tile by sku on load.
+
+  /** Schedule a save. Debounced, so typing a figure is one write, not one per key. */
+  private persist() {
+    if (!this.id || !this.firestore) return;
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.flush(), 500);
+  }
+
+  /** Write the working draft onto the quotation document, pictures dropped. */
+  private async flush() {
+    if (!this.id || !this.firestore) return;
+    const pricing = {
+      discountValue: this.discountValue || 0,
+      updatedAt: Date.now(),
+      groups: this.groups.map(g => ({
+        id: g.id,
+        name: g.name,
+        lines: g.lines.map(l => ({
+          key: l.key,
+          name: l.name,
+          variant: l.variant || '',
+          sku: l.sku || '',
+          mrp: l.mrp || 0,
+          price: l.price || 0,
+          quantity: l.quantity || 0
+        }))
+      }))
+    };
+    try {
+      await setDoc(
+        doc(this.firestore, 'quotations', this.id), { pricing }, { merge: true }
+      );
+    } catch (e) {
+      console.warn('Quotation pricing save notice:', (e as any)?.message || e);
+    }
+  }
+
+  /** Called by the page after it changes a line the service did not touch. */
+  save() {
+    this.persist();
+  }
+
+  /**
+   * Fill the draft from a pricing already saved to the quotation — an earlier
+   * session's work, or another admin's — so the priced version comes back
+   * exactly as it was left, on whatever device opens it. A load, not a change:
+   * it is not written back.
+   */
+  private seedFromPricing(pricing: QuotationPricing) {
+    this.discountValue = Number(pricing.discountValue) || 0;
+    this.groups = (pricing.groups || []).map(g => ({
+      id: g.id,
+      name: g.name,
+      lines: (g.lines || []).map(l => ({
+        key: l.key,
+        name: l.name,
+        variant: l.variant || '',
+        sku: l.sku || '',
+        // Redrawn from the catalogue by sku; never stored on the draft.
+        image: this.products.getProductById(l.sku)?.image || '',
+        mrp: Number(l.mrp) || 0,
+        price: Number(l.price) || 0,
+        quantity: Number(l.quantity) || 0
+      }))
+    }));
+    this.seeded = true;
   }
 
   get isSeeded(): boolean {
@@ -92,7 +197,15 @@ export class AreaQuoteDraftService {
    * a flat request is one asked for in a single unnamed space — so both open
    * here rather than on two pages that priced the same thing twice.
    */
-  seedFromRequest(request: { areas?: QuotationArea[]; items?: QuotationItem[] } | undefined) {
+  seedFromRequest(
+    request: { areas?: QuotationArea[]; items?: QuotationItem[]; pricing?: QuotationPricing } | undefined
+  ) {
+    // A price already saved for this quotation wins over the raw request — it is
+    // this session's, an earlier one's, or another admin's priced copy.
+    if (request?.pricing?.groups?.length) {
+      this.seedFromPricing(request.pricing);
+      return;
+    }
     if (request?.areas?.length) {
       this.seedFrom(request.areas);
       return;
@@ -127,11 +240,13 @@ export class AreaQuoteDraftService {
       lines: []
     };
     this.groups = [...this.groups, group];
+    this.persist();
     return group;
   }
 
   removeGroup(group: AreaGroup) {
     this.groups = this.groups.filter(g => g !== group);
+    this.persist();
   }
 
   key(product: Product, variant?: ProductVariant, lightColour?: string, bodyColour?: string): string {
@@ -150,6 +265,7 @@ export class AreaQuoteDraftService {
     const line = group.lines.find(l => l.key === key);
     if (line) {
       line.quantity += 1;
+      this.persist();
       return;
     }
     const price = this.unitPrice(product, variant, lightColour);
@@ -167,6 +283,7 @@ export class AreaQuoteDraftService {
       price: this.discounted(price),
       quantity: 1
     }];
+    this.persist();
   }
 
   /** One fewer, and out of the area entirely at zero. */
@@ -176,10 +293,12 @@ export class AreaQuoteDraftService {
     if (index < 0) return;
     if (group.lines[index].quantity > 1) group.lines[index].quantity -= 1;
     else group.lines = group.lines.filter((_, i) => i !== index);
+    this.persist();
   }
 
   removeLine(group: AreaGroup, line: QuoteLine) {
     group.lines = group.lines.filter(l => l !== line);
+    this.persist();
   }
 
   // ---- What it comes to ----
@@ -202,11 +321,17 @@ export class AreaQuoteDraftService {
    *
    * Written into each line's price rather than worked out again on every
    * render, and always from the MRP — so applying 10% twice cannot compound.
+   *
+   * Every product is priced from its MRP, a figure typed by hand included: the
+   * percentage is the whole job's price, so applying one after pricing a
+   * product by hand puts that product on the percentage like the rest. Typing
+   * over the figure again is what gives it its own price back.
    */
   applyDiscount() {
     for (const group of this.groups) {
       for (const line of group.lines) line.price = this.discounted(line.mrp || 0);
     }
+    this.persist();
   }
 
   netPrice(line: QuoteLine): number {
@@ -299,12 +424,19 @@ export class AreaQuoteDraftService {
     return row.sources.reduce((sum, s) => sum + this.lineMrpTotal(s.line), 0);
   }
 
-  /** What this row ended up discounted by, against its own MRP. */
+  /**
+   * Where this row is priced against its own MRP, signed.
+   *
+   * Below list it is negative — the saving the customer is being given. Above
+   * list it is positive, and it is printed too: a price typed in over the MRP
+   * used to show nothing at all, which read as full price rather than as the
+   * fifty rupees over list it actually was.
+   */
   mergedPercent(row: MergedLine): number {
     const mrp = this.mergedMrpTotal(row);
     const amount = this.mergedTotal(row);
-    if (!mrp || amount >= mrp) return 0;
-    return Math.round((1 - amount / mrp) * 100);
+    if (!mrp || amount === mrp) return 0;
+    return Math.round((amount / mrp - 1) * 100);
   }
 
   /**
@@ -326,6 +458,7 @@ export class AreaQuoteDraftService {
     if (want > rest) {
       sources[0].line.quantity = want - rest;
       row.quantity = want;
+      this.persist();
       return;
     }
 
@@ -339,6 +472,7 @@ export class AreaQuoteDraftService {
       if (line.quantity <= 0) this.removeLine(group, line);
     }
     row.quantity = want;
+    this.persist();
   }
 
   incMerged(row: MergedLine) {
@@ -354,12 +488,14 @@ export class AreaQuoteDraftService {
     const value = Math.max(0, Math.round(price) || 0);
     for (const s of row.sources) s.line.price = value;
     row.price = value;
+    this.persist();
   }
 
   setMergedMrp(row: MergedLine, mrp: number) {
     const value = Math.max(0, Math.round(mrp) || 0);
     for (const s of row.sources) s.line.mrp = value;
     row.mrp = value;
+    this.persist();
   }
 
   /** Off the quotation means off it — out of every area that asked for it. */
@@ -367,6 +503,7 @@ export class AreaQuoteDraftService {
     for (const s of row.sources) this.removeLine(s.group, s.line);
     row.sources = [];
     row.quantity = 0;
+    this.persist();
   }
 
   /** How many rows the final list prints — products, not area lines. */

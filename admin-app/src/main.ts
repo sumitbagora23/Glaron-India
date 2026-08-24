@@ -8,11 +8,27 @@ import { environment } from './environments/environment';
 
 // Firebase
 import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
-import { initializeFirestore, provideFirestore, persistentLocalCache, persistentMultipleTabManager } from '@angular/fire/firestore';
+import { initializeFirestore, provideFirestore, persistentLocalCache } from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getStorage, provideStorage } from '@angular/fire/storage';
 import { getMessaging, provideMessaging } from '@angular/fire/messaging';
 import { provideServiceWorker } from '@angular/service-worker';
+
+// Older builds ran Firestore's multi-tab cache, which broadcast every pending
+// write — each carrying a product's inline base64 image — into localStorage
+// under `firestore_*` keys. That overran the ~5 MB quota and then made every
+// new write crash (QuotaExceededError / INTERNAL ASSERTION FAILED, id b815),
+// so add / edit / delete all failed with a "connection" error. The multi-tab
+// manager is gone below (single-tab persistence keeps its data in IndexedDB
+// instead); clear the stranded keys once here to reclaim the jammed space.
+try {
+  const stale: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('firestore_')) stale.push(k);
+  }
+  stale.forEach(k => localStorage.removeItem(k));
+} catch { /* private mode / no storage — nothing to reclaim */ }
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -25,9 +41,13 @@ bootstrapApplication(AppComponent, {
     // Firestore throwing. The persistent IndexedDB cache keeps the catalogue —
     // including inline base64 images — on the device, so the console opens
     // instantly on later launches and keeps working offline.
+    // Single-tab persistence: the catalogue (inline images included) still lives
+    // in IndexedDB for instant, offline loads — but Firestore no longer mirrors
+    // its pending writes into localStorage, so a large save can never exhaust
+    // the localStorage quota again. A second tab just falls back to memory.
     provideFirestore(() => initializeFirestore(getApp(), {
       ignoreUndefinedProperties: true,
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      localCache: persistentLocalCache(),
       // Force long-polling so Firestore works on networks/proxies that block or
       // buffer its streaming WebChannel connection. Without it, reads still come
       // from the cache but writes and the live quotations feed can stall with no

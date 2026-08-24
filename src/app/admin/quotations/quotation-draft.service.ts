@@ -287,6 +287,11 @@ export class QuotationDraftService {
    * of each line rather than working it out again on every render. The MRP is
    * left exactly as it was: the discount moves the price column, never the list
    * price it is measured against — so applying 10% twice cannot compound.
+   *
+   * Every product is priced from its MRP, a figure typed by hand included: the
+   * percentage is the whole quotation's price, so applying one after pricing a
+   * product by hand puts that product on the percentage like the rest. Typing
+   * over the figure again is what gives it its own price back.
    */
   applyDiscount() {
     const pct = this.discountPercent;

@@ -59,14 +59,6 @@
             </td>
 
             <td class="td-areas" data-label="What they sent">
-              <span class="area-count-chip">
-                <ng-container *ngIf="areaCount(q)">
-                  {{ areaCount(q) }} {{ areaCount(q) === 1 ? 'area' : 'areas' }} · {{ areaPieces(q) }} pcs
-                </ng-container>
-                <ng-container *ngIf="!areaCount(q)">
-                  {{ itemPieces(q) }} pcs
-                </ng-container>
-              </span>
               <span class="area-names" *ngIf="areaCount(q)">{{ areaNames(q) }}</span>
               <span class="area-names" *ngIf="!areaCount(q)">one list</span>
             </td>

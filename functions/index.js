@@ -135,6 +135,99 @@ exports.quotationImage = onRequest(async (req, res) => {
 });
 
 /**
+ * Accept a customer's quotation from the public catalogue and write it to the
+ * console — WITHOUT the customer needing any sign-in.
+ *
+ * The public app has no account for a customer, so it used to take an anonymous
+ * Firebase session to satisfy the `quotations` write rule. When the Anonymous
+ * provider is turned off at the project level that fails with
+ * `auth/admin-restricted-operation` and the submit never lands. This endpoint
+ * writes with the Admin SDK (which bypasses security rules), so a submission
+ * always reaches the console regardless of the auth provider or the rules.
+ *
+ * Reached same-origin as POST /submit-quotation via the hosting rewrite in
+ * firebase.json, so the app needs no CORS dance; a permissive CORS header is set
+ * anyway so a direct call also works.
+ */
+exports.submitQuotation = onRequest({ cors: true }, async (req, res) => {
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+  if (req.method !== 'POST') { res.status(405).json({ ok: false, error: 'POST only' }); return; }
+
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const mobile = String(b.mobile || '').replace(/\D/g, '');
+    if (!name || mobile.length < 10) {
+      res.status(400).json({ ok: false, error: 'name and mobile required' });
+      return;
+    }
+
+    const id = /^[A-Za-z0-9_-]{1,128}$/.test(String(b.id || ''))
+      ? String(b.id)
+      : ('q-' + Date.now() + '-' + Math.floor(Math.random() * 1000));
+
+    // Build a clean record, dropping anything undefined so Firestore accepts it.
+    const record = {
+      id,
+      name: name.slice(0, 200),
+      mobile,
+      createdAt: Number(b.createdAt) || Date.now(),
+    };
+    if (typeof b.ref === 'string' && b.ref) record.ref = b.ref.slice(0, 200);
+    // An uploaded quote (JPEG/PDF data URL), stored inline the same as elsewhere.
+    if (typeof b.image === 'string' && b.image.startsWith('data:')) record.image = b.image;
+    if (Array.isArray(b.items)) {
+      const items = sanitizeQuotationItems(b.items);
+      if (items.length) record.items = items;
+    }
+    if (Array.isArray(b.areas)) {
+      const areas = b.areas.slice(0, 100)
+        .map((a) => ({
+          name: String((a && a.name) || '').slice(0, 200),
+          items: sanitizeQuotationItems(a && a.items),
+        }))
+        .filter((a) => a.items.length);
+      if (areas.length) record.areas = areas;
+    }
+
+    // A quotation must carry SOMETHING to price.
+    if (!record.image && !record.items && !record.areas) {
+      res.status(400).json({ ok: false, error: 'nothing to submit' });
+      return;
+    }
+
+    await admin.firestore().collection(QUOTATIONS_COLLECTION).doc(id).set(record);
+    logger.info(`Quotation ${id} submitted by ${name} (${mobile}).`);
+    res.status(200).json({ ok: true, id });
+  } catch (err) {
+    logger.error(`submitQuotation failed: ${err.message || err}`);
+    res.status(500).json({ ok: false, error: 'server error' });
+  }
+});
+
+/** Clean and bound a customer's picked lines before they are stored. */
+function sanitizeQuotationItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .slice(0, 500)
+    .map((i) => {
+      const o = {
+        name: String((i && i.name) || '').slice(0, 300),
+        quantity: Math.max(1, Math.min(100000, Number(i && i.quantity) || 1)),
+      };
+      if (i && i.variant) o.variant = String(i.variant).slice(0, 300);
+      if (i && i.sku) o.sku = String(i.sku).slice(0, 100);
+      // Keep only a short path to a picture, never an inline data URL — a dozen
+      // of those on one request would burst the 1 MB document limit.
+      if (i && typeof i.image === 'string' && !i.image.startsWith('data:') && i.image.length <= 500) {
+        o.image = i.image;
+      }
+      return o;
+    })
+    .filter((i) => i.name);
+}
+
+/**
  * Who a broadcast is addressed to.
  *
  * Documents written before audiences existed carry no field at all; those were

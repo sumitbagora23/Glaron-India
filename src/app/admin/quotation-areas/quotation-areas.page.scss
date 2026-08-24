@@ -210,6 +210,40 @@
   white-space: nowrap;
 }
 
+/* The MRP and the price are typed over where they are printed, so the figure
+   itself carries the invitation: a caret over it, and nothing else until it is
+   pointed at. */
+.is-tappable {
+  cursor: text;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba(23, 3, 56, 0.05); }
+}
+
+/* The box a figure opens into. Deliberately not a box: same font, same weight,
+   same place, with a single amber rule under it so the row it is on is
+   obvious. A bordered field here turned every row of the list into a form. */
+.qd-inline-box {
+  width: 84px;
+  max-width: 100%;
+  padding: 0 0 2px;
+  border: none;
+  border-bottom: 1.5px solid #FEB300;
+  border-radius: 0;
+  background: transparent;
+  font-family: 'Outfit';
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #170338;
+  outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+}
+
 .qd-rate-off {
   display: block;
   font-family: 'Outfit';
@@ -712,6 +746,19 @@
   border-radius: 999px;
   background: rgba(22, 163, 74, .12);
   color: #16A34A;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+/* The same pill for a price above the MRP, in red rather than green. Over list
+   is not a saving, and a quotation that quietly prints one is the one thing
+   nobody spots before it is sent. */
+.qa-line-up {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(229, 72, 77, .12);
+  color: #C62828;
   font-size: 10.5px;
   font-weight: 800;
 }
@@ -1327,7 +1374,7 @@
   flex-wrap: wrap;
 
   .qa-area-input { max-width: 320px; }
-  .qd-add-product, .qd-edit-price, .qd-apply { white-space: nowrap; }
+  .qd-add-product, .qd-apply { white-space: nowrap; }
 }
 .qa-applied-line {
   margin: -8px 0 14px;
@@ -1362,7 +1409,6 @@
     .qa-area-input,
     .qd-discount-bar { grid-column: 1 / -1; max-width: none; }
     .qd-add-product,
-    .qd-edit-price,
     .qd-apply { justify-content: center; }
 
     /* On the summary side Add Area is the last control, and a half-width

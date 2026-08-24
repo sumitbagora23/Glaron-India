@@ -860,11 +860,18 @@ export class ProductFormPage implements OnInit {
       }
       this.router.navigate(['/admin/dashboard']);
     } catch (e: any) {
-      // The Firestore write failed. Tell the admin, so they don't believe a
-      // product saved when it never reached the dealers.
-      this.saveError = /longer than|size|invalid/i.test(e?.message || '')
+      // The Firestore write failed. Surface the real reason — on screen and in
+      // the console — so a failed save is never mistaken for a good one, and so
+      // the actual code (permission-denied, unavailable, ...) is visible.
+      console.error('Product save failed:', e);
+      const code = e?.code ? String(e.code) : '';
+      const msg = e?.message || String(e) || '';
+      const friendly = /longer than|size|exceeds|invalid/i.test(msg)
         ? 'This product is too large to save — please choose a smaller image.'
-        : 'Could not save to the server. Check your connection and try again.';
+        : /permission|insufficient|unauth/i.test(code + ' ' + msg)
+          ? 'Not allowed to save — please sign in as the admin and try again.'
+          : 'Could not save to the server.';
+      this.saveError = `${friendly} (${code || 'error'}: ${msg})`.slice(0, 300);
     } finally {
       this.isLoading = false;
     }

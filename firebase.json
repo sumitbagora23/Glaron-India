@@ -79,6 +79,11 @@
           "region": "us-central1"
         },
         {
+          "source": "/submit-quotation",
+          "function": "submitQuotation",
+          "region": "us-central1"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -178,6 +183,11 @@
           "function": "quotationImage"
         },
         {
+          "source": "/submit-quotation",
+          "function": "submitQuotation",
+          "region": "us-central1"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -249,6 +259,11 @@
         {
           "source": "/quotation-image/**",
           "function": "quotationImage",
+          "region": "us-central1"
+        },
+        {
+          "source": "/submit-quotation",
+          "function": "submitQuotation",
           "region": "us-central1"
         },
         {

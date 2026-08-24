@@ -74,6 +74,31 @@ export interface Product {
    */
   bodyColoursV2?: boolean;
   /**
+   * Set once the finishes the catalogue prints but the stored product never
+   * carried have been filled in from the July 2026 catalogue's BODY COLOUR
+   * (crossed with REFLECTOR) column — the roughly fifty ranges, mostly the
+   * gate lights and the single-option outdoor fittings, that showed no finish
+   * to choose at all. Fill-only: a product that already lists finishes, whether
+   * seeded or typed by an admin, is left exactly as it is.
+   */
+  bodyColoursV3?: boolean;
+  /**
+   * Set once the option dimensions and cut-outs have been taken from the July
+   * 2026 catalogue's TECHNICAL SPECIFICATIONS block.
+   *
+   * Two shapes of change. A fill, for the products that still carried a single
+   * blank option: the catalogue's base (lowest-wattage) row gives that one
+   * option its wattage, dimension and cut-out, never a price (the per-option
+   * price sheet is not in the repo) and never over a value an admin has already
+   * typed. A replace, for the five whose stored options had been duplicated off
+   * the wrong product (Streak, Nova, Tile, and the dimensions on Freedom and
+   * Solar Street): their option list is rebuilt from the catalogue. Where the
+   * wattages still line up the real prices are kept; where they do not, the
+   * option carries no price and falls back to the product's headline one until
+   * the sheet is applied.
+   */
+  variantDetails2026?: boolean;
+  /**
    * Set once the option's `type` has been folded into its `wattage`.
    *
    * The two fields held the same kind of value, so the sheet's "3W" sat in one
@@ -129,6 +154,16 @@ export interface Product {
    * product this way.
    */
   ballRgbpFixed?: boolean;
+  /**
+   * Set once the August 2026 price sheet has been applied: the per-wattage
+   * rates the office wrote out by hand, which the repo never had before (the
+   * seed only ever carried a single placeholder option). It rebuilds the
+   * option list from that sheet — one option per wattage, each at its own
+   * price, with the wattage, dimension and cut-out from the catalogue — for the
+   * ranges the sheet actually prices. Bumped to v2 to re-run once the per-
+   * option dimensions were added over the first rates-only pass.
+   */
+  priceSheet2026v2?: boolean;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   stock: number;
   price: number;
@@ -172,6 +207,13 @@ export interface Product {
 })
 export class ProductService {
   private STORAGE_KEY = 'glaron_products_catalog_v13';
+  // Ids of catalogue products the admin has deleted. Held so the seed-fill in
+  // the Firestore sync never resurrects them: every listed product begins life
+  // as a seed, so without this a delete came straight back on the next
+  // snapshot. Loaded from localStorage for an instant guard on this device and
+  // mirrored to Firestore (meta/products) so no other client re-seeds it.
+  private DELETED_KEY = 'glaron_products_deleted_v1';
+  private deletedIds = new Set<string>(this.loadDeletedIds());
   private firestore = inject(Firestore, { optional: true });
 
   private defaultProducts: Product[] = [
@@ -2517,6 +2559,401 @@ export class ProductService {
           "price": 170
         }
       ]
+    },
+    {
+      "id": "GLR-NIVO-75",
+      "name": "Nivo",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1400,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-NIVO-75.webp",
+      "description": "TM. Nivo. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 8W / 12W / 15W. 63×78 mm / 73×80 mm / 83×81 mm. 55 mm / 65 mm / 75 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. BK / WH. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "8W",
+          "dimension": "63*78",
+          "cutout": "55",
+          "price": 1400
+        },
+        {
+          "wattage": "12W",
+          "dimension": "73*80",
+          "cutout": "65",
+          "price": 1640
+        },
+        {
+          "wattage": "15W",
+          "dimension": "83*81",
+          "cutout": "75",
+          "price": 2240
+        }
+      ],
+      "bodyColours": [
+        "BK",
+        "WH"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-PLUT-76",
+      "name": "Pluto",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1300,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-PLUT-76.webp",
+      "description": "TM. Pluto. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 43×65 mm / 63×94 mm / 83×103 mm. 35 mm / 55 mm / 75 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. WH / BK. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "43*65",
+          "cutout": "35",
+          "price": 1300
+        },
+        {
+          "wattage": "12W",
+          "dimension": "63*94",
+          "cutout": "55",
+          "price": 1720
+        },
+        {
+          "wattage": "18W",
+          "dimension": "83*103",
+          "cutout": "75",
+          "price": 2600
+        }
+      ],
+      "bodyColours": [
+        "WH",
+        "BK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-TERA-77",
+      "name": "Tera",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1200,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-TERA-77.webp",
+      "description": "TM. Tera. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 10W / 12W / 15W. 52×71 mm / 62×80 mm / 72×90 mm / 82×90 mm. 45 mm / 55 mm / 65 mm / 75 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. WH / BK. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "52*71",
+          "cutout": "45",
+          "price": 1200
+        },
+        {
+          "wattage": "10W",
+          "dimension": "62*80",
+          "cutout": "55",
+          "price": 1400
+        },
+        {
+          "wattage": "12W",
+          "dimension": "72*90",
+          "cutout": "65",
+          "price": 1540
+        },
+        {
+          "wattage": "15W",
+          "dimension": "82*90",
+          "cutout": "75",
+          "price": 1740
+        }
+      ],
+      "bodyColours": [
+        "WH",
+        "BK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-MIRA-78",
+      "name": "Mirage",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1220,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-MIRA-78.webp",
+      "description": "TM. Mirage. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 35×75 mm / 45×90 mm / 55×120 mm. 30 mm / 40 mm / 50 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. MW / MB / SATIN BLACK. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "35*75",
+          "cutout": "30",
+          "price": 1220
+        },
+        {
+          "wattage": "12W",
+          "dimension": "45*90",
+          "cutout": "40",
+          "price": 1520
+        },
+        {
+          "wattage": "18W",
+          "dimension": "55*120",
+          "cutout": "50",
+          "price": 1880
+        }
+      ],
+      "bodyColours": [
+        "MW",
+        "MB",
+        "SATIN BLACK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-AERO-79",
+      "name": "Aero",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1160,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-AERO-79.webp",
+      "description": "TM. Aero. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 62×80 mm / 72×80 mm / 82×80 mm. 57 mm / 67 mm / 77 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. MW / MB / SATIN BLACK / BRASS. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "62*80",
+          "cutout": "57",
+          "price": 1160
+        },
+        {
+          "wattage": "12W",
+          "dimension": "72*80",
+          "cutout": "67",
+          "price": 1380
+        },
+        {
+          "wattage": "18W",
+          "dimension": "82*80",
+          "cutout": "77",
+          "price": 1760
+        }
+      ],
+      "bodyColours": [
+        "MW",
+        "MB",
+        "SATIN BLACK",
+        "BRASS"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-CRES-80",
+      "name": "Cresta",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1020,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-CRES-80.webp",
+      "description": "TM. Cresta. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 50×60 mm / 55×70 mm / 70×90 mm. 55 mm / 70 mm / 80 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. MW / MB. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "50*60",
+          "cutout": "55",
+          "price": 1020
+        },
+        {
+          "wattage": "12W",
+          "dimension": "55*70",
+          "cutout": "70",
+          "price": 1320
+        },
+        {
+          "wattage": "18W",
+          "dimension": "70*90",
+          "cutout": "80",
+          "price": 1560
+        }
+      ],
+      "bodyColours": [
+        "MW",
+        "MB"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-GALA-81",
+      "name": "Galaxy",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 900,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-GALA-81.webp",
+      "description": "TM. Galaxy. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 7W / 12W / 18W. 39×52 mm / 60×63 mm / 80×73 mm. 35 mm / 55 mm / 75 mm. 3000k / 4000k / 6500k. Available. 38°. >80. Aluminium Die-casting. MW / MB / WH+GREY / GD / GB. N/A. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "7W",
+          "dimension": "39*52",
+          "cutout": "35",
+          "price": 900
+        },
+        {
+          "wattage": "12W",
+          "dimension": "60*63",
+          "cutout": "55",
+          "price": 1300
+        },
+        {
+          "wattage": "18W",
+          "dimension": "80*73",
+          "cutout": "75",
+          "price": 1840
+        }
+      ],
+      "bodyColours": [
+        "MW",
+        "MB",
+        "WH/GREY",
+        "GD",
+        "GB"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-LINS-82",
+      "name": "Linea - S",
+      "category": "COB",
+      "categories": [
+        "COB"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 1620,
+      "previewType": "panel",
+      "image": "/assets/images/products/GLR-LINS-82.webp",
+      "description": "TM. Linea - S. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. Beam Angle. CRI (Ra). Material. Body Color. Reflector. 12W / 24W. 135×35×55 mm / 270×35×55 mm. N/A. 3000k / 4000k / 6500k. N/A. 24°. >80. Aluminium Die-casting. PKW / BK. MW / MB. 2 YEARS",
+      "variants": [
+        {
+          "wattage": "12W",
+          "dimension": "135*35*55",
+          "price": 1620
+        },
+        {
+          "wattage": "24W",
+          "dimension": "270*35*55",
+          "price": 2150
+        }
+      ],
+      "bodyColours": [
+        "PKW",
+        "BK"
+      ],
+      "lightColours": [
+        "Cool White",
+        "Natural White",
+        "Warm White",
+        "3 In 1",
+        "Dimmable-Tunable"
+      ],
+      "warranty": "2 Years"
+    },
+    {
+      "id": "GLR-LEAF-83",
+      "name": "Leaf Street",
+      "category": "Street",
+      "categories": [
+        "Street"
+      ],
+      "status": "In Stock",
+      "stock": 100,
+      "price": 3200,
+      "previewType": "street",
+      "image": "/assets/images/products/GLR-LEAF-83.webp",
+      "description": "2 YEARS. Leaf Street. Wattage. Dimension. Cut Out. CCT (K). Tunable/Dimmable. CRI (Ra). Material. Body Color. IP Rating. 24W / 36W / 50W. 275×120×55 mm / 315×135×55 mm / 360×170×55 mm. N/A. 6500K. No. >80. Aluminium Die-casting. Grey. IP66. TM. Leaf Street",
+      "variants": [
+        {
+          "price": 3200
+        }
+      ],
+      "lightColours": [
+        "Cool White"
+      ],
+      "warranty": "2 Years"
     }
   ];
 
@@ -2657,6 +3094,87 @@ export class ProductService {
     const def = this.defaultProducts.find(dp => dp.id === p.id);
     if (def?.bodyColours?.length) p.bodyColours = [...def.bodyColours];
     p.bodyColoursV2 = true;
+    return true;
+  }
+
+  /**
+   * The finishes the July 2026 catalogue prints for the ranges whose stored
+   * product carried none — read straight off each page's BODY COLOUR row,
+   * crossed with its REFLECTOR row the way the sheet is meant to be read (see
+   * parseBodyColours): "BK/WH" against "GBK/RGD/GD/CH" is the eight
+   * combinations, not two. A range already listing its finishes is not here;
+   * this only fills the blanks, so nothing already set is overwritten.
+   */
+  private static readonly BODY_COLOURS_V3: { [id: string]: string[] } = {
+    'GLR-GLAR-6': ['MW', 'MB', 'RG', 'SILVER', 'GB'],
+    'GLR-DELT-7': ['BK/GBK', 'BK/RGD', 'BK/GD', 'BK/CH', 'WH/GBK', 'WH/RGD', 'WH/GD', 'WH/CH'],
+    'GLR-VOGU-8': ['MW', 'MB'],
+    'GLR-GLON-9': ['MW', 'MB', 'RG', 'SB', 'ANTIQUE BRASS'],
+    'GLR-ELEG-10': ['White', 'Black'],
+    'GLR-ORBI-11': ['White', 'Black'],
+    'GLR-PRIS-12': ['BK/RGD', 'BK/GBK', 'WH/RGD', 'WH/GBK'],
+    'GLR-DUO-13': ['Black', 'White'],
+    'GLR-DUOR-14': ['MW/GBK', 'MW/RG', 'MW/WH', 'BK/GBK', 'BK/RG', 'BK/WH'],
+    'GLR-PULL-16': ['BK', 'WH'],
+    'GLR-LINE-17': ['PKW/MW', 'PKW/MB', 'PKW/RG', 'PKW/GB', 'BK/MW', 'BK/MB', 'BK/RG', 'BK/GB'],
+    'GLR-DEEP-19': ['White', 'Black'],
+    'GLR-NEXU-21': ['PKW/WH', 'PKW/SB', 'PKW/RG', 'PKW/MB', 'PKW/MW', 'BK/WH', 'BK/SB', 'BK/RG', 'BK/MB', 'BK/MW'],
+    'GLR-NOVA-22': ['PKW', 'BK'],
+    'GLR-CONC-23': ['White'],
+    'GLR-TRAC-25': ['MW', 'MB'],
+    'GLR-STRE-26': ['PKW', 'BK'],
+    'GLR-MOVA-27': ['MW/GBK', 'MW/RG', 'MB/GBK', 'MB/RG'],
+    'GLR-MAGN-29': ['BRASS GOLD', 'MESH BLACK'],
+    'GLR-SLIM-31': ['White'],
+    'GLR-SURF-32': ['White'],
+    'GLR-TRIM-33': ['White', 'Black'],
+    'GLR-TILE-34': ['White'],
+    'GLR-PROF-38': ['Aluminium Finish', 'Black', 'White'],
+    'GLR-MAGN-39': ['Black', 'White'],
+    'GLR-LINE-40': ['Black'],
+    'GLR-CURV-43': ['Matt Black'],
+    'GLR-CASE-44': ['Gloss Black'],
+    'GLR-UPDO-45': ['Gloss Black'],
+    'GLR-RUBI-46': ['Black'],
+    'GLR-SPIK-48': ['Black'],
+    'GLR-WALL-49': ['Black', 'Grey'],
+    'GLR-INGR-50': ['Silver Chrome'],
+    'GLR-SWIM-51': ['Silver Chrome'],
+    'GLR-GMFL-52': ['Grey'],
+    'GLR-SLIM-53': ['Grey'],
+    'GLR-HIBA-54': ['Matt Grey'],
+    'GLR-STRE-55': ['Grey'],
+    'GLR-SOLA-56': ['Black'],
+    'GLR-AURA-57': ['Black'],
+    'GLR-VIST-58': ['Grey'],
+    'GLR-CUBE-59': ['Black'],
+    'GLR-CUBE-60': ['Black'],
+    'GLR-MASH-61': ['Black'],
+    'GLR-FREE-62': ['Black'],
+    'GLR-RUBI-63': ['Sand Black'],
+    'GLR-TEMP-64': ['Grey'],
+    'GLR-LEGA-65': ['Grey'],
+    'GLR-FOUR-66': ['Grey'],
+    'GLR-SQUA-67': ['Grey'],
+    'GLR-RING-68': ['Grey'],
+    'GLR-ROUN-69': ['Grey'],
+    'GLR-OVAL-70': ['Grey'],
+    'GLR-LUXC-73': ['White'],
+  };
+
+  /**
+   * Fills in the finishes for a range that had none, from the catalogue map
+   * above. Never touches a product that already lists finishes.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyBodyColoursV3(p: Product): boolean {
+    if (p.bodyColoursV3) return false;
+    const add = ProductService.BODY_COLOURS_V3[p.id];
+    if (add && !(p.bodyColours && p.bodyColours.length)) {
+      p.bodyColours = [...add];
+    }
+    p.bodyColoursV3 = true;
     return true;
   }
 
@@ -2825,6 +3343,139 @@ export class ProductService {
     return true;
   }
 
+  /**
+   * The per-wattage rates from the August 2026 hand-written price sheet.
+   *
+   * The office finally wrote out what each wattage costs — the sheet the repo
+   * had always lacked, which is why every one of these ranges shipped with a
+   * single placeholder option at one headline price. Each entry is the full
+   * option list the sheet prices, one row per wattage. Ranges the sheet leaves
+   * blank (Elegance, Prism, Track Wall's upper wattages, the outdoor pages) are
+   * not here and keep what they had.
+   */
+  private static readonly PRICE_SHEET_2026: { [id: string]: ProductVariant[] } = {
+    'GLR-GLAR-6':  [{ wattage: '7W', dimension: '55*55*60', cutout: '50', price: 1370 }, { wattage: '12W', dimension: '55*55*70', cutout: '50', price: 1550 }],
+    'GLR-DELT-7':  [{ wattage: '7W', dimension: '75*60', cutout: '65', price: 950 }, { wattage: '12W', dimension: '85*76', cutout: '75', price: 1120 }, { wattage: '18W', dimension: '95*100', cutout: '85', price: 1380 }],
+    'GLR-VOGU-8':  [{ wattage: '7W', dimension: '42*42*60', cutout: '35', price: 1180 }, { wattage: '12W', dimension: '62*62*60', cutout: '55', price: 1780 }],
+    'GLR-GLON-9':  [{ wattage: '7W', dimension: '63*43', cutout: '55', price: 820 }, { wattage: '12W', dimension: '80*44', cutout: '75', price: 980 }, { wattage: '18W', dimension: '94*51', cutout: '85', price: 1240 }],
+    'GLR-ORBI-11': [{ wattage: '7W', dimension: '63*32', cutout: '60', price: 760 }, { wattage: '12W', dimension: '80*40', cutout: '75', price: 1080 }, { wattage: '18W', dimension: '95*40', cutout: '85', price: 1320 }],
+    'GLR-DUO-13':  [{ wattage: '2×7W', dimension: '65*122', cutout: '113*55', price: 2640 }, { wattage: '2×15W', dimension: '85*162', cutout: '153*75', price: 3680 }],
+    'GLR-DUOR-14': [{ wattage: '2×7W', dimension: '68*134', cutout: '55*122', price: 1820 }, { wattage: '2×12W', dimension: '85*170', cutout: '75*160', price: 2380 }],
+    'GLR-PULL-16': [{ wattage: '7W', dimension: '62*93', cutout: '55', price: 1480 }, { wattage: '12W', dimension: '84*104', cutout: '75', price: 1580 }, { wattage: '2×12W', dimension: '194*104', cutout: '177*88', price: 3180 }],
+    'GLR-LINE-17': [{ wattage: '6W', dimension: '68*45', cutout: '58*35', price: 620 }, { wattage: '8W', dimension: '95*45', cutout: '85*35', price: 740 }, { wattage: '10W', dimension: '144*41', cutout: '138*35', price: 980 }, { wattage: '12W', dimension: '146*45', cutout: '137*35', price: 1100 }, { wattage: '20W', dimension: '276*41', cutout: '272*35', price: 1480 }],
+    'GLR-NEXU-21': [{ wattage: '12W', dimension: '92*75', price: 1180 }, { wattage: '18W', dimension: '122*75', price: 1540 }, { wattage: '24W', dimension: '142*75', price: 1920 }],
+    'GLR-NOVA-22': [{ wattage: '7W', dimension: '51*45', price: 920 }, { wattage: '12W', dimension: '80*46', price: 1180 }, { wattage: '18W', dimension: '90*48', price: 1420 }],
+    'GLR-MOVA-27': [{ wattage: '7W', dimension: '63*92', price: 980 }, { wattage: '12W', dimension: '74*98', price: 1280 }, { wattage: '18W', dimension: '83*105', price: 1580 }],
+    // Magna (GLR-MAGN-29) is deliberately absent: the hand sheet prices it at
+    // 7W/12W/18W, the catalogue prints it as a 10W/15W ball, and the two cannot
+    // be reconciled. Its August-sheet rates were applied in the first pass and
+    // are left as they are until the office settles which wattages Magna sells.
+  };
+
+  /**
+   * Puts the August 2026 sheet's per-wattage prices onto a stored product.
+   *
+   * A rebuild, not a fill: the range's whole option list becomes the sheet's,
+   * so a product that had one placeholder option now carries every wattage the
+   * sheet prices, each at its own rate, and the headline price drops to the
+   * lowest of them. Ranges the sheet is silent about are left untouched.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyPriceSheet2026(p: Product): boolean {
+    if (p.priceSheet2026v2) return false;
+    const rows = ProductService.PRICE_SHEET_2026[p.id];
+    if (rows && rows.length) {
+      p.variants = rows.map(r => ({ ...r }));
+      p.price = Math.min(...rows.map(r => r.price ?? p.price));
+    }
+    p.priceSheet2026v2 = true;
+    return true;
+  }
+
+  /**
+   * Option dimensions and cut-outs lifted from the July 2026 catalogue.
+   *
+   * `patch` fills a single blank option, field by field and only where empty.
+   * `replace` rebuilds the whole option list. See `variantDetails2026`.
+   */
+  private static readonly VARIANT_DETAILS_2026: {
+    [id: string]: { patch?: Partial<ProductVariant>; replace?: ProductVariant[] };
+  } = {
+    // A single blank option, filled from the catalogue's base row. No price.
+    'GLR-GLAR-6':  { patch: { wattage: '7W',    dimension: '55*55*60',   cutout: '50' } },
+    'GLR-VOGU-8':  { patch: { wattage: '7W',    dimension: '42*42*60',   cutout: '35' } },
+    'GLR-GLON-9':  { patch: { wattage: '7W',    dimension: '63*63*43',   cutout: '55' } },
+    'GLR-PRIS-12': { patch: { wattage: '7W',    dimension: '68*48',      cutout: '60' } },
+    'GLR-DUO-13':  { patch: { wattage: '2*10W', cutout: '113*55' } },
+    'GLR-DUOR-14': { patch: { wattage: '2*7W',  dimension: '68*134',     cutout: '55*122' } },
+    'GLR-PULL-16': { patch: { wattage: '7W',    dimension: '68*48',      cutout: '60' } },
+    'GLR-LINE-17': { patch: { wattage: '6W',    dimension: '68*45*32',   cutout: '58*35' } },
+    'GLR-NEXU-21': { patch: { wattage: '12W',   dimension: '92*75' } },
+    'GLR-TRAC-25': { patch: { wattage: '10W',   dimension: '30*30*110' } },
+    'GLR-MOVA-27': { patch: { wattage: '7W',    dimension: '85*90',      cutout: '75' } },
+    'GLR-MAGN-29': { patch: { wattage: '10W',   dimension: '85*85*65' } },
+    'GLR-CASE-44': { patch: { wattage: '6W',    dimension: '160*100*25' } },
+    'GLR-UPDO-45': { patch: { wattage: '6W',    dimension: '80*65*75' } },
+    'GLR-RUBI-46': { patch: { wattage: '6W',    dimension: '110*110*85' } },
+    'GLR-WALL-49': { patch: { wattage: '18W',   dimension: '50*55*500' } },
+    'GLR-INGR-50': { patch: { wattage: '3W',    dimension: '65*65*75',   cutout: '32' } },
+    'GLR-SWIM-51': { patch: { wattage: '3W',    dimension: '85',         cutout: '60' } },
+    'GLR-HIBA-54': { patch: { wattage: '100W',  dimension: '315*145*175' } },
+    'GLR-STRE-55': { patch: { wattage: '24W',   dimension: '275*120*55' } },
+    'GLR-LINE-40': { patch: { wattage: '20W',   dimension: '2ft' } },
+    'GLR-RUBI-63': { patch: { wattage: '12W',   dimension: '130*130*120' } },
+    'GLR-TEMP-64': { patch: { wattage: '15W',   dimension: '200' } },
+    'GLR-LEGA-65': { patch: { wattage: '15W',   dimension: '200' } },
+    'GLR-FOUR-66': { patch: { wattage: '15W',   dimension: '300' } },
+    'GLR-SQUA-67': { patch: { wattage: '15W',   dimension: '300' } },
+    'GLR-RING-68': { patch: { wattage: '15W',   dimension: '300' } },
+    'GLR-ROUN-69': { patch: { wattage: '15W',   dimension: '300' } },
+    'GLR-OVAL-70': { patch: { wattage: '15W',   dimension: '300' } },
+    // Option lists rebuilt from the catalogue (stored options were the wrong
+    // product's). Prices kept only where the wattages still line up.
+    'GLR-STRE-26': { replace: [{ wattage: '7W', dimension: '35*35*120' }] },
+    'GLR-NOVA-22': { replace: [
+      { wattage: '7W',  dimension: '51*51*45' },
+      { wattage: '12W', dimension: '80*80*46' },
+      { wattage: '18W', dimension: '90*90*48' },
+      { wattage: '24W', dimension: '128*128*50' },
+    ] },
+    'GLR-TILE-34': { replace: [
+      { wattage: '24W', dimension: '285*285', cutout: '300*300' },
+      { wattage: '30W', dimension: '285*285', cutout: '300*300' },
+      { wattage: '40W', dimension: '575*575', cutout: '595*595' },
+      { wattage: '50W', dimension: '575*575', cutout: '595*595' },
+    ] },
+    'GLR-FREE-62': { replace: [
+      { wattage: '20W', dimension: '275*120*55', packing: '12', price: 1640 },
+    ] },
+    'GLR-SOLA-56': { replace: [
+      { wattage: '70W',  dimension: '275*120*55', packing: '20', price: 3400 },
+      { wattage: '120W', dimension: '315*135*55', packing: '10', price: 4800 },
+    ] },
+  };
+
+  /**
+   * Puts the catalogue's option dimensions and cut-outs onto a stored product.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyVariantDetails2026(p: Product): boolean {
+    if (p.variantDetails2026) return false;
+    const d = ProductService.VARIANT_DETAILS_2026[p.id];
+    if (d?.replace) {
+      p.variants = d.replace.map(v => ({ ...v }));
+    } else if (d?.patch && p.variants && p.variants.length) {
+      const v = p.variants[0] as { [k: string]: unknown };
+      for (const [k, val] of Object.entries(d.patch)) {
+        if (!v[k]) v[k] = val;
+      }
+    }
+    p.variantDetails2026 = true;
+    return true;
+  }
+
   // Detects placeholder test categories like "t1", "t2", "t3" (or comma lists of
   // them) that should not appear as real product categories.
   private isJunkCategory(category?: string): boolean {
@@ -2845,12 +3496,35 @@ export class ProductService {
   private initFirestoreSync() {
     if (!this.firestore) return;
     try {
+      // Deleted-product tombstones, shared across every device so a removed
+      // catalogue product is never re-seeded by another client. Public-read
+      // like the products themselves; only the admin's writes land.
+      const metaRef = doc(this.firestore, 'meta', 'products');
+      onSnapshot(metaRef, (snap) => {
+        const ids = (snap.data()?.['deletedIds'] as string[]) || [];
+        let changed = false;
+        ids.forEach(id => {
+          if (!this.deletedIds.has(id)) { this.deletedIds.add(id); changed = true; }
+        });
+        if (changed) {
+          this.saveDeletedIds();
+          this.reconcileDeletions();
+        }
+      }, () => {});
+
       const prodCollection = collection(this.firestore, 'products');
       onSnapshot(prodCollection, (snapshot) => {
         if (!snapshot.empty) {
           const remoteProducts: Product[] = [];
           snapshot.forEach(docSnap => {
             const p = docSnap.data() as Product;
+            // A product the admin has deleted must never reappear, even if an
+            // older client re-seeded it before the tombstone reached it. Drop
+            // it from the list and, where we can write, remove it for good.
+            if (this.deletedIds.has(p.id)) {
+              if (this.firestore) deleteDoc(doc(this.firestore, 'products', p.id)).catch(() => {});
+              return;
+            }
             // Seed variants only onto a product that has none of its own.
             //
             // This used to overwrite p.variants from defaultProducts on every
@@ -2896,6 +3570,10 @@ export class ProductService {
             if (this.applyBodyColoursV2(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the finishes the catalogue prints that were never stored.
+            if (this.applyBodyColoursV3(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             // ...and the option's two identity fields folded into one.
             if (this.applyOptionFieldMerge(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
@@ -2929,6 +3607,14 @@ export class ProductService {
             if (this.applyBallRgbp(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the option dimensions and cut-outs from the catalogue.
+            if (this.applyVariantDetails2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // ...and the per-wattage prices from the August 2026 sheet.
+            if (this.applyPriceSheet2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -2939,7 +3625,7 @@ export class ProductService {
           // edits are safe.
           const stored = new Set(remoteProducts.map(p => p.id));
           this.defaultProducts.forEach(p => {
-            if (stored.has(p.id)) return;
+            if (stored.has(p.id) || this.deletedIds.has(p.id)) return;
             const fresh = JSON.parse(JSON.stringify(p)) as Product;
             remoteProducts.push(fresh);
             if (this.firestore) {
@@ -2954,6 +3640,7 @@ export class ProductService {
         } else {
           // Seed Firestore with defaultProducts if database is empty
           this.defaultProducts.forEach(p => {
+            if (this.deletedIds.has(p.id)) return;
             if (this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
@@ -2993,6 +3680,7 @@ export class ProductService {
           this.applyPriceList2026(p);
           this.applyCatalogue2026(p);
           this.applyBodyColoursV2(p);
+          this.applyBodyColoursV3(p);
           this.applyOptionFieldMerge(p);
           this.applyLightColours2026(p);
           this.applyTrackSplit(p);
@@ -3000,11 +3688,19 @@ export class ProductService {
           this.applyWarranty(p);
           this.applyRopeStripFix(p);
           this.applyBallRgbp(p);
+          this.applyVariantDetails2026(p);
+          this.applyPriceSheet2026(p);
           return p;
         });
-        // Keep the superseded duplicates off the first paint too, or they show
-        // for a moment before the Firestore sync removes them.
-        parsed = parsed.filter((p: any) => !ProductService.SUPERSEDED.has(p.id));
+        // Keep the superseded duplicates — and anything the admin has deleted —
+        // off the first paint too, or they show for a moment before the
+        // Firestore sync removes them.
+        parsed = parsed.filter((p: any) =>
+          !ProductService.SUPERSEDED.has(p.id) && !this.deletedIds.has(p.id));
+        // Immediately rewrite the cache without its images, so a store bloated
+        // by an older build is shrunk on this very load — freeing the room
+        // Firestore needs for its own writes before the admin tries to save.
+        this.saveToStorage(parsed);
         return parsed;
       }
     } catch (e) {
@@ -3014,16 +3710,122 @@ export class ProductService {
     return this.defaultProducts;
   }
 
+  // localStorage tops out near 5 MB, and a single product's inline base64 image
+  // is ~0.7 MB, so persisting the whole catalogue here overran the quota. That
+  // did more than lose the cache: Firestore keeps its own pending writes in
+  // localStorage too (the `firestore_mutations_...` keys), so a full store made
+  // EVERY Firestore write crash with QuotaExceededError / INTERNAL ASSERTION —
+  // add, edit and delete all failed with a "connection" error. The cache only
+  // needs enough to paint the list instantly and to fall back on when Firestore
+  // is down; the heavy images are dropped and served from Firestore instead
+  // (its IndexedDB cache holds them, and offline the images simply wait).
+  private slimForStorage(products: Product[]): Product[] {
+    return products.map(p => {
+      if (!p.image) return p;
+      const { image, ...rest } = p;
+      return rest as Product;
+    });
+  }
+
   private saveToStorage(products: Product[]) {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(products));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.slimForStorage(products)));
     } catch (e) {
+      // Out of quota even without images: drop the cache rather than leave a
+      // stale oversized copy wedged in front of Firestore's own writes.
       console.error('Error saving products to localStorage', e);
+      try { localStorage.removeItem(this.STORAGE_KEY); } catch {}
     }
   }
 
+  private loadDeletedIds(): string[] {
+    try {
+      const raw = localStorage.getItem(this.DELETED_KEY);
+      const ids = raw ? JSON.parse(raw) : [];
+      return Array.isArray(ids) ? ids : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveDeletedIds() {
+    try {
+      localStorage.setItem(this.DELETED_KEY, JSON.stringify([...this.deletedIds]));
+    } catch (e) {
+      console.error('Error saving deleted product ids to localStorage', e);
+    }
+  }
+
+  // Drops any tombstoned product still sitting in the current list (and, where
+  // we can write, in Firestore), so a deletion synced from another device takes
+  // effect on this one too.
+  private reconcileDeletions() {
+    const current = this.productsSignal();
+    const kept = current.filter(p => !this.deletedIds.has(p.id));
+    if (kept.length !== current.length) {
+      this.productsSignal.set(kept);
+      this.saveToStorage(kept);
+    }
+    const fs = this.firestore;
+    if (fs) {
+      current.forEach(p => {
+        if (this.deletedIds.has(p.id)) deleteDoc(doc(fs, 'products', p.id)).catch(() => {});
+      });
+    }
+  }
+
+  // The order the products are printed in the August 2026 catalogue, by id. The
+  // list is shown in this sequence rather than the order Firestore hands the
+  // documents back (by document id), which is not the catalogue's. Every id in
+  // defaultProducts is here; the four that have no catalogue page of their own
+  // — the two track rails, Lux Concealed and Rope Cord — sit beside the
+  // product they were split from. An id not in this list (a product an admin
+  // adds later) sorts to the end, keeping its own order.
+  private static readonly CATALOGUE_ORDER: string[] = [
+    'GLR-DELT-3', 'GLR-CURV-4', 'GLR-GEM-5', 'GLR-GLAR-6', 'GLR-DELT-7', 'GLR-VOGU-8',
+    'GLR-GLON-9', 'GLR-ELEG-10', 'GLR-ORBI-11', 'GLR-PRIS-12', 'GLR-PLUT-76', 'GLR-NIVO-75',
+    'GLR-TERA-77', 'GLR-MIRA-78', 'GLR-AERO-79', 'GLR-CRES-80', 'GLR-GALA-81', 'GLR-SPOT-18',
+    'GLR-LINE-17', 'GLR-LINS-82', 'GLR-DUO-13', 'GLR-DUOR-14', 'GLR-MOVA-15', 'GLR-PULL-16',
+    'GLR-DEEP-19', 'GLR-NEXU-20', 'GLR-NEXU-21', 'GLR-NOVA-22', 'GLR-CONC-23', 'GLR-LUXC-73',
+    'GLR-TRAC-24', 'GLR-TRAC-25', 'GLR-PCTR-71', 'GLR-METR-72', 'GLR-STRE-26', 'GLR-MOVA-27',
+    'GLR-CYLI-28', 'GLR-MAGN-29', 'GLR-STRI-35', 'GLR-SLIM-31', 'GLR-SURF-32', 'GLR-TRIM-33',
+    'GLR-TILE-34', 'GLR-STRI-30', 'GLR-SMPS-36', 'GLR-ROPE-37', 'GLR-RCRD-74', 'GLR-PROF-38',
+    'GLR-MAGN-39', 'GLR-LINE-40', 'GLR-KTYP-41', 'GLR-BALL-42', 'GLR-CURV-43', 'GLR-CASE-44',
+    'GLR-UPDO-45', 'GLR-FOOT-47', 'GLR-RUBI-46', 'GLR-WALL-49', 'GLR-SPIK-48', 'GLR-SWIM-51',
+    'GLR-INGR-50', 'GLR-SLIM-53', 'GLR-GMFL-52', 'GLR-HIBA-54', 'GLR-LEAF-83', 'GLR-STRE-55',
+    'GLR-AURA-57', 'GLR-VIST-58', 'GLR-SOLA-56', 'GLR-CUBE-59', 'GLR-MASH-61', 'GLR-CUBE-60',
+    'GLR-RUBI-63', 'GLR-FREE-62', 'GLR-LEGA-65', 'GLR-TEMP-64', 'GLR-SQUA-67', 'GLR-FOUR-66',
+    'GLR-ROUN-69', 'GLR-RING-68', 'GLR-OVAL-70',
+  ];
+  private catalogueIndex?: Map<string, number>;
+  private sortedCacheSource: Product[] | null = null;
+  private sortedCache: Product[] = [];
+
+  // Order a list by CATALOGUE_ORDER. A stable sort, so any ids not on the list
+  // keep their incoming order after those that are.
+  private sortByCatalogue(list: Product[]): Product[] {
+    if (!this.catalogueIndex) {
+      this.catalogueIndex = new Map(
+        ProductService.CATALOGUE_ORDER.map((id, i) => [id, i]),
+      );
+    }
+    const idx = this.catalogueIndex;
+    const END = Number.MAX_SAFE_INTEGER;
+    return [...list].sort(
+      (a, b) => (idx.get(a.id) ?? END) - (idx.get(b.id) ?? END),
+    );
+  }
+
   get products(): Product[] {
-    return this.productsSignal();
+    // Sort once per underlying list, not on every read: the signal hands back a
+    // new array only when the data actually changes, so a reference check tells
+    // a fresh list from a repeat read and keeps the returned reference stable.
+    const src = this.productsSignal();
+    if (src !== this.sortedCacheSource) {
+      this.sortedCacheSource = src;
+      this.sortedCache = this.sortByCatalogue(src);
+    }
+    return this.sortedCache;
   }
 
   getProductById(id: string): Product | undefined {
@@ -3076,6 +3878,11 @@ export class ProductService {
   }
 
   deleteProduct(id: string) {
+    // Tombstone first, so the Firestore snapshot that follows the delete below
+    // (and every future seed-fill) knows not to bring this product back.
+    this.deletedIds.add(id);
+    this.saveDeletedIds();
+
     this.productsSignal.update(products => {
       const newList = products.filter(p => p.id !== id);
       this.saveToStorage(newList);
@@ -3085,6 +3892,9 @@ export class ProductService {
     if (this.firestore) {
       deleteDoc(doc(this.firestore, 'products', id))
         .catch(err => console.warn('Firestore delete notice:', err?.message || err));
+      // Share the tombstone so no other client re-seeds this catalogue product.
+      setDoc(doc(this.firestore, 'meta', 'products'), { deletedIds: [...this.deletedIds] }, { merge: true })
+        .catch(err => console.warn('Firestore tombstone notice:', err?.message || err));
     }
   }
 }

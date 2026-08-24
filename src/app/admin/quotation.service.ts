@@ -38,6 +38,40 @@ export interface QuotationArea {
   items: QuotationItem[];
 }
 
+/** One priced line of the admin's working copy, saved to Firestore. */
+export interface QuotationPricingLine {
+  key: string;
+  name: string;
+  variant: string;
+  sku: string;
+  mrp: number;
+  price: number;
+  quantity: number;
+}
+
+/** One area of the priced draft — the lines kept in the room they belong to. */
+export interface QuotationPricingGroup {
+  id: string;
+  name: string;
+  lines: QuotationPricingLine[];
+}
+
+/**
+ * The admin's priced working copy of a quotation.
+ *
+ * Saved onto the quotation's own document, beside what the customer sent, so a
+ * price typed on one machine shows on every other — in incognito, on another
+ * admin's device, wherever the console is open. Pictures are left off (they are
+ * data URLs and would burst the document); each tile is redrawn from the
+ * catalogue by `sku` when the draft is loaded.
+ */
+export interface QuotationPricing {
+  discountValue: number;
+  groups: QuotationPricingGroup[];
+  /** Epoch millis of the last save — which copy is the most recent. */
+  updatedAt: number;
+}
+
 /**
  * A quotation a customer sent in from the public catalogue. Three kinds arrive
  * here, and the shape says which:
@@ -73,6 +107,12 @@ export interface CustomerQuotation {
   ref?: string;
   /** Epoch millis — ordering and the "time ago" label. */
   createdAt: number;
+  /**
+   * The admin's priced working copy, saved here so the pricing is shared across
+   * every device and admin rather than kept in one browser. Absent until an
+   * admin prices the quotation. Never overwrites the request fields above.
+   */
+  pricing?: QuotationPricing;
 }
 
 @Injectable({
@@ -226,17 +266,50 @@ export class QuotationService {
   }
 
   private async write(record: CustomerQuotation): Promise<void> {
-    // Sent over the Firestore REST API rather than the SDK's setDoc.
-    //
-    // The SDK talks to the backend over a streaming WebChannel connection, and
-    // on some customer networks, proxies and mobile carriers that stream is
-    // silently blocked or buffered. When it is, a setDoc write is queued into
-    // the offline cache and its promise never resolves — the request form just
-    // spins on "Sending your list…" forever and the quotation is never
-    // delivered. Plain HTTPS (which the REST endpoint uses) is not affected, so
-    // posting the document directly is what actually gets a customer's request
-    // through. No sign-in is involved: the rule on `quotations` allows an
-    // unauthenticated create, so this goes in with no identity attached.
+    // Send through the submitQuotation Cloud Function first: a plain POST that
+    // writes with admin privileges, so a submission lands in the console with no
+    // customer sign-in and — crucially — without touching the customer's own
+    // Firestore client, which can be wedged by a full localStorage cache. Same
+    // origin via the /submit-quotation hosting rewrite, so no CORS.
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch('/submit-quotation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(record),
+          signal: controller.signal,
+        });
+        if (res.ok) return;
+        throw new Error('submit-quotation ' + res.status);
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch (e) {
+      // Function unreachable (offline, not yet deployed): fall back to writing
+      // straight to Firestore over its REST API. Losing the submission is worse
+      // than a slow one.
+      console.warn('submitQuotation function notice:', (e as any)?.message || e);
+      await this.writeViaRest(record);
+    }
+  }
+
+  /**
+   * Fallback write, straight to the Firestore REST API rather than the SDK's
+   * setDoc.
+   *
+   * The SDK talks to the backend over a streaming WebChannel connection, and on
+   * some customer networks, proxies and mobile carriers that stream is silently
+   * blocked or buffered. When it is, a setDoc write is queued into the offline
+   * cache and its promise never resolves — the request form just spins on
+   * "Sending your list…" forever and the quotation is never delivered. Plain
+   * HTTPS (which the REST endpoint uses) is not affected, so posting the
+   * document directly is what actually gets a customer's request through. No
+   * sign-in is involved: the rule on `quotations` allows an unauthenticated
+   * create, so this goes in with no identity attached.
+   */
+  private async writeViaRest(record: CustomerQuotation): Promise<void> {
     const app = this.firestore!.app;
     const projectId = app.options.projectId;
     const apiKey = app.options.apiKey;
