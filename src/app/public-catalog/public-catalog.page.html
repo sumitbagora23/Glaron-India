@@ -19,7 +19,12 @@
           <span class="bar-title">{{ topBarTitle }}</span>
         </div>
 
-        <span class="catalog-pill" *ngIf="isHomeBar">Catalogue</span>
+        <div class="right-bar-group">
+          <span class="catalog-pill" *ngIf="isHomeBar">Catalogue</span>
+          <!-- Which build is live. Sits beside the chip, tiny and low-contrast —
+               a reference for us, not a thing a customer needs to read. -->
+          <span class="app-version">v{{ appVersion }}</span>
+        </div>
       </div>
     </header>
 

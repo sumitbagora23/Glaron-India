@@ -34,6 +34,22 @@ ion-content { --background: var(--g-bg); }
   justify-content: space-between;
   padding: 0 18px;
 }
+
+/* Right side of the brand bar: the Catalogue chip with the build number beside
+   it. Centred in the bar, so it adds nothing to its height. */
+.right-bar-group { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+
+/* Build number. Tiny and muted on purpose — a reference for us, not something a
+   customer needs to read. */
+.app-version {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  line-height: 1;
+  color: var(--g-text-soft, #9aa0a6);
+  opacity: .7;
+  pointer-events: none;
+}
 .left-brand-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .topbar-logo { height: 24px; width: auto; display: block; }
 

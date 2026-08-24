@@ -12,6 +12,7 @@ import { QuotationService, QuotationItem, QuotationArea } from '../admin/quotati
 import { CatalogShareService } from '../catalog-share.service';
 import { LightColourService } from '../admin/light-colour.service';
 import { orderableBodyColours } from '../admin/body-colours';
+import { APP_VERSION } from '../version';
 
 /** One line a visitor has put on their list. */
 export interface PublicCartItem {
@@ -66,6 +67,9 @@ export interface PublicArea {
   imports: [CommonModule, FormsModule, IonContent]
 })
 export class PublicCatalogPage implements OnInit, OnDestroy {
+
+  /** Shown small in the top bar so it is clear which build is live. */
+  readonly appVersion = APP_VERSION;
 
   // A saved line keeps what was ordered as one string — "7W · 2ft · Cool
   // White". These two split the shade off its end so the box of colour sits
