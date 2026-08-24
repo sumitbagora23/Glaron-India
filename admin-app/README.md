@@ -80,3 +80,15 @@ match /admin_tokens/{docId} {
   allow read, write: if request.auth != null;
 }
 ```
+
+**3. Let public customers send a quotation.** A customer sending a quote from
+the public catalogue has no account and never signs in, so the `quotations`
+collection must accept an unauthenticated `create`. Reading and clearing the
+feed stays admin-only:
+
+```
+match /quotations/{id} {
+  allow create: if true;
+  allow read, update, delete: if request.auth != null;
+}
+```

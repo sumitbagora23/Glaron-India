@@ -32,6 +32,15 @@ bootstrapApplication(AppComponent, {
     provideFirestore(() => initializeFirestore(getApp(), {
       ignoreUndefinedProperties: true,
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      // Some networks, proxies and mobile carriers silently block or buffer
+      // Firestore's streaming WebChannel connection. When that happens reads
+      // still come from the cache, but a write (setDoc) never gets its server
+      // ack and the promise hangs forever — which is what left "Sending your
+      // list…" spinning and made quotation requests impossible to submit.
+      // Forcing long-polling makes the SDK talk over ordinary HTTPS requests
+      // (the same transport plain fetch/REST uses, which always works here)
+      // instead of the WebChannel stream, so writes actually complete.
+      experimentalForceLongPolling: true,
     })),
     provideAuth(() => getAuth()),
     provideStorage(() => getStorage()),

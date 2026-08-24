@@ -28,6 +28,11 @@ bootstrapApplication(AppComponent, {
     provideFirestore(() => initializeFirestore(getApp(), {
       ignoreUndefinedProperties: true,
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      // Force long-polling so Firestore works on networks/proxies that block or
+      // buffer its streaming WebChannel connection. Without it, reads still come
+      // from the cache but writes and the live quotations feed can stall with no
+      // error. See the matching note in the customer app's main.ts.
+      experimentalForceLongPolling: true,
     })),
     provideAuth(() => getAuth()),
     provideStorage(() => getStorage()),

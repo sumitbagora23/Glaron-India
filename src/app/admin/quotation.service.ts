@@ -1,8 +1,7 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
-  Firestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit
+  Firestore, collection, doc, deleteDoc, onSnapshot, query, orderBy, limit
 } from '@angular/fire/firestore';
-import { Auth, signInAnonymously } from '@angular/fire/auth';
 
 /** One line a customer picked out of the public catalogue. */
 export interface QuotationItem {
@@ -81,7 +80,6 @@ export interface CustomerQuotation {
 })
 export class QuotationService {
   private firestore = inject(Firestore, { optional: true });
-  private auth = inject(Auth, { optional: true });
   private injector = inject(Injector);
 
   private readonly COL = 'quotations';
@@ -91,7 +89,6 @@ export class QuotationService {
 
   private listSignal = signal<CustomerQuotation[]>([]);
   private listening = false;
-  private anonSession: Promise<void> | null = null;
 
   /** Subscribe to the live feed, newest first. Idempotent. */
   start() {
@@ -123,26 +120,6 @@ export class QuotationService {
   /** Every quotation received, newest first. */
   get quotations(): CustomerQuotation[] {
     return this.listSignal();
-  }
-
-  /**
-   * Take an anonymous Firebase session so the write satisfies rules that
-   * require `request.auth != null`. The customer sending a quote has no account
-   * and never signs in, so this is the only identity available. Resolves either
-   * way — if the Anonymous provider is off the write is simply attempted as-is.
-   */
-  private ensureSession(): Promise<void> {
-    if (!this.auth) return Promise.resolve();
-    if (this.auth.currentUser) return Promise.resolve();
-    if (this.anonSession) return this.anonSession;
-
-    this.anonSession = signInAnonymously(this.auth)
-      .then(() => undefined)
-      .catch(err => {
-        console.warn('Anonymous quotation session notice:', err?.code || err?.message || err);
-        this.anonSession = null;
-      });
-    return this.anonSession;
   }
 
   /** Send a customer's uploaded quotation to the console. */
@@ -249,8 +226,69 @@ export class QuotationService {
   }
 
   private async write(record: CustomerQuotation): Promise<void> {
-    await this.ensureSession();
-    await setDoc(doc(this.firestore!, this.COL, record.id), record);
+    // Sent over the Firestore REST API rather than the SDK's setDoc.
+    //
+    // The SDK talks to the backend over a streaming WebChannel connection, and
+    // on some customer networks, proxies and mobile carriers that stream is
+    // silently blocked or buffered. When it is, a setDoc write is queued into
+    // the offline cache and its promise never resolves — the request form just
+    // spins on "Sending your list…" forever and the quotation is never
+    // delivered. Plain HTTPS (which the REST endpoint uses) is not affected, so
+    // posting the document directly is what actually gets a customer's request
+    // through. No sign-in is involved: the rule on `quotations` allows an
+    // unauthenticated create, so this goes in with no identity attached.
+    const app = this.firestore!.app;
+    const projectId = app.options.projectId;
+    const apiKey = app.options.apiKey;
+    const url =
+      `https://firestore.googleapis.com/v1/projects/${projectId}` +
+      `/databases/(default)/documents/${this.COL}` +
+      `?documentId=${encodeURIComponent(record.id)}` +
+      (apiKey ? `&key=${apiKey}` : '');
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: this.toFsFields(record as unknown as Record<string, unknown>) }),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Quotation write failed (${res.status}): ${detail.slice(0, 200)}`);
+    }
+  }
+
+  /**
+   * Turn a plain object into the Firestore REST `fields` map. Undefined values
+   * are dropped, so an omitted optional field (a line with no variant, say)
+   * simply isn't written — matching how the rest of the app treats them.
+   */
+  private toFsFields(obj: Record<string, unknown>): Record<string, unknown> {
+    const fields: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      const value = obj[key];
+      if (value !== undefined) fields[key] = this.toFsValue(value);
+    }
+    return fields;
+  }
+
+  /** One value in Firestore REST's typed-value shape. Covers the types a
+   *  quotation document actually holds: strings, whole numbers, nested arrays
+   *  (items, areas) and the maps inside them. */
+  private toFsValue(value: unknown): Record<string, unknown> {
+    if (typeof value === 'string') return { stringValue: value };
+    if (typeof value === 'number') {
+      return Number.isInteger(value)
+        ? { integerValue: String(value) }
+        : { doubleValue: value };
+    }
+    if (typeof value === 'boolean') return { booleanValue: value };
+    if (Array.isArray(value)) {
+      return { arrayValue: { values: value.map(v => this.toFsValue(v)) } };
+    }
+    if (value && typeof value === 'object') {
+      return { mapValue: { fields: this.toFsFields(value as Record<string, unknown>) } };
+    }
+    return { nullValue: null };
   }
 
   /** Remove a quotation once it has been dealt with. */
