@@ -5,6 +5,7 @@ import {
 } from '@angular/fire/firestore';
 import { Messaging, getToken, onMessage } from '@angular/fire/messaging';
 import { environment } from '../../environments/environment';
+import { writeDocViaRest, deleteDocViaRest } from './firestore-rest';
 
 // Where the logged-in mobile number is kept, per kind of account (see
 // app.routes DEALER_AUTH_KEY / AGENT_AUTH_KEY and the matching *_SESSION_KEY in
@@ -379,14 +380,17 @@ export class NotificationService {
       ...(agentPhones.length ? { agentPhones } : {})
     };
     if (this.firestore) {
-      await setDoc(doc(this.firestore, this.COL, id), payload);
+      // Over REST, so the broadcast lands on networks where the SDK's streaming
+      // write is blocked — otherwise the Cloud Function never fires, no device
+      // is pushed, and this promise never resolves (see firestore-rest.ts).
+      await writeDocViaRest(this.firestore, this.COL, id, payload as unknown as Record<string, unknown>);
     }
   }
 
   // Remove a previously sent notification from the feed.
   async remove(id: string): Promise<void> {
     if (this.firestore) {
-      await deleteDoc(doc(this.firestore, this.COL, id)).catch(() => {});
+      await deleteDocViaRest(this.firestore, this.COL, id).catch(() => {});
     }
   }
 

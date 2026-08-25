@@ -54,6 +54,30 @@
   &:hover { background: var(--ad-surface-2); }
 }
 
+.oc-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.oc-submit-top {
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  background: #170338;
+  border-radius: 6px;
+  font-family: 'Outfit';
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) { background: #2D145A; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
 /* Controls */
 .oc-controls {
   display: flex;

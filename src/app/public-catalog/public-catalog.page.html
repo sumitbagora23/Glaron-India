@@ -56,7 +56,7 @@
         <section class="category-grid">
           <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId" (click)="openCategory(cat.name)">
             <div class="cat-grid-media" [class.no-image]="!cat.image">
-              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" loading="lazy" />
             </div>
             <span class="cat-grid-name">{{ cat.name }}</span>
           </button>
@@ -219,7 +219,7 @@
         <div class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">
           <div class="card-head-row">
             <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
-              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" />
+              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
             </div>
 
             <div class="card-head-info">
@@ -670,7 +670,7 @@
           <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId"
                   [class.is-on]="isCategoryOn(cat.name)" (click)="pickCategory(cat.name)">
             <div class="cat-grid-media" [class.no-image]="!cat.image">
-              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" loading="lazy" />
             </div>
             <span class="cat-grid-name">{{ cat.name }}</span>
           </button>

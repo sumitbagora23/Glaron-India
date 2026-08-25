@@ -48,11 +48,13 @@ bootstrapApplication(AppComponent, {
     provideFirestore(() => initializeFirestore(getApp(), {
       ignoreUndefinedProperties: true,
       localCache: persistentLocalCache(),
-      // Force long-polling so Firestore works on networks/proxies that block or
-      // buffer its streaming WebChannel connection. Without it, reads still come
-      // from the cache but writes and the live quotations feed can stall with no
-      // error. See the matching note in the customer app's main.ts.
-      experimentalForceLongPolling: true,
+      // Auto-detect long-polling: keep the fast streaming WebChannel on normal
+      // networks (so the console, orders and the live quotations feed are
+      // near-instant) and fall back to HTTPS long-polling only on a network or
+      // proxy that actually blocks the stream. Blocked networks stay covered
+      // without slowing every good one. See the matching note in the customer
+      // app's main.ts.
+      experimentalAutoDetectLongPolling: true,
     })),
     provideAuth(() => getAuth()),
     provideStorage(() => getStorage()),

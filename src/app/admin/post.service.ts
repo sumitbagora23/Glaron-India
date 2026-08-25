@@ -1,7 +1,8 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
-  Firestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit
+  Firestore, collection, onSnapshot, query, orderBy, limit
 } from '@angular/fire/firestore';
+import { writeDocViaRest, deleteDocViaRest } from './firestore-rest';
 
 /**
  * A shareable post the admin publishes for dealers.
@@ -95,14 +96,17 @@ export class PostService {
       ...(details && details.trim() ? { details: details.trim() } : {})
     };
     if (this.firestore) {
-      await setDoc(doc(this.firestore, this.COL, id), post);
+      // Over REST, so it lands on networks where the SDK's streaming write is
+      // blocked (see firestore-rest.ts) — otherwise the post never reaches the
+      // dealer home tab and this promise never resolves.
+      await writeDocViaRest(this.firestore, this.COL, id, post as unknown as Record<string, unknown>);
     }
   }
 
   /** Take a post down — it disappears from the dealer home tab immediately. */
   async remove(id: string): Promise<void> {
     if (this.firestore) {
-      await deleteDoc(doc(this.firestore, this.COL, id)).catch(() => {});
+      await deleteDocViaRest(this.firestore, this.COL, id).catch(() => {});
     }
   }
 }

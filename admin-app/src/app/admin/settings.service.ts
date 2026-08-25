@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Firestore, doc, setDoc, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
+import { writeDocViaRest } from './firestore-rest';
 
 export interface AppSettings {
   // Phone number used by the "Call" button in the dealer panel.
@@ -101,7 +102,14 @@ export class SettingsService {
     this.saveToStorage(updated);
 
     if (this.firestore) {
-      return setDoc(doc(this.firestore, 'settings', this.DOC_ID), updated, { merge: true });
+      // Over REST (merge), so a banner change lands on networks where the SDK's
+      // streaming write is blocked — otherwise the dealer carousel never
+      // updates and this promise never resolves (see firestore-rest.ts).
+      return writeDocViaRest(
+        this.firestore, 'settings', this.DOC_ID,
+        updated as unknown as Record<string, unknown>,
+        { merge: true }
+      );
     }
     return Promise.resolve();
   }

@@ -3658,20 +3658,14 @@ export class ProductService {
             remoteProducts.push(p);
           });
 
-          // A product added to the seed after this collection was first written
-          // would otherwise never appear: the branch below only runs when the
-          // collection is empty. Anything in the seed and not here is added.
-          // Nothing already stored is touched, so an admin's own products and
-          // edits are safe.
-          const stored = new Set(remoteProducts.map(p => p.id));
-          this.defaultProducts.forEach(p => {
-            if (stored.has(p.id) || this.deletedIds.has(p.id)) return;
-            const fresh = JSON.parse(JSON.stringify(p)) as Product;
-            remoteProducts.push(fresh);
-            if (this.firestore) {
-              setDoc(doc(this.firestore, 'products', fresh.id), fresh).catch(() => {});
-            }
-          });
+          // NO per-item seed-fill here. This app (dealer + agent) is a read
+          // client: the server list is authoritative. The admin app is the one
+          // that seeds new catalogue products. Re-adding a defaultProducts entry
+          // that the server doesn't have would resurrect a product the admin just
+          // deleted — it isn't on the server, and the shared tombstone hasn't
+          // reached this device yet — so the deleted product would flash back on
+          // every open (and, worse, the setDoc used to re-create it server-side).
+          // Trusting the server snapshot keeps a deletion deleted here.
 
           if (remoteProducts.length > 0) {
             this.productsSignal.set(remoteProducts);

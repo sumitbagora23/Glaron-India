@@ -154,7 +154,7 @@
 
         <article class="post-card" *ngFor="let post of sharePosts" (click)="sharePost(post)">
           <div class="post-card-media">
-            <img [src]="post.image" class="post-card-img" alt="Post" (error)="onImgError($event)" decoding="async" />
+            <img [src]="post.image" class="post-card-img" alt="Post" (error)="onImgError($event)" decoding="async" loading="lazy" />
             <span class="post-new-pill" *ngIf="isNewPost(post)">{{ t('newLabel') }}</span>
           </div>
           <p class="post-card-caption" *ngIf="post.caption">{{ post.caption }}</p>
@@ -618,7 +618,7 @@
         <section class="category-grid">
           <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId" (click)="openCategory(cat.name)">
             <div class="cat-grid-media" [class.no-image]="!cat.image">
-              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" loading="lazy" />
               <span *ngIf="!cat.image" class="cat-grid-noimg">No Image</span>
             </div>
             <span class="cat-grid-name">{{ tn(cat.name) }}</span>
@@ -707,7 +707,7 @@
           <!-- Top row: image on the left, name + description on the right -->
           <div class="card-head-row has-actions">
             <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
-              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" />
+              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
               <span *ngIf="!product.image" class="no-image-label">No Image</span>
             </div>
 
@@ -971,7 +971,7 @@
           <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId"
                   [class.is-on]="isCategoryOn(cat.name)" (click)="pickCategory(cat.name)">
             <div class="cat-grid-media" [class.no-image]="!cat.image">
-              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" />
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" loading="lazy" />
             </div>
             <span class="cat-grid-name">{{ tn(cat.name) }}</span>
           </button>

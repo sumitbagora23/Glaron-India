@@ -56,10 +56,16 @@ bootstrapApplication(AppComponent, {
       // still come from the cache, but a write (setDoc) never gets its server
       // ack and the promise hangs forever — which is what left "Sending your
       // list…" spinning and made quotation requests impossible to submit.
-      // Forcing long-polling makes the SDK talk over ordinary HTTPS requests
-      // (the same transport plain fetch/REST uses, which always works here)
-      // instead of the WebChannel stream, so writes actually complete.
-      experimentalForceLongPolling: true,
+      //
+      // Auto-detect (rather than *forcing* long-polling on every device) probes
+      // the connection once at start-up: on a normal network it keeps the fast
+      // streaming WebChannel, so reads, live feeds and writes are near-instant;
+      // only on a network that actually blocks the stream does it fall back to
+      // ordinary HTTPS long-polling. Blocked networks stay covered — the very
+      // reason forced long-polling was added — without taxing every good one.
+      // (Dealer writes already go over plain REST via firestore-rest.ts, so the
+      // hanging-setDoc case has a second safety net regardless.)
+      experimentalAutoDetectLongPolling: true,
     })),
     provideAuth(() => getAuth()),
     provideStorage(() => getStorage()),
