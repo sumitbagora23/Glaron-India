@@ -3493,8 +3493,48 @@ export class ProductService {
     return !!image && image.includes('/assets/images/products/');
   }
 
-  private initFirestoreSync() {
+  // Read the shared delete-tombstones over plain HTTPS before seed-fill runs, so a
+  // product another device deleted is never re-shown here. Reads are public, so no
+  // auth is needed; a blocked network times out instead of hanging.
+  private async loadServerTombstones(): Promise<void> {
     if (!this.firestore) return;
+    try {
+      const app = this.firestore.app;
+      const projectId = app.options.projectId;
+      const apiKey = app.options.apiKey;
+      const url =
+        `https://firestore.googleapis.com/v1/projects/${projectId}` +
+        `/databases/(default)/documents/meta/products` +
+        (apiKey ? `?key=${apiKey}` : '');
+      const res = await new Promise<Response>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('__timeout__')), 5000);
+        fetch(url).then(
+          r => { clearTimeout(timer); resolve(r); },
+          e => { clearTimeout(timer); reject(e); }
+        );
+      });
+      if (!res.ok) return;
+      const json: any = await res.json();
+      const values = json?.fields?.deletedIds?.arrayValue?.values;
+      if (!Array.isArray(values)) return;
+      let changed = false;
+      for (const v of values) {
+        const id = v?.stringValue;
+        if (id && !this.deletedIds.has(id)) { this.deletedIds.add(id); changed = true; }
+      }
+      if (changed) {
+        this.saveDeletedIds();
+        this.reconcileDeletions();
+      }
+    } catch { /* offline or blocked — the onSnapshot tombstone listener still runs */ }
+  }
+
+  private async initFirestoreSync() {
+    if (!this.firestore) return;
+    // Load shared delete-tombstones before seed-fill can re-show a product another
+    // device deleted: the products snapshot fires before the tombstone listener,
+    // so without this a deleted product kept reappearing on every reader surface.
+    await this.loadServerTombstones();
     try {
       // Deleted-product tombstones, shared across every device so a removed
       // catalogue product is never re-seeded by another client. Public-read

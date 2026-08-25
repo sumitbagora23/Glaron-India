@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { parseBodyColours } from './body-colours';
 import { Firestore, collection, doc, setDoc, deleteDoc, onSnapshot } from '@angular/fire/firestore';
+import { getAuth } from '@angular/fire/auth';
 
 export interface ProductVariant {
   /**
@@ -3490,8 +3491,14 @@ export class ProductService {
     return !!image && image.includes('/assets/images/products/');
   }
 
-  private initFirestoreSync() {
+  private async initFirestoreSync() {
     if (!this.firestore) return;
+    // Load the shared delete-tombstones from the server BEFORE anything below can
+    // seed-fill. The products snapshot and the meta/products tombstone listener
+    // are independent, so on a fresh load the products snapshot can fire first and
+    // re-create a product another device just deleted — deletedIds isn't populated
+    // yet. That race is exactly why a deleted product kept coming back everywhere.
+    await this.loadServerTombstones();
     try {
       // Deleted-product tombstones, shared across every device so a removed
       // catalogue product is never re-seeded by another client. Public-read
@@ -3828,6 +3835,166 @@ export class ProductService {
     return this.productsSignal().find(p => p.id === id);
   }
 
+  // ── Resilient writes ──────────────────────────────────────────────────────
+  // A plain setDoc/deleteDoc resolves only once Firestore's backend acks the
+  // write. On some networks, proxies and mobile carriers the SDK's connection is
+  // silently blocked or buffered, so that ack never arrives: the promise hangs
+  // forever — the Save button spins with no end — and, because the write never
+  // left the device, dealers, agents and the catalogue never see the change.
+  // (The customer quotation path hit the same wall and was fixed the same way.)
+  // So try the SDK first, but if it hasn't acked within a few seconds, write
+  // straight to the Firestore REST API over ordinary HTTPS, which always gets
+  // through — the document actually lands and propagates to every other device.
+  // How long to wait for the SDK write to ack before falling back to REST. Kept
+  // short so a save on a network that silently blocks the SDK doesn't leave the
+  // Save button spinning for long; the REST write is idempotent, so firing it a
+  // little early on a merely-slow (but working) network does no harm.
+  private readonly WRITE_TIMEOUT_MS = 4000;
+
+  private withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('__timeout__')), ms);
+      p.then(
+        v => { clearTimeout(timer); resolve(v); },
+        e => { clearTimeout(timer); reject(e); }
+      );
+    });
+  }
+
+  private async persistDoc(col: string, id: string, data: Record<string, unknown>): Promise<void> {
+    const sdkWrite = setDoc(doc(this.firestore!, col, id), data as any);
+    // Keep the losing side of the race from becoming an unhandled rejection.
+    sdkWrite.catch(() => {});
+    try {
+      await this.withTimeout(sdkWrite, this.WRITE_TIMEOUT_MS);
+    } catch {
+      // Whether the SDK stalled (timeout) or failed on a bad transport, get the
+      // write through over HTTPS. A genuine reason to fail (e.g. a document over
+      // Firestore's 1 MB limit) is thrown here too, so the caller can show it —
+      // never a silent "saved".
+      await this.writeDocViaRest(col, id, data);
+    }
+  }
+
+  private async removeDoc(col: string, id: string): Promise<void> {
+    const sdkDelete = deleteDoc(doc(this.firestore!, col, id));
+    sdkDelete.catch(() => {});
+    try {
+      await this.withTimeout(sdkDelete, this.WRITE_TIMEOUT_MS);
+    } catch {
+      await this.deleteDocViaRest(col, id);
+    }
+  }
+
+  // Read the shared tombstone document over plain HTTPS (public-read, no auth) so
+  // the deleted-product list is known before seed-fill runs. Times out rather than
+  // hanging on a blocked network; the onSnapshot tombstone listener still catches
+  // anything added later.
+  private async loadServerTombstones(): Promise<void> {
+    try {
+      const res = await this.withTimeout(fetch(this.restDocUrl('meta', 'products')), 5000);
+      if (!res.ok) return;
+      const json: any = await res.json();
+      const values = json?.fields?.deletedIds?.arrayValue?.values;
+      if (!Array.isArray(values)) return;
+      let changed = false;
+      for (const v of values) {
+        const id = v?.stringValue;
+        if (id && !this.deletedIds.has(id)) { this.deletedIds.add(id); changed = true; }
+      }
+      if (changed) {
+        this.saveDeletedIds();
+        // Drop any tombstoned product already sitting in the local cache so it
+        // never flashes on screen before the live snapshot reconciles it.
+        this.reconcileDeletions();
+      }
+    } catch { /* offline or blocked — the onSnapshot tombstone listener still runs */ }
+  }
+
+  private restDocUrl(col: string, id: string): string {
+    const app = this.firestore!.app;
+    const projectId = app.options.projectId;
+    const apiKey = app.options.apiKey;
+    return (
+      `https://firestore.googleapis.com/v1/projects/${projectId}` +
+      `/databases/(default)/documents/${col}/${encodeURIComponent(id)}` +
+      (apiKey ? `?key=${apiKey}` : '')
+    );
+  }
+
+  // The admin's ID token, so a REST write satisfies the same rule that lets the
+  // signed-in admin write through the SDK. Absent (not signed in) → no header,
+  // which is correct for anything that allows an unauthenticated write.
+  private async authHeader(): Promise<Record<string, string>> {
+    try {
+      const user = getAuth(this.firestore!.app).currentUser;
+      const token = user ? await user.getIdToken() : '';
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private async writeDocViaRest(col: string, id: string, data: Record<string, unknown>): Promise<void> {
+    // PATCH with no updateMask upserts and fully replaces the document — the same
+    // semantics as setDoc without merge, so a field cleared in the form is really
+    // cleared in Firestore.
+    const res = await fetch(this.restDocUrl(col, id), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(await this.authHeader()) },
+      body: JSON.stringify({ fields: this.toFsFields(data) }),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Firestore write failed (${res.status}): ${detail.slice(0, 200)}`);
+    }
+  }
+
+  private async deleteDocViaRest(col: string, id: string): Promise<void> {
+    const res = await fetch(this.restDocUrl(col, id), {
+      method: 'DELETE',
+      headers: { ...(await this.authHeader()) },
+    });
+    // Deleting an already-absent document is a success for our purposes.
+    if (!res.ok && res.status !== 404) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Firestore delete failed (${res.status}): ${detail.slice(0, 200)}`);
+    }
+  }
+
+  /**
+   * Turn a plain object into the Firestore REST `fields` map. Undefined values
+   * are dropped, so an omitted optional field simply isn't written — matching
+   * how setDoc treats them under ignoreUndefinedProperties.
+   */
+  private toFsFields(obj: Record<string, unknown>): Record<string, unknown> {
+    const fields: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      const value = obj[key];
+      if (value !== undefined) fields[key] = this.toFsValue(value);
+    }
+    return fields;
+  }
+
+  /** One value in Firestore REST's typed-value shape: strings, numbers,
+   *  booleans, arrays (variants, categories) and the maps inside them. */
+  private toFsValue(value: unknown): Record<string, unknown> {
+    if (typeof value === 'string') return { stringValue: value };
+    if (typeof value === 'number') {
+      return Number.isInteger(value)
+        ? { integerValue: String(value) }
+        : { doubleValue: value };
+    }
+    if (typeof value === 'boolean') return { booleanValue: value };
+    if (Array.isArray(value)) {
+      return { arrayValue: { values: value.map(v => this.toFsValue(v)) } };
+    }
+    if (value && typeof value === 'object') {
+      return { mapValue: { fields: this.toFsFields(value as Record<string, unknown>) } };
+    }
+    return { nullValue: null };
+  }
+
   // Returns a promise that rejects if the Firestore write fails (commonly an
   // image pushing the document past Firestore's 1 MB limit) so the caller can
   // tell the admin the save didn't sync. Swallowing it showed a "saved" screen
@@ -3849,7 +4016,7 @@ export class ProductService {
     });
 
     if (this.firestore) {
-      return setDoc(doc(this.firestore, 'products', newProduct.id), newProduct);
+      return this.persistDoc('products', newProduct.id, newProduct as unknown as Record<string, unknown>);
     }
     return Promise.resolve();
   }
@@ -3868,7 +4035,7 @@ export class ProductService {
     });
 
     if (this.firestore) {
-      return setDoc(doc(this.firestore, 'products', product.id), product);
+      return this.persistDoc('products', product.id, product as unknown as Record<string, unknown>);
     }
     return Promise.resolve();
   }
@@ -3886,10 +4053,12 @@ export class ProductService {
     });
 
     if (this.firestore) {
-      deleteDoc(doc(this.firestore, 'products', id))
+      this.removeDoc('products', id)
         .catch(err => console.warn('Firestore delete notice:', err?.message || err));
       // Share the tombstone so no other client re-seeds this catalogue product.
-      setDoc(doc(this.firestore, 'meta', 'products'), { deletedIds: [...this.deletedIds] }, { merge: true })
+      // meta/products holds only deletedIds, so writing the whole current set is
+      // an exact replace — no merge needed — and rides the same REST fallback.
+      this.persistDoc('meta', 'products', { deletedIds: [...this.deletedIds] })
         .catch(err => console.warn('Firestore tombstone notice:', err?.message || err));
     }
   }
