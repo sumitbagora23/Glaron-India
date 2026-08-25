@@ -145,9 +145,10 @@ export interface NotificationTarget {
 export const DEALER_NOTIFICATION_TARGETS: NotificationTarget[] = [
   { key: 'home', label: 'Home', url: '/dealer/catalog?tab=home' },
   { key: 'products', label: 'Products', url: '/dealer/catalog?tab=products' },
-  // The Orders page is its own route, so a tap lands on it directly rather
-  // than asking the catalogue to switch tabs after it boots.
-  { key: 'orders', label: 'Orders', url: '/dealer/orders' },
+  // Orders now live inside the catalogue as a tab (the standalone /dealer/orders
+  // route is the retired UI), so a tap lands on that tab the same way Home and
+  // Products do — the panel reads ?tab=orders on boot and opens it.
+  { key: 'orders', label: 'Orders', url: '/dealer/catalog?tab=orders' },
 ];
 
 // The agent PWA's tabs. It has no orders or profile screen, and a commission

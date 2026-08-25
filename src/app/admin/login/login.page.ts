@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { IonContent, IonSpinner } from '@ionic/angular/standalone';
 import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
 import { APP_VERSION } from '../../version';
+import { isAdminEmail, getAdminPassword } from '../admin-credentials';
 
 @Component({
   selector: 'app-login',
@@ -44,22 +45,19 @@ export class LoginPage implements OnInit {
 
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false]
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
-  // `remember` decides how long the session lasts: localStorage survives a
-  // browser restart, sessionStorage only this tab. Writing both unconditionally
-  // made the "Remember me" checkbox do nothing.
-  private persistAdminLogin(email: string, remember: boolean) {
+  // The console stays signed in on this device until the user explicitly signs
+  // out. The token goes to localStorage, which survives closing the installed
+  // PWA — sessionStorage does not, and writing only there was why reopening the
+  // app kept landing back on the login screen. sessionStorage is written too so
+  // the current tab is covered without waiting on a storage read.
+  private persistAdminLogin(email: string) {
     try {
+      localStorage.setItem('glaron_admin_logged_in', email);
       sessionStorage.setItem('glaron_admin_logged_in', email);
-      if (remember) {
-        localStorage.setItem('glaron_admin_logged_in', email);
-      } else {
-        localStorage.removeItem('glaron_admin_logged_in');
-      }
     } catch (e) {}
   }
 
@@ -80,11 +78,12 @@ export class LoginPage implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     const { email, password } = this.loginForm.value;
-    const remember = this.loginForm.value.rememberMe === true;
 
-    // Admin developer bypass for local preview and testing
-    if (email === 'admin@glaronindia.com' && password === '123456789') {
-      this.persistAdminLogin(email, remember);
+    // The single admin account signs in against the password stored on this
+    // device (the built-in default, or whatever was last set on the "Recreate
+    // password" screen) — no network needed.
+    if (isAdminEmail(email) && password === getAdminPassword()) {
+      this.persistAdminLogin(email);
       setTimeout(() => {
         this.isLoading = false;
         this.router.navigate(['/admin/home']);
@@ -95,7 +94,7 @@ export class LoginPage implements OnInit {
     try {
       // Sign in with Firebase Auth
       await signInWithEmailAndPassword(this.auth, email, password);
-      this.persistAdminLogin(email, remember);
+      this.persistAdminLogin(email);
       // On success, navigate to the admin dashboard
       this.router.navigate(['/admin/home']);
     } catch (error: any) {

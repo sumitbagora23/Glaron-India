@@ -268,20 +268,10 @@
                         </div>
                       </td>
 
-                      <!-- Tap the figure and type over it. No column of boxes
-                           to switch on first, and nothing drawn round it: the
-                           list has to read the same while a price is being
-                           changed as it does when it is being read. -->
+                      <!-- MRP is the list figure and is never edited here.
+                           Only the Price column opens for typing. -->
                       <td class="qd-td-mrp" data-label="MRP">
-                        <input #inlineBox *ngIf="isEditing(row, 'mrp'); else mrpFigure"
-                               type="number" min="0" step="1" class="qd-inline-box"
-                               [value]="row.mrp || ''" placeholder="0"
-                               (input)="onRowMrpInput(row, $any($event.target).value)"
-                               (blur)="stopEdit()" (keyup.enter)="stopEdit()" (keyup.escape)="stopEdit()" />
-                        <ng-template #mrpFigure>
-                          <span class="qd-mrp-text is-tappable" [class.is-empty]="!row.mrp"
-                                (click)="startEdit(row, 'mrp')">₹{{ money(row.mrp) }}</span>
-                        </ng-template>
+                        <span class="qd-mrp-text" [class.is-empty]="!row.mrp">₹{{ money(row.mrp) }}</span>
                       </td>
 
                       <td class="qd-td-rate" data-label="Price">

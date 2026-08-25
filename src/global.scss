@@ -1403,8 +1403,16 @@ textarea.g-input { resize: none; line-height: 1.5; padding-top: 14px; }
     color: #94A3B8;
   }
 
-  /* A thumbnail column sits beside the text rather than above it. */
-  .inventory-table .td-preview {
+  /* A thumbnail column sits beside the text rather than above it.
+
+     The `td[class]` selector above sets every cell to width:100%, and it wins
+     on specificity (class + attribute + element) over a plain `.td-preview`
+     no matter the source order — which left the thumbnail cell a full-width
+     floated block, so the name/details flexbox beside it collapsed to zero
+     width and the product name rendered one letter per line. Matching the same
+     `td[class]` shape here, plus the class, out-specifies it so `width:auto`
+     actually takes and the thumbnail shrinks to its own box. */
+  .inventory-table td[class].td-preview {
     float: left;
     width: auto;
     margin: 0 12px 6px 0;

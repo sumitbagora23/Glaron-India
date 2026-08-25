@@ -381,3 +381,53 @@
 }
 
 .oc-spec-empty { font-size: 11.5px; color: #6B6673; }
+
+/* ==========================================================================
+   Mobile (≤900px) — the shell drawer's breakpoint, shared with every page.
+
+   This page redefines .content-canvas and .page-header-row for its centred
+   desktop form. A component's own selectors carry an [_ngcontent] attribute
+   and out-specify the bare global mobile rules in global.scss, so without this
+   block the phone kept the 24px desktop gutters and the page title sat on one
+   row fighting the Cancel/Submit buttons for width. Bring both back in line
+   with the rest of the console: tighter gutters, the header stacked, and the
+   footer's summary and buttons stacked full width with real touch targets.
+   ========================================================================== */
+@media (max-width: 900px) {
+  .content-canvas {
+    padding: 16px 14px 40px;
+  }
+
+  .page-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .oc-header-actions {
+    width: 100%;
+
+    .oc-cancel-top,
+    .oc-submit-top {
+      flex: 1 1 auto;
+      min-height: 44px;
+    }
+  }
+
+  .oc-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+
+    .oc-footer-actions {
+      width: 100%;
+
+      .oc-cancel,
+      .oc-submit {
+        flex: 1 1 auto;
+        min-height: 44px;
+      }
+    }
+  }
+}
