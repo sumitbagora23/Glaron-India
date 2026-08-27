@@ -158,6 +158,28 @@
                   cell straight from the price sheet: <strong>BK/WH + GBK/RG</strong> becomes the four
                   combinations BK/GBK, BK/RG, WH/GBK and WH/RG.
                 </span>
+
+                <!-- A photo per finish (optional). The catalogue shows it the
+                     moment that finish is picked; a finish with no photo falls
+                     back to the main product image. Only drawn once there are
+                     finishes to hang a photo on. -->
+                <div class="bc-images" *ngIf="bodyColourPreview.length">
+                  <span class="bc-images-title">Photo per finish <span class="optional-tag">(Optional)</span></span>
+                  <div class="bc-image-row" *ngFor="let bc of bodyColourPreview">
+                    <span class="bc-image-name">{{ bc }}</span>
+                    <input type="file" accept="image/*" hidden #bcImgInput
+                           (change)="onBodyColourImageSelected(bc, $event)" />
+                    <div class="bc-image-thumb" *ngIf="bodyColourImage(bc)">
+                      <img [src]="bodyColourImage(bc)" alt="" />
+                      <button type="button" class="bc-image-remove"
+                              (click)="removeBodyColourImage(bc)" title="Remove photo">&times;</button>
+                    </div>
+                    <button type="button" class="bc-image-add" (click)="bcImgInput.click()">
+                      {{ bodyColourImage(bc) ? 'Replace' : 'Add photo' }}
+                    </button>
+                  </div>
+                  <span class="bc-hint">Shown on the catalogue when that finish is picked. Leave any blank to use the main product photo.</span>
+                </div>
               </div>
 
               <!-- Light Colour.

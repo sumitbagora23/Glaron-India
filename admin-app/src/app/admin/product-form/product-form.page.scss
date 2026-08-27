@@ -582,6 +582,30 @@
   }
 }
 
+/* The options table is a fixed multi-column grid that cannot shrink past
+   ~600px. On a phone it would otherwise drag the whole form wider than the
+   screen (the PWA install shows this worst). Here it scrolls sideways inside
+   its own card instead: the header row stays locked above the inputs, so the
+   columns are never left unlabelled, and nothing else on the page is pushed
+   off-screen. */
+@media (max-width: 680px) {
+  .variants-form-section {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .card-body-variants {
+    align-self: stretch;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .v-head,
+  .variant-horizontal-form-row {
+    min-width: 600px;
+  }
+}
+
 .select-dropdown {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2349454E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -1090,6 +1114,89 @@
   font-size: 11px;
   line-height: 1.45;
   color: var(--g-text-soft);
+}
+
+/* ---- A photo per finish ---- */
+.bc-images {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--g-border-strong);
+}
+.bc-images-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--g-text-soft);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.bc-image-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+.bc-image-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--g-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bc-image-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid var(--g-border-strong);
+  background: var(--g-surface-3);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+.bc-image-remove {
+  /* Sits inside the top-right corner of the thumbnail — the thumb clips its
+     overflow to keep the photo's rounded corners, so a button placed outside
+     that box would be clipped away and never seen. */
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--g-surface-1);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.bc-image-add {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1.5px solid var(--g-border-strong);
+  border-radius: 8px;
+  background: var(--g-surface-1);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--g-text);
+  cursor: pointer;
+
+  &:hover { background: var(--g-surface-3); }
 }
 
 /* ---- The options table: one grid, shared by the header and every row ----

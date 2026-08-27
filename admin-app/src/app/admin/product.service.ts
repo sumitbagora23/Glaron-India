@@ -186,6 +186,15 @@ export interface Product {
   // are read off the variants' imported `bodyColour` text instead. See
   // orderableBodyColours() in body-colours.ts.
   bodyColours?: string[];
+  // A photo per body-colour finish, keyed by the finish name exactly as it
+  // appears in `bodyColours` ({ "Black": "data:image/jpeg;...", ... }). Sparse
+  // and optional: only the finishes the admin actually has a photo for get an
+  // entry. Where a finish has one, the catalogue shows it in place of `image`
+  // the moment that finish is picked; every finish without one falls back to
+  // `image`. Stored inline like `image`, so the whole set counts against the
+  // product document's ~1 MB Firestore limit — the product form guards the
+  // combined size before saving.
+  bodyColourImages?: { [colour: string]: string };
   /**
    * How long the fitting is guaranteed for — "2 Years", "1 Year".
    *
@@ -3724,8 +3733,11 @@ export class ProductService {
   // (its IndexedDB cache holds them, and offline the images simply wait).
   private slimForStorage(products: Product[]): Product[] {
     return products.map(p => {
-      if (!p.image) return p;
-      const { image, ...rest } = p;
+      if (!p.image && !p.bodyColourImages) return p;
+      // Both the main photo and the per-finish photos are inline data URLs;
+      // keeping them out of localStorage is what stops a catalogue full of
+      // images overrunning the quota (see the note on the cache above).
+      const { image, bodyColourImages, ...rest } = p;
       return rest as Product;
     });
   }

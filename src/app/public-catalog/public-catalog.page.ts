@@ -779,6 +779,34 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     this.selectedModalImageTitle = '';
   }
 
+  // ---- The photo that follows the chosen finish ----
+  //
+  // A finish can carry its own photo (set on the admin product form). Where it
+  // does, the card and the lightbox show it the moment that finish is picked;
+  // every other finish — and every product that never had finish photos — falls
+  // back to the main product image, so nothing looks different for them.
+
+  /** The photo for one finish, falling back to the main product image. */
+  imageForBodyColour(product: Product, bodyColour?: string): string | undefined {
+    const own = bodyColour ? product.bodyColourImages?.[bodyColour] : undefined;
+    return own || product.image;
+  }
+
+  // The finish the card's photo follows. Like activeBodyColour(), but it also
+  // resolves for a product with a single finish — which has no tab to pick, yet
+  // may still carry one photo of its own.
+  private imageBodyColour(product: Product): string | undefined {
+    const active = this.activeBodyColour(product);
+    if (active) return active;
+    const all = orderableBodyColours(product);
+    return all.length === 1 ? all[0] : undefined;
+  }
+
+  /** The photo shown on a product card (and its lightbox), by the open finish. */
+  displayImage(product: Product): string | undefined {
+    return this.imageForBodyColour(product, this.imageBodyColour(product));
+  }
+
   // ---- Quotation list ----
 
   /** Total pieces on the list — what the tab badge counts. */
@@ -853,7 +881,8 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
         key,
         productId: product.id,
         name: product.name,
-        image: product.image,
+        // The line is for one finish, so its thumbnail is that finish's photo.
+        image: this.imageForBodyColour(product, bodyColour),
         variant: this.lineLabel(variant, lightColour, bodyColour),
         quantity: 1
       });
@@ -933,7 +962,7 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
       key: this.cartKey(product, variant, lightColour, bodyColour),
       productId: product.id,
       name: product.name,
-      image: product.image,
+      image: this.imageForBodyColour(product, bodyColour),
       variant: label
     };
     this.numpadTitle = label && label !== product.name ? `${product.name} · ${label}` : product.name;

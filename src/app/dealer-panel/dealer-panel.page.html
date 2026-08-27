@@ -706,9 +706,9 @@
 
           <!-- Top row: image on the left, name + description on the right -->
           <div class="card-head-row has-actions">
-            <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
-              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
-              <span *ngIf="!product.image" class="no-image-label">No Image</span>
+            <div class="product-media-box" [class.no-image]="!displayImage(product)" (click)="openImageModal(displayImage(product), product.name)">
+              <img *ngIf="displayImage(product)" [src]="displayImage(product)" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
+              <span *ngIf="!displayImage(product)" class="no-image-label">No Image</span>
             </div>
 
             <div class="card-head-info">
@@ -731,6 +731,18 @@
                    their prices and their steppers, and the ⓘ beside it opens
                    the size, the cut-out and the rest of the sheet. -->
               <ng-container *ngIf="specTabs(product).length">
+                <!-- The finish comes first: it is the coarser choice, and it
+                     picks which photo the card shows. Drawn only when there is
+                     more than one finish to choose between. -->
+                <div class="body-colour-row" *ngIf="productBodyColours(product).length">
+                  <button class="body-colour-tab"
+                          *ngFor="let bc of productBodyColours(product); trackBy: trackByBodyColour"
+                          [class.is-open]="isBodyColourOpen(product, bc)"
+                          (click)="selectBodyColour(product, bc)">
+                    <span class="bc-text">{{ tn(bc) }}</span>
+                  </button>
+                </div>
+
                 <div class="spec-tab-strip">
                   <div class="spec-tab-row">
                     <button class="spec-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"

@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
 import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch, splitLightColourLabel } from '../product-spec-tabs';
+import { orderableBodyColours } from '../admin/body-colours';
 import { DealerService, Dealer } from '../admin/dealer.service';
 import { INDIA_STATES_CITIES } from '../dealer-apply/india-locations';
 import { OrderService, Order } from '../admin/order.service';
@@ -1115,6 +1116,58 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   // Under the open wattage tab every shade is listed with its own stepper, so
   // the quantity a dealer types is already against the colour they mean.
   trackByColour = (_: number, colour: string) => colour;
+
+  // ---- Body colour (the housing finish) ----
+  //
+  // Which finish is open on each card, so opening a second card does not disturb
+  // the first. It drives the card's photo: a finish the admin gave its own photo
+  // shows it; the rest fall back to the main product image. Picking a finish
+  // does not change the price — a body colour never moves it — so it stays out
+  // of the cart entirely; it only chooses which photo the card shows.
+  private openBodyColourByProduct: { [productId: string]: string } = {};
+  trackByBodyColour = (_: number, colour: string) => colour;
+
+  /** The finishes this product is sold in — empty when there is nothing to choose. */
+  productBodyColours(product: Product): string[] {
+    const colours = orderableBodyColours(product);
+    return colours.length > 1 ? colours : [];
+  }
+
+  /** The finish the card is currently showing (its photo follows this). */
+  activeBodyColour(product: Product): string | undefined {
+    const colours = this.productBodyColours(product);
+    if (!colours.length) return undefined;
+    const open = this.openBodyColourByProduct[product.id];
+    return open && colours.includes(open) ? open : colours[0];
+  }
+
+  isBodyColourOpen(product: Product, colour: string): boolean {
+    return this.activeBodyColour(product) === colour;
+  }
+
+  selectBodyColour(product: Product, colour: string) {
+    this.openBodyColourByProduct[product.id] = colour;
+  }
+
+  /** The photo for one finish, falling back to the main product image. */
+  imageForBodyColour(product: Product, bodyColour?: string): string | undefined {
+    const own = bodyColour ? product.bodyColourImages?.[bodyColour] : undefined;
+    return own || product.image;
+  }
+
+  // Like activeBodyColour(), but resolves for a single-finish product too — it
+  // has no tab to pick, yet may still carry one photo of its own.
+  private imageBodyColour(product: Product): string | undefined {
+    const active = this.activeBodyColour(product);
+    if (active) return active;
+    const all = orderableBodyColours(product);
+    return all.length === 1 ? all[0] : undefined;
+  }
+
+  /** The photo shown on a product card (and its lightbox), by the open finish. */
+  displayImage(product: Product): string | undefined {
+    return this.imageForBodyColour(product, this.imageBodyColour(product));
+  }
 
   // Only the name of the light is shown — no swatch, no colour temperature.
 

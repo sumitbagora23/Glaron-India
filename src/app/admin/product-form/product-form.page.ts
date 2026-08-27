@@ -66,6 +66,13 @@ export class ProductFormPage implements OnInit {
   get bodyColourPreview(): string[] {
     return readBodyColourInput(this.bodyColoursText);
   }
+
+  // A photo per finish, keyed by the finish name exactly as it reads in the
+  // preview above. Sparse: only the finishes the admin actually has a photo for
+  // get an entry, and everything else falls back to the main product image on
+  // the catalogue. Each is compressed harder than the main image, because a
+  // product can carry several and they all share one Firestore document.
+  bodyColourImages: { [colour: string]: string } = {};
   lightColourDropdownOpen = false;
   // What each shade costs, keyed by colour name. An absolute price, not a
   // surcharge. Blank means that shade is sold at the option's own price.
@@ -491,7 +498,11 @@ export class ProductFormPage implements OnInit {
         categories: this.selectedCategories,
         lightColours: this.selectedLightColours,
         lightColourPrices: this.lightColourPrices,
-        image: this.imagePreview
+        image: this.imagePreview,
+        // Carried so the finishes typed so far — and any photo attached to one —
+        // survive the trip to the Light Colours page and back.
+        bodyColoursText: this.bodyColoursText,
+        bodyColourImages: this.bodyColourImages
       }));
     } catch (e) {
       // A full sessionStorage (a large image) costs the draft, not the form.
@@ -541,6 +552,8 @@ export class ProductFormPage implements OnInit {
       .filter((c: string) => c === NO_COLOUR || available.includes(c));
     this.lightColourPrices = draft.lightColourPrices || {};
     this.imagePreview = draft.image || null;
+    this.bodyColoursText = draft.bodyColoursText || this.bodyColoursText;
+    this.bodyColourImages = draft.bodyColourImages || {};
 
     // The typing that produced this draft was real: keep discard() asking.
     this.productForm.markAsDirty();
@@ -690,6 +703,53 @@ export class ProductFormPage implements OnInit {
     this.imagePreview = null;
   }
 
+  // ---- Photo per finish ----
+  //
+  // Optional: the admin uploads one only for the finishes there is a photo for.
+  // Where a finish carries one, the catalogue shows it the moment that finish is
+  // picked; a finish with none falls back to the main product image above.
+
+  /** The photo held for one finish, or null when it falls back to the main image. */
+  bodyColourImage(colour: string): string | null {
+    return this.bodyColourImages[colour] || null;
+  }
+
+  // Read, downscale and store one finish's photo. Compressed to a tighter budget
+  // than the main image (220 KB rather than 700): a product can carry several of
+  // these and every one of them shares the product's single ~1 MB Firestore
+  // document, so each is kept small. onSubmit still guards the combined size.
+  onBodyColourImageSelected(colour: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    // Clear at once so re-picking the same file fires change again.
+    input.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        this.bodyColourImages = {
+          ...this.bodyColourImages,
+          [colour]: this.compressToDataUrl(img, 220_000)
+        };
+        this.productForm.markAsDirty();
+      };
+      img.onerror = () => { this.saveError = 'That image could not be read.'; };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeBodyColourImage(colour: string) {
+    const { [colour]: _dropped, ...rest } = this.bodyColourImages;
+    this.bodyColourImages = rest;
+    this.productForm.markAsDirty();
+  }
+
   // Pre-load details in edit mode
   loadProductDetails(id: string) {
     const product = this.productService.getProductById(id);
@@ -721,6 +781,9 @@ export class ProductFormPage implements OnInit {
       // The admin sees them already filled in and can correct them in place —
       // which is also how the imported text gets replaced by a real list.
       this.bodyColoursText = orderableBodyColours(product).join(', ');
+      // The per-finish photos, keyed by finish name. A plain copy — the finishes
+      // they key off are the ones just loaded into bodyColoursText.
+      this.bodyColourImages = { ...(product.bodyColourImages || {}) };
 
       this.imagePreview = product.image || null;
 
@@ -744,11 +807,20 @@ export class ProductFormPage implements OnInit {
       return;
     }
 
-    // Final safety guard: even after adaptive compression, refuse to save an
-    // image that would exceed Firestore's document limit — otherwise the write
-    // fails and the product silently never reaches the dealer app.
-    if (this.imagePreview && this.imagePreview.length > 900_000) {
-      this.saveError = 'This image is too large to save. Please choose a smaller or less detailed image.';
+    // Final safety guard: even after adaptive compression, refuse to save when
+    // the images together would exceed Firestore's document limit — otherwise the
+    // write fails and the product silently never reaches the dealer app. Every
+    // image is inline in the one document: the main photo AND a photo per finish.
+    // Only finishes still in the list count; a photo whose finish was removed is
+    // dropped on save (see keptColourImages below), so it must not block here.
+    const keptFinishesForSize = readBodyColourInput(this.bodyColoursText);
+    let imageBytes = this.imagePreview?.length || 0;
+    keptFinishesForSize.forEach(c => { imageBytes += this.bodyColourImages[c]?.length || 0; });
+    if (imageBytes > 900_000) {
+      const hasFinishPhotos = keptFinishesForSize.some(c => this.bodyColourImages[c]);
+      this.saveError = hasFinishPhotos
+        ? 'These images are too large to save together. Remove a finish photo, or choose smaller images.'
+        : 'This image is too large to save. Please choose a smaller or less detailed image.';
       return;
     }
 
@@ -821,6 +893,17 @@ export class ProductFormPage implements OnInit {
     const parsedBodyColours = readBodyColourInput(this.bodyColoursText);
     const bodyColours = parsedBodyColours.length ? parsedBodyColours : undefined;
 
+    // A photo per finish, kept only for finishes still in the list above. A
+    // photo whose finish was deleted is dropped rather than orphaned in the
+    // document. Left off entirely when none remain, so a product with no finish
+    // photos carries no field at all.
+    const keptColourImages: { [colour: string]: string } = {};
+    parsedBodyColours.forEach(colour => {
+      const img = this.bodyColourImages[colour];
+      if (img) keptColourImages[colour] = img;
+    });
+    const bodyColourImages = Object.keys(keptColourImages).length ? keptColourImages : undefined;
+
     try {
       if (this.isEditMode) {
         const existing = this.productService.getProductById(this.productId);
@@ -835,6 +918,7 @@ export class ProductFormPage implements OnInit {
             lightColours,
             lightColourPrice,
             bodyColours,
+            bodyColourImages,
             warranty: (formData.warranty || '').trim() || '2 Years',
             image: imageUrl,
             variants: cleanedVariants.length > 0 ? cleanedVariants : undefined
@@ -851,6 +935,7 @@ export class ProductFormPage implements OnInit {
           lightColours,
           lightColourPrice,
           bodyColours,
+          bodyColourImages,
           warranty: (formData.warranty || '').trim() || '2 Years',
           stock: 999,
           image: imageUrl,

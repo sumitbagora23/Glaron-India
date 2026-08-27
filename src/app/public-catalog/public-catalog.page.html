@@ -218,8 +218,8 @@
 
         <div class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">
           <div class="card-head-row">
-            <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
-              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
+            <div class="product-media-box" [class.no-image]="!displayImage(product)" (click)="openImageModal(displayImage(product), product.name)">
+              <img *ngIf="displayImage(product)" [src]="displayImage(product)" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
             </div>
 
             <div class="card-head-info">
