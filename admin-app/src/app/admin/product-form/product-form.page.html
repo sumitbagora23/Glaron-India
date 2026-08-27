@@ -66,25 +66,6 @@
                   Product Name must be at least 3 characters.
                 </div>
               </div>
-              
-              <!-- Product Description field -->
-              <div class="input-form-group">
-                <label for="description" class="input-field-label">Product Description <span class="req-star">*</span></label>
-                <textarea 
-                  id="description" 
-                  formControlName="description" 
-                  placeholder="Describe the product features, benefits, and applications..." 
-                  class="field-textarea-box"
-                  [class.border-error]="productForm.get('description')?.touched && productForm.get('description')?.invalid"
-                ></textarea>
-                <!-- Error validation -->
-                <div class="validation-error-msg" *ngIf="productForm.get('description')?.touched && productForm.get('description')?.errors?.['required']">
-                  Product Description is required.
-                </div>
-                <div class="validation-error-msg" *ngIf="productForm.get('description')?.touched && productForm.get('description')?.errors?.['minlength']">
-                  Description must be at least 10 characters.
-                </div>
-              </div>
 
               <!-- Warranty. The range carries two years; a product whose own
                    table on the price sheet prints a note carries that instead. -->

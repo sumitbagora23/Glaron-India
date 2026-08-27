@@ -446,7 +446,6 @@ export class ProductFormPage implements OnInit {
   ngOnInit() {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required, Validators.minLength(10)]],
       warranty: ['2 Years'],
       // Base price is optional when variant pricing is supplied (handled by the
       // form-level pricingValidator). If a value IS entered it must be >= 1.
@@ -526,8 +525,7 @@ export class ProductFormPage implements OnInit {
 
     const values = draft.values || {};
     this.productForm.patchValue({
-      name: values.name || '',
-      description: values.description || ''
+      name: values.name || ''
     });
 
     // Variants first: adding them disables the base price, so patching the
@@ -756,7 +754,6 @@ export class ProductFormPage implements OnInit {
     if (product) {
       this.productForm.patchValue({
         name: product.name,
-        description: product.description,
         // A 0 / missing base price (variant-priced products) loads as blank so the
         // "min 1" rule doesn't flag it — base price stays optional when variants exist.
         price: product.price ? product.price : null
@@ -911,7 +908,6 @@ export class ProductFormPage implements OnInit {
           await this.productService.updateProduct({
             ...existing,
             name: formData.name,
-            description: formData.description,
             price: formData.price || 0,
             category: categoryJoined,
             categories,
@@ -928,7 +924,6 @@ export class ProductFormPage implements OnInit {
         await this.productService.addProduct({
           id,
           name: formData.name,
-          description: formData.description,
           price: formData.price || 0,
           category: categoryJoined,
           categories,

@@ -225,9 +225,6 @@
             <div class="card-head-info">
               <span class="category-uppercase-tag" *ngIf="product.category">{{ product.category }}</span>
               <h3 class="product-title">{{ product.name }}</h3>
-              <p class="product-description" [class.expanded]="expandedDescId === product.id" (click)="toggleDesc(product)">
-                {{ productDescription(product) }}
-              </p>
 
               <!-- A product with no variants is added as itself. Only on an
                    office link: a dealer's customer has nothing to send. -->
