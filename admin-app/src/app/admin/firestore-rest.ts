@@ -127,3 +127,83 @@ export async function deleteDocViaRest(
     clearTimeout(timer);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------------
+
+/** Decode one Firestore REST typed value back to a plain JS value. */
+function fromFsValue(value: any): unknown {
+  if (value == null || typeof value !== 'object') return null;
+  if ('stringValue' in value) return value.stringValue;
+  if ('integerValue' in value) return Number(value.integerValue);
+  if ('doubleValue' in value) return value.doubleValue;
+  if ('booleanValue' in value) return value.booleanValue;
+  if ('timestampValue' in value) return value.timestampValue;
+  if ('arrayValue' in value) return (value.arrayValue?.values || []).map(fromFsValue);
+  if ('mapValue' in value) return fromFsFields(value.mapValue?.fields || {});
+  return null;
+}
+
+function fromFsFields(fields: Record<string, any>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(fields || {})) out[key] = fromFsValue(fields[key]);
+  return out;
+}
+
+export interface RestDoc {
+  id: string;
+  data: Record<string, unknown>;
+}
+
+/**
+ * Read every document of a collection over plain HTTPS.
+ *
+ * The SDK's onSnapshot listener rides the same streaming connection as its
+ * writes, so on a network that blocks the stream it quietly keeps serving the
+ * on-device cache: a document that reached the server never appears. This
+ * one-shot GET is not affected, so a service can use it to (re)load the true
+ * server list beside the listener. Pages through the collection, and aborts
+ * rather than hanging on a dead network.
+ */
+export async function listCollectionViaRest(
+  firestore: Firestore,
+  collectionPath: string,
+  opts?: { timeoutMs?: number }
+): Promise<RestDoc[]> {
+  const app = firestore.app;
+  const projectId = app.options.projectId;
+  const apiKey = app.options.apiKey;
+  const base =
+    `https://firestore.googleapis.com/v1/projects/${projectId}` +
+    `/databases/(default)/documents/${collectionPath}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 10000);
+  const docs: RestDoc[] = [];
+  try {
+    let pageToken = '';
+    do {
+      const params = ['pageSize=300'];
+      if (pageToken) params.push(`pageToken=${encodeURIComponent(pageToken)}`);
+      if (apiKey) params.push(`key=${apiKey}`);
+      const res = await fetch(`${base}?${params.join('&')}`, { signal: controller.signal });
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error(`Firestore list failed (${res.status}): ${detail.slice(0, 200)}`);
+      }
+      const json: any = await res.json();
+      for (const d of json?.documents || []) {
+        const name: string = d?.name || '';
+        docs.push({
+          id: decodeURIComponent(name.slice(name.lastIndexOf('/') + 1)),
+          data: fromFsFields(d?.fields || {}),
+        });
+      }
+      pageToken = json?.nextPageToken || '';
+    } while (pageToken);
+    return docs;
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Firestore, collection, doc, setDoc, onSnapshot, deleteDoc } from '@angular/fire/firestore';
 import { SettingsService } from './settings.service';
+import { writeDocViaRest, deleteDocViaRest, listCollectionViaRest } from './firestore-rest';
 
 export type DealerStatus = 'Active' | 'Inactive';
 
@@ -54,6 +55,17 @@ export class DealerService {
   // dealer must be locked out) without false-positives during initial load.
   hasSynced = false;
   private readyResolvers: Array<() => void> = [];
+
+  // True once the list has come from the server itself — a REST read or a live
+  // (non-cache) snapshot. Until then a cache-only snapshot is the best we have;
+  // after it, a cache-only snapshot must not put the stale copy back.
+  private serverSeen = false;
+  // Writes in flight. A REST refresh is skipped while one is pending so it can't
+  // flip a row back to its old value between the optimistic update and the ack.
+  private pendingWrites = 0;
+  private refreshInFlight: Promise<void> | null = null;
+  // How often the server list is re-read over REST while the tab is visible.
+  private static readonly REFRESH_MS = 30_000;
 
   constructor() {
     this.clearLegacyStorage();
@@ -110,13 +122,18 @@ export class DealerService {
     try {
       const dealersCol = collection(this.firestore, 'dealers');
       onSnapshot(dealersCol, (snapshot) => {
+        // The SDK's streaming connection is silently blocked on some networks
+        // (see firestore-rest.ts). It then keeps replaying the on-device cache,
+        // and a registration that did reach the server never shows up here.
+        // Once the server list has been seen — over REST below or from a live
+        // snapshot — a cache-only replay must not overwrite it.
+        if (snapshot.metadata.fromCache && this.serverSeen) return;
+
         const realDealers: Dealer[] = [];
         snapshot.forEach(docSnap => {
           const data = docSnap.data() as Dealer;
-          const nameLower = (data.name || '').toLowerCase().trim();
-          
-          // If it's an old predefined dealer, delete it from Firestore!
-          if (PREDEFINED_DEALER_NAMES.some(p => nameLower.includes(p))) {
+          if (this.isPredefined(data)) {
+            // If it's an old predefined dealer, delete it from Firestore!
             if (this.firestore && docSnap.id) {
               deleteDoc(doc(this.firestore, 'dealers', docSnap.id)).catch(() => {});
             }
@@ -125,9 +142,8 @@ export class DealerService {
           }
         });
 
-        this.dealersSignal.set(realDealers);
-        this.saveToStorage(realDealers);
-        this.markSynced();
+        if (!snapshot.metadata.fromCache) this.serverSeen = true;
+        this.applyServerList(realDealers);
       }, (err) => {
         console.warn('Firestore dealers notice:', err);
         // Unblock any waiters even on error (fail-open — don't lock dealers out)
@@ -136,6 +152,91 @@ export class DealerService {
       });
     } catch (e) {
       console.warn('Firestore dealers init notice:', e);
+    }
+
+    // Plain-HTTPS read of the same list. It lands even where the stream is
+    // blocked, so the admin sees a new registration — and a dealer sees their
+    // approval — within one refresh interval whatever the network does.
+    this.refreshFromServer();
+    if (typeof document !== 'undefined') {
+      setInterval(() => {
+        if (document.visibilityState === 'visible') this.refreshFromServer();
+      }, DealerService.REFRESH_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.refreshFromServer();
+      });
+    }
+  }
+
+  private isPredefined(d: { name?: string }): boolean {
+    const nameLower = (d.name || '').toLowerCase().trim();
+    return PREDEFINED_DEALER_NAMES.some(p => nameLower.includes(p));
+  }
+
+  private applyServerList(list: Dealer[]) {
+    this.dealersSignal.set(list);
+    this.saveToStorage(list);
+    this.markSynced();
+  }
+
+  // Re-read the whole dealers collection over REST and adopt it as the list.
+  // Skipped while a write is in flight (its optimistic state wins; the refresh
+  // after its ack catches up) and de-duplicated while one is already running.
+  refreshFromServer(): Promise<void> {
+    if (!this.firestore) return Promise.resolve();
+    if (this.pendingWrites > 0) return Promise.resolve();
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    this.refreshInFlight = listCollectionViaRest(this.firestore, 'dealers')
+      .then(docs => {
+        if (this.pendingWrites > 0) return;
+        const list = docs
+          .map(d => {
+            const data = d.data as unknown as Dealer;
+            return { ...data, id: data.id || d.id };
+          })
+          .filter(d => !this.isPredefined(d));
+        this.serverSeen = true;
+        this.applyServerList(list);
+      })
+      .catch(err => {
+        // Offline or blocked: the stream (or the on-device cache) still serves.
+        console.warn('Firestore dealers refresh notice:', err?.message || err);
+      })
+      .finally(() => { this.refreshInFlight = null; });
+    return this.refreshInFlight;
+  }
+
+  /**
+   * Persist one dealer document. Plain HTTPS first: it lands at once even where
+   * the SDK's streaming write is silently queued (a registration recently took
+   * 7½ minutes to reach the server through that queue). The SDK write is only
+   * the fallback when REST itself fails (offline). Running both would let a
+   * stalled SDK copy land minutes later on top of a newer REST write — e.g. an
+   * admin's approval reverted by the registration that preceded it.
+   *
+   * Resolves when the document is on the server, or — on the SDK fallback —
+   * after a short grace so an offline, queued write is accepted rather than
+   * hung on. Rejects if the write is refused.
+   */
+  private async persistDealer(id: string, dealer: Dealer, label: string): Promise<void> {
+    if (!this.firestore) return;
+    this.pendingWrites++;
+    try {
+      try {
+        await writeDocViaRest(this.firestore, 'dealers', id, dealer as unknown as Record<string, unknown>);
+      } catch (restErr) {
+        console.warn(`Firestore ${label} notice (REST):`, restErr);
+        const sdk = setDoc(doc(this.firestore, 'dealers', id), dealer);
+        sdk.catch(() => { /* surfaced through the race below if it fails in time */ });
+        await Promise.race([
+          sdk,
+          new Promise<void>(resolve => setTimeout(resolve, 8000))
+        ]);
+      }
+    } finally {
+      this.pendingWrites--;
+      if (this.pendingWrites === 0) this.refreshFromServer();
     }
   }
 
@@ -226,9 +327,9 @@ export class DealerService {
     // land there is lost the moment the next Firestore snapshot replaces the
     // local list, so its result is surfaced to the caller rather than swallowed.
     // The application copy is best-effort.
-    setDoc(doc(this.firestore, 'dealer_applications', id), newDealer)
+    writeDocViaRest(this.firestore, 'dealer_applications', id, newDealer as unknown as Record<string, unknown>)
       .catch(err => console.warn('Firestore application notice:', err));
-    return setDoc(doc(this.firestore, 'dealers', id), newDealer)
+    return this.persistDealer(id, newDealer, 'add dealer')
       .catch(err => {
         console.warn('Firestore add dealer notice:', err);
         throw err;
@@ -274,7 +375,7 @@ export class DealerService {
     if (this.firestore) {
       const target = this.dealersSignal().find(d => d.id === id);
       if (target && target.id) {
-        setDoc(doc(this.firestore, 'dealers', target.id), target)
+        this.persistDealer(target.id, target, 'update profile')
           .catch(err => console.warn('Firestore update profile notice:', err));
       }
     }
@@ -292,7 +393,7 @@ export class DealerService {
     if (this.firestore) {
       const target = this.dealersSignal().find(d => d.id === id);
       if (target) {
-        setDoc(doc(this.firestore, 'dealers', id), target)
+        this.persistDealer(id, target, 'update password')
           .catch(err => console.warn('Firestore update password notice:', err));
       }
     }
@@ -308,7 +409,7 @@ export class DealerService {
     if (this.firestore) {
       const target = this.dealersSignal().find(d => d.id === id);
       if (target) {
-        setDoc(doc(this.firestore, 'dealers', id), target)
+        this.persistDealer(id, target, 'update dealer')
           .catch(err => console.warn('Firestore update dealer notice:', err));
       }
     }
@@ -326,10 +427,23 @@ export class DealerService {
     this.pruneOfferDealerIds();
 
     if (this.firestore) {
-      deleteDoc(doc(this.firestore, 'dealers', id))
-        .catch(err => console.warn('Firestore delete dealer notice:', err));
-      deleteDoc(doc(this.firestore, 'dealer_applications', id))
-        .catch(() => {});
+      // Over REST for the same reason as persistDealer: a queued SDK delete can
+      // sit for minutes, and a deleted dealer would keep signing in meanwhile.
+      // The SDK delete is only the offline fallback, and isn't waited on.
+      const fs = this.firestore;
+      this.pendingWrites++;
+      Promise.all([
+        deleteDocViaRest(fs, 'dealers', id).catch(err => {
+          console.warn('Firestore delete dealer notice:', err);
+          deleteDoc(doc(fs, 'dealers', id)).catch(() => {});
+        }),
+        deleteDocViaRest(fs, 'dealer_applications', id).catch(() => {
+          deleteDoc(doc(fs, 'dealer_applications', id)).catch(() => {});
+        })
+      ]).finally(() => {
+        this.pendingWrites--;
+        if (this.pendingWrites === 0) this.refreshFromServer();
+      });
     }
   }
 
@@ -366,7 +480,7 @@ export class DealerService {
     if (this.firestore) {
       const target = this.dealersSignal().find(d => d.id === id || d.name === id);
       if (target && target.id) {
-        setDoc(doc(this.firestore, 'dealers', target.id), target)
+        this.persistDealer(target.id, target, 'update multiplier')
           .catch(err => console.warn('Firestore update multiplier notice:', err));
       }
     }

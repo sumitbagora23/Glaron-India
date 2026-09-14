@@ -50,7 +50,10 @@ export class DealersPage implements OnInit {
   }
 
   get filteredDealers(): Dealer[] {
-    let list = this.dealers;
+    // Newest registration first, so a dealer who has just signed up is the top
+    // row rather than wherever their document id happens to sort.
+    let list = [...this.dealers].sort((a, b) =>
+      (b.submittedAt || '').localeCompare(a.submittedAt || ''));
 
     if (this.statusFilter !== 'All') {
       list = list.filter(dealer => this.statusOf(dealer) === this.statusFilter);
