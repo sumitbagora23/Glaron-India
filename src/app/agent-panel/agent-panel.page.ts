@@ -6,6 +6,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
 import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch } from '../product-spec-tabs';
+import { orderableBodyColours } from '../admin/body-colours';
 import { CategoryService, Category } from '../admin/category.service';
 import { SettingsService } from '../admin/settings.service';
 import { AgentService, Agent } from '../agent.service';
@@ -547,6 +548,56 @@ export class AgentPanelPage implements OnInit, OnDestroy {
   // whose variants carry no wattage and no dimension has no tabs at all.
   private specTabState = new SpecTabState();
   trackBySpecTab = this.specTabState.trackByKey;
+
+  // ---- Body colour (the housing finish) ----
+  //
+  // Same as the dealer panel: which finish is open on each card, driving the
+  // card's photo. A finish the admin gave its own photo shows it; the rest fall
+  // back to the main product image. It never changes a price.
+  private openBodyColourByProduct: { [productId: string]: string } = {};
+  trackByBodyColour = (_: number, colour: string) => colour;
+
+  /** The finishes this product is sold in — empty when there is nothing to choose. */
+  productBodyColours(product: Product): string[] {
+    const colours = orderableBodyColours(product);
+    return colours.length > 1 ? colours : [];
+  }
+
+  /** The finish the card is currently showing (its photo follows this). */
+  activeBodyColour(product: Product): string | undefined {
+    const colours = this.productBodyColours(product);
+    if (!colours.length) return undefined;
+    const open = this.openBodyColourByProduct[product.id];
+    return open && colours.includes(open) ? open : colours[0];
+  }
+
+  isBodyColourOpen(product: Product, colour: string): boolean {
+    return this.activeBodyColour(product) === colour;
+  }
+
+  selectBodyColour(product: Product, colour: string) {
+    this.openBodyColourByProduct[product.id] = colour;
+  }
+
+  /** The photo for one finish, falling back to the main product image. */
+  imageForBodyColour(product: Product, bodyColour?: string): string | undefined {
+    const own = bodyColour ? product.bodyColourImages?.[bodyColour] : undefined;
+    return own || product.image;
+  }
+
+  // Like activeBodyColour(), but resolves for a single-finish product too — it
+  // has no tab to pick, yet may still carry one photo of its own.
+  private imageBodyColour(product: Product): string | undefined {
+    const active = this.activeBodyColour(product);
+    if (active) return active;
+    const all = orderableBodyColours(product);
+    return all.length === 1 ? all[0] : undefined;
+  }
+
+  /** The photo shown on a product card (and its lightbox), by the open finish. */
+  displayImage(product: Product): string | undefined {
+    return this.imageForBodyColour(product, this.imageBodyColour(product));
+  }
   trackByColour = (_: number, colour: string) => colour;
 
   specTabs(product: Product): SpecTab[] {
@@ -567,7 +618,13 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   /** The ⓘ sheet of the open option: dimension, cut-out and the rest. */
   specRows(tab: SpecTab): SpecDetail[] {
-    return specDetails(tab.variant);
+    return specDetails(tab.variant, this.warrantyFor(tab));
+  }
+
+  /** The guarantee on the product a tab belongs to. The key is `productId#i`. */
+  private warrantyFor(tab: SpecTab): string | undefined {
+    const productId = String(tab.key || '').split('#')[0];
+    return this.products.find((p: Product) => p.id === productId)?.warranty;
   }
 
   isSpecSheetOpen(product: Product): boolean {

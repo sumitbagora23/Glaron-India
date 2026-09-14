@@ -671,7 +671,10 @@
         </div>
       </div>
 
-      <!-- Product Cards Grid -->
+      <!-- Product Cards Grid.
+           THE REFERENCE CARD — src/app/agent-panel/agent-panel.page.html
+           carries the same card minus the order steppers and translations.
+           A change to this card is made to the agent card too. -->
       <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
 
         <div class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">

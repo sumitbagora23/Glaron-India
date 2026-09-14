@@ -382,7 +382,13 @@
         </div>
       </div>
 
-      <!-- PRODUCT CARDS — image, name, description, variants. Nothing else. -->
+      <!-- PRODUCT CARDS.
+           KEEP IN STEP WITH src/app/dealer-panel/dealer-panel.page.html: the
+           dealer card is the reference. Everything the dealer card shows —
+           finish tabs, per-finish photo, wattage tabs, the ⓘ sheet, shades and
+           prices — is shown here the same way. Only the order steppers and the
+           dealer's translations (tn/t) are dealer-only. A change to one card
+           is made to both. -->
       <section class="product-cards-grid" *ngIf="activeTab === 'products' || (activeTab === 'home' && homeCategory)">
 
         <article class="product-card" *ngFor="let product of displayedProducts; trackBy: trackByProductId">
@@ -417,8 +423,9 @@
           </div>
 
           <div class="card-head-row has-actions">
-            <div class="product-media-box" [class.no-image]="!product.image" (click)="openImageModal(product.image, product.name)">
-              <img *ngIf="product.image" [src]="product.image" (error)="onImgError($event)" class="product-card-img" alt="Product" decoding="async" />
+            <div class="product-media-box" [class.no-image]="!displayImage(product)" (click)="openImageModal(displayImage(product), product.name)">
+              <img *ngIf="displayImage(product)" [src]="displayImage(product)" (error)="onImgError($event)" class="product-card-img" alt="Product Image" decoding="async" loading="lazy" />
+              <span *ngIf="!displayImage(product)" class="no-image-label">No Image</span>
             </div>
 
             <div class="card-head-info">
@@ -433,6 +440,18 @@
             <!-- Wattage reads as small tabs; the open one carries the price and
                  the ⓘ that opens its size and the rest of the sheet. -->
             <ng-container *ngIf="specTabs(product).length">
+              <!-- The finish comes first: it is the coarser choice, and it picks
+                   which photo the card shows. Drawn only when there is more
+                   than one finish to choose between. -->
+              <div class="body-colour-row" *ngIf="productBodyColours(product).length">
+                <button class="body-colour-tab"
+                        *ngFor="let bc of productBodyColours(product); trackBy: trackByBodyColour"
+                        [class.is-open]="isBodyColourOpen(product, bc)"
+                        (click)="selectBodyColour(product, bc)">
+                  <span class="bc-text">{{ bc }}</span>
+                </button>
+              </div>
+
               <div class="spec-tab-strip">
                 <div class="spec-tab-row">
                   <button class="spec-tab" *ngFor="let tab of specTabs(product); trackBy: trackBySpecTab"
@@ -480,20 +499,25 @@
           <!-- No variants. A product sold in shades is still priced per shade
                here — the light colours do not depend on there being a wattage
                to hang them off. -->
-          <div class="product-details-body" *ngIf="!product.variants?.length && showPrices">
-            <span class="specs-header">{{ cardPriceLabel }}</span>
+          <div class="product-details-body" *ngIf="!product.variants?.length && (showPrices || productLightColours(product).length)">
+            <span class="specs-header">{{ showPrices ? cardPriceLabel : 'Available options' }}</span>
 
             <div class="spec-open-panel" *ngIf="productLightColours(product).length; else singleBasePrice">
               <div class="light-colour-row" *ngFor="let colour of productLightColours(product); trackBy: trackByColour">
                 <span class="light-colour-name"><span class="lc-swatch" [style.background]="swatch(colour)"></span>{{ colour }}</span>
-                <span class="variant-price-value">
+                <span class="variant-price-value" *ngIf="showPrices">
                   ₹{{ colourPrice(getCardPrice(product), product, colour, product.price) | number:'1.0-0' }}
                 </span>
               </div>
             </div>
 
+            <!-- No shades either: the price stands on its own. -->
             <ng-template #singleBasePrice>
-              <span class="product-single-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
+              <div class="pricing-block" *ngIf="showPrices">
+                <div class="price-val-row">
+                  <span class="product-single-price">₹{{ getCardPrice(product) | number:'1.0-0' }}</span>
+                </div>
+              </div>
             </ng-template>
           </div>
 
