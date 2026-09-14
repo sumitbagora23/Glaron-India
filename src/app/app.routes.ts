@@ -2,7 +2,7 @@ import { Routes, Router, CanActivateFn } from '@angular/router';
 import { Component, OnInit, inject } from '@angular/core';
 import { DealerService } from './admin/dealer.service';
 import { DEALER_SESSION_KEY, DEALER_BYPASS_MOBILE } from './dealer-auth.service';
-import { AGENT_SESSION_KEY } from './agent-auth.service';
+import { AGENT_SESSION_KEY, AGENT_BYPASS_MOBILE } from './agent-auth.service';
 import { AgentService } from './agent.service';
 import { PwaInstallService } from './pwa-install.service';
 
@@ -122,6 +122,8 @@ export const agentAuthGuard: CanActivateFn = () => {
   }
 
   const mobile = getLoggedAgentMobile();
+  if (mobile === AGENT_BYPASS_MOBILE) return true;
+
   const agentService = inject(AgentService);
   if (agentService.hasSynced && mobile && !agentService.findByMobile(mobile)) {
     clearAgentLogin();

@@ -5,6 +5,7 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular/standalo
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
+import { applyDevSession } from './app/dev-session';
 
 // Firebase imports
 import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
@@ -28,6 +29,10 @@ try {
   }
   stale.forEach(k => localStorage.removeItem(k));
 } catch { /* private mode / no storage — nothing to reclaim */ }
+
+// Localhost-only `?as=…` test sessions (see app/dev-session.ts). Must run
+// before the router reads the session keys.
+applyDevSession();
 
 bootstrapApplication(AppComponent, {
   providers: [

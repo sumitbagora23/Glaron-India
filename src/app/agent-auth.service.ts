@@ -19,6 +19,10 @@ import { AgentService, Agent } from './agent.service';
 
 // Where the signed-in agent's mobile number is kept.
 export const AGENT_SESSION_KEY = 'glaron_logged_agent_mobile';
+// Developer test account for the sales panel — not a real Firestore agent
+// record. Only ever set by the localhost dev-session hook (dev-session.ts); the
+// sign-in form has no password for it.
+export const AGENT_BYPASS_MOBILE = '9999999998';
 
 export type AgentLoginOutcome =
   | { status: 'ok'; agent: Agent }
