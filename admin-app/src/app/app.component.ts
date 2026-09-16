@@ -62,6 +62,14 @@ export class AppComponent implements OnInit {
           this.applyUpdate();
         });
       this.checkForUpdate();
+      // Keep looking while the app stays open, so a new build is already
+      // downloaded by the next launch and takes effect then — instead of one
+      // launch to fetch it and a second to run it. Foreground checks only
+      // download; the swap still happens in the launch window above.
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) this.checkForUpdate();
+      });
+      setInterval(() => { if (!document.hidden) this.checkForUpdate(); }, 10 * 60_000);
       return;
     }
 
