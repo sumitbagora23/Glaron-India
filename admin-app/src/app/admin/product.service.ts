@@ -134,6 +134,9 @@ export interface Product {
   // Set once the second 16 September 2026 page is on the product (see
   // applySheet2026b).
   sheet2026b?: boolean;
+  // Set once the bollards are on enquiry with 300 / 600 / 900mm options (see
+  // applyBollards2026).
+  bollards2026?: boolean;
   /**
    * Set once the track rail has been taken off the tracklight.
    *
@@ -228,6 +231,10 @@ export interface Product {
    * ("1 Year Eco Strip / 2 Years Pure Copper") and a number could not say that.
    */
   warranty?: string;
+  // Sold on enquiry: the card shows the options but no rate, and offers "Get
+  // price on WhatsApp" instead. Set on the product form. A dealer cannot put
+  // such a product on an order from the card.
+  priceOnEnquiry?: boolean;
   variants?: ProductVariant[];
 }
 
@@ -3470,6 +3477,25 @@ export class ProductService {
   }
 
   /**
+   * Every bollard is sold on enquiry, in 300mm, 600mm and 900mm: no rate on
+   * the card, a "Get price on WhatsApp" button instead. Applied to the live
+   * documents over REST on 16 September 2026.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyBollards2026(p: Product): boolean {
+    if (p.bollards2026) return false;
+    const cats = [...(p.categories || []), ...String(p.category || '').split(',')]
+      .map(c => c.trim().toLowerCase());
+    if (!cats.includes('bollard')) return false;
+    p.priceOnEnquiry = true;
+    p.variants = ['300mm', '600mm', '900mm'].map(wattage => ({ wattage }));
+    p.price = 0;
+    p.bollards2026 = true;
+    return true;
+  }
+
+  /**
    * Prices the Dimmable-Tunable and 3 In 1 shades on every COB and Down Light
    * product's listed wattages at the option's own price plus the September
    * 2026 uplift. Written as the shade's price (not a surcharge), the way
@@ -3920,6 +3946,10 @@ export class ProductService {
             if (this.applySheet2026b(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and the bollards on enquiry.
+            if (this.applyBollards2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -4061,6 +4091,7 @@ export class ProductService {
           this.applyMovableOptions2026(p);
           this.applyRates2026v3(p);
           this.applySheet2026b(p);
+          this.applyBollards2026(p);
           return p;
         });
         // Keep the superseded duplicates off the first paint too, or they show

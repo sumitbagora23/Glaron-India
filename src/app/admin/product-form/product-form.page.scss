@@ -1342,3 +1342,14 @@ $v-grid: 34px minmax(110px, 1.2fr) minmax(90px, 1fr) 92px 92px 152px 30px;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, .1);
   }
 }
+
+/* The "price on enquiry" switch under Warranty. */
+.enquiry-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  input { width: 18px; height: 18px; accent-color: var(--g-primary, #170338); }
+}

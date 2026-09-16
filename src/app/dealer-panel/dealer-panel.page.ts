@@ -309,6 +309,11 @@ export class DealerPanelPage implements OnInit, OnDestroy {
     shareProduct: { en: 'Share product', hi: 'उत्पाद शेयर करें' },
     lightColour: { en: 'Light colour', hi: 'लाइट कलर' },
     availableOptions: { en: 'Available options', hi: 'उपलब्ध विकल्प' },
+    priceOnEnquiry: { en: 'Price on enquiry', hi: 'कीमत पूछताछ पर' },
+    getPriceOnWhatsApp: { en: 'Get price on WhatsApp', hi: 'व्हाट्सएप पर कीमत पूछें' },
+    whatsappPriceAsk: { en: 'Hi, please share the price for:', hi: 'नमस्ते, कृपया इसकी कीमत बताएं:' },
+    waOption: { en: 'Option', hi: 'विकल्प' },
+    waFinish: { en: 'Finish', hi: 'फ़िनिश' },
     nothingElseRecorded: { en: 'Nothing else recorded on this option.', hi: 'इस विकल्प पर और कुछ दर्ज नहीं है।' },
     shareVariants: { en: 'Variants', hi: 'वैरिएंट' },
     shareDownloaded: { en: 'Image downloaded · details copied', hi: 'इमेज डाउनलोड हुई · विवरण कॉपी हुआ' },
@@ -2208,6 +2213,28 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   // prefilled with an enquiry that names the product and links its image so
   // WhatsApp renders a preview. Sending the image as a file isn't possible from
   // a wa.me link — the share button beside this one does that.
+  /** Prices on this card? Off for the whole list, or for a product sold on enquiry. */
+  pricesFor(product: Product): boolean {
+    return this.showPrices && !product.priceOnEnquiry;
+  }
+
+  /** "Get price on WhatsApp": the enquiry, with the option and finish picked. */
+  enquirePrice(product: Product, event?: Event) {
+    event?.stopPropagation();
+    const digits = this.whatsappDigits();
+    if (!digits) return;
+    const lines = [this.t('whatsappPriceAsk')];
+    lines.push(`${this.t('waProduct')}: ${this.tn(product.name) || product.name || ''}`);
+    const tab = this.openSpecTab(product);
+    if (tab?.label) lines.push(`${this.t('waOption')}: ${tab.label}`);
+    const finish = this.activeBodyColour(product) || (orderableBodyColours(product).length === 1 ? orderableBodyColours(product)[0] : '');
+    if (finish) lines.push(`${this.t('waFinish')}: ${this.tn(finish)}`);
+    const shareableImage = this.toShareableImageUrl(product.image);
+    if (shareableImage) lines.push(shareableImage);
+    this.activity.log('product-enquiry', `Asked the price of ${product.name} on WhatsApp`, this.productMeta(product));
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  }
+
   openWhatsApp(product: Product, event?: Event) {
     // Don't let the click bubble to the card (which opens the image/description).
     event?.stopPropagation();

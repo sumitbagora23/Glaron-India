@@ -480,3 +480,22 @@
   font-size: 14px;
   font-weight: 500;
 }
+
+/* ---- Price on enquiry ----
+   No rate on the card; one full-width WhatsApp button asks for it, carrying
+   the option and finish the reader has picked. */
+.enquiry-row { margin-top: 10px; }
+.enquiry-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px;
+  border: none; border-radius: 12px;
+  background: #25D366; color: #fff;
+  font-size: 13px; font-weight: 800; letter-spacing: .2px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, .3);
+  transition: transform .12s ease;
+  .wa-icon { width: 18px; height: 18px; flex-shrink: 0; }
+  &:active { transform: scale(.98); }
+}
+.enquiry-note { font-size: 12px; font-weight: 700; color: var(--g-text-soft); }

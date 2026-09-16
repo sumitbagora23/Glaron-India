@@ -226,6 +226,28 @@ export class AgentPanelPage implements OnInit, OnDestroy {
   // prefilled with an enquiry that names the product and links its image so
   // WhatsApp renders a preview. Sending the image as a file isn't possible from
   // a wa.me link — the share button beside this one does that.
+  /** Prices on this card? Off for the whole list, or for a product sold on enquiry. */
+  pricesFor(product: Product): boolean {
+    return this.showPrices && !product.priceOnEnquiry;
+  }
+
+  /** "Get price on WhatsApp": the enquiry, with the option and finish picked. */
+  enquirePrice(product: Product, event?: Event) {
+    event?.stopPropagation();
+    const digits = this.whatsappDigits();
+    if (!digits) return;
+    const lines = ['Hi, please share the price for:'];
+    lines.push(`Product: ${product.name || ''}`);
+    const tab = this.openSpecTab(product);
+    if (tab?.label) lines.push(`Option: ${tab.label}`);
+    const finish = this.activeBodyColour(product) || (orderableBodyColours(product).length === 1 ? orderableBodyColours(product)[0] : '');
+    if (finish) lines.push(`Finish: ${finish}`);
+    const shareableImage = this.toShareableImageUrl(product.image);
+    if (shareableImage) lines.push(shareableImage);
+    this.activity.log('product-enquiry', `Asked the price of ${product.name} on WhatsApp`, this.productMeta(product));
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  }
+
   openWhatsApp(product: Product, event?: Event) {
     // Don't let the click bubble to the card (which opens the image modal).
     event?.stopPropagation();

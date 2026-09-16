@@ -447,6 +447,8 @@ export class ProductFormPage implements OnInit {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       warranty: ['2 Years'],
+      // Sold on enquiry: no rate on the card, "Get price on WhatsApp" instead.
+      priceOnEnquiry: [false],
       // Base price is optional when variant pricing is supplied (handled by the
       // form-level pricingValidator). If a value IS entered it must be >= 1.
       price: [null, [Validators.min(1)]],
@@ -564,6 +566,8 @@ export class ProductFormPage implements OnInit {
   // Form-level rule: a product needs pricing from EITHER a base price OR at least
   // one variant that has a price / price-per-metre. If neither exists → invalid.
   private pricingValidator = (group: AbstractControl): ValidationErrors | null => {
+    // A product sold on enquiry carries no rate at all.
+    if (group.get('priceOnEnquiry')?.value) return null;
     const price = group.get('price')?.value;
     const hasBasePrice = price !== null && price !== '' && Number(price) > 0;
 
@@ -773,7 +777,7 @@ export class ProductFormPage implements OnInit {
         this.selectedCategories = [];
       }
 
-      this.productForm.patchValue({ warranty: product.warranty || '2 Years' });
+      this.productForm.patchValue({ warranty: product.warranty || '2 Years', priceOnEnquiry: !!product.priceOnEnquiry });
       this.selectedLightColours = product.lightColours ? [...product.lightColours] : [];
       this.lightColourPrices = { ...(product.lightColourPrice || {}) };
 
@@ -921,6 +925,7 @@ export class ProductFormPage implements OnInit {
             bodyColours,
             bodyColourImages,
             warranty: (formData.warranty || '').trim() || '2 Years',
+            priceOnEnquiry: !!formData.priceOnEnquiry,
             image: imageUrl,
             variants: cleanedVariants.length > 0 ? cleanedVariants : undefined
           });
@@ -937,6 +942,7 @@ export class ProductFormPage implements OnInit {
           bodyColours,
           bodyColourImages,
           warranty: (formData.warranty || '').trim() || '2 Years',
+          priceOnEnquiry: !!formData.priceOnEnquiry,
           stock: 999,
           image: imageUrl,
           previewType: 'panel',
