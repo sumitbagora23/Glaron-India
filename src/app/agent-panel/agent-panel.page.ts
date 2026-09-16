@@ -6,7 +6,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
 import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch } from '../product-spec-tabs';
-import { orderableBodyColours } from '../admin/body-colours';
+import { orderableBodyColours, variantBodyColours } from '../admin/body-colours';
 import { CategoryService, Category } from '../admin/category.service';
 import { SettingsService } from '../admin/settings.service';
 import { AgentService, Agent } from '../agent.service';
@@ -559,7 +559,10 @@ export class AgentPanelPage implements OnInit, OnDestroy {
 
   /** The finishes this product is sold in — empty when there is nothing to choose. */
   productBodyColours(product: Product): string[] {
-    const colours = orderableBodyColours(product);
+    // Narrowed to the finishes the OPEN option is sold in, so picking Striker's
+    // metal body leaves only black to choose. The picked finish falls back to
+    // the first one listed when the option changes underneath it.
+    const colours = variantBodyColours(product, this.openSpecTab(product)?.variant);
     return colours.length > 1 ? colours : [];
   }
 

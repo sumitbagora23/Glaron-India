@@ -598,7 +598,11 @@ export class ProductFormPage implements OnInit {
       // above, under this option's own tab. Empty means this option is sold in
       // whatever shades the product is sold in.
       lightColours: [variant?.lightColours ? [...variant.lightColours] : []],
-      lightColourPrice: [variant?.lightColourPrice ? { ...variant.lightColourPrice } : {}]
+      lightColourPrice: [variant?.lightColourPrice ? { ...variant.lightColourPrice } : {}],
+      // Not editable on the form yet — carried through the save so a finish
+      // restriction set on the option (Striker's metal body: black only) is
+      // not lost when the product is re-saved.
+      bodyColours: [variant?.bodyColours ? [...variant.bodyColours] : []]
     });
   }
 
@@ -852,7 +856,8 @@ export class ProductFormPage implements OnInit {
           price: byMetre ? undefined : rate,
           pricePerMtr: byMetre ? rate : undefined,
           lightColours: colours.length ? colours : undefined,
-          lightColourPrice: Object.keys(priced).length ? priced : undefined
+          lightColourPrice: Object.keys(priced).length ? priced : undefined,
+          bodyColours: (v.bodyColours || []).length ? v.bodyColours : undefined
         };
       });
 

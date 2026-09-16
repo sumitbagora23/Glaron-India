@@ -6,7 +6,7 @@ import { IonContent } from '@ionic/angular/standalone';
 import { QuotationService, CustomerQuotation } from '../quotation.service';
 import { QuoteLine } from '../quotations/quotation-draft.service';
 import { AreaQuoteDraftService, AreaGroup, MergedLine } from '../quotations/area-draft.service';
-import { orderableBodyColours } from '../body-colours';
+import { orderableBodyColours, variantBodyColours } from '../body-colours';
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { CategoryService, Category } from '../category.service';
 import { orderRefDigits } from '../order-ref';
@@ -610,7 +610,10 @@ export class QuotationAreasPage implements OnInit, AfterViewChecked {
 
   /** The finishes this product is sold in — empty when there is no choice. */
   productBodyColours(product: Product): string[] {
-    const colours = orderableBodyColours(product);
+    // Narrowed to the finishes the OPEN option is sold in, so picking Striker's
+    // metal body leaves only black to choose. The picked finish falls back to
+    // the first one listed when the option changes underneath it.
+    const colours = variantBodyColours(product, this.openSpecTab(product)?.variant);
     return colours.length > 1 ? colours : [];
   }
 

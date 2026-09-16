@@ -154,6 +154,33 @@ function fromFsFields(fields: Record<string, any>): Record<string, unknown> {
 export interface RestDoc {
   id: string;
   data: Record<string, unknown>;
+  /** The server's last-write stamp — changes on every write, so a poll can
+   *  tell a changed document from an unchanged one without reading it. */
+  updateTime: string;
+}
+
+/** Read one document over REST. Resolves null when it does not exist. */
+export async function getDocViaRest(
+  firestore: Firestore,
+  collectionPath: string,
+  docId: string,
+  opts?: { timeoutMs?: number }
+): Promise<RestDoc | null> {
+  const { url, apiKey } = baseUrl(firestore, collectionPath, docId);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 15000);
+  try {
+    const res = await fetch(url + (apiKey ? `?key=${apiKey}` : ''), { signal: controller.signal });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Firestore read failed (${res.status}): ${detail.slice(0, 200)}`);
+    }
+    const d: any = await res.json();
+    return { id: docId, data: fromFsFields(d?.fields || {}), updateTime: String(d?.updateTime || '') };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -169,7 +196,7 @@ export interface RestDoc {
 export async function listCollectionViaRest(
   firestore: Firestore,
   collectionPath: string,
-  opts?: { timeoutMs?: number }
+  opts?: { timeoutMs?: number; fields?: string[] }
 ): Promise<RestDoc[]> {
   const app = firestore.app;
   const projectId = app.options.projectId;
@@ -185,6 +212,9 @@ export async function listCollectionViaRest(
     let pageToken = '';
     do {
       const params = ['pageSize=300'];
+      // A field mask keeps a poll cheap: `fields: ['id']` returns each
+      // document's name and updateTime with one small field, not its images.
+      (opts?.fields || []).forEach(f => params.push(`mask.fieldPaths=${encodeURIComponent(f)}`));
       if (pageToken) params.push(`pageToken=${encodeURIComponent(pageToken)}`);
       if (apiKey) params.push(`key=${apiKey}`);
       const res = await fetch(`${base}?${params.join('&')}`, { signal: controller.signal });
@@ -198,6 +228,7 @@ export async function listCollectionViaRest(
         docs.push({
           id: decodeURIComponent(name.slice(name.lastIndexOf('/') + 1)),
           data: fromFsFields(d?.fields || {}),
+          updateTime: String(d?.updateTime || ''),
         });
       }
       pageToken = json?.nextPageToken || '';

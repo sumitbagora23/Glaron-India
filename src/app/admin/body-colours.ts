@@ -120,6 +120,23 @@ export function orderableBodyColours(product: { bodyColours?: string[] }): strin
 }
 
 /**
+ * The finishes one option is sold in: the product's list, narrowed to what the
+ * option itself names when it names any (Striker's metal body is black only).
+ * Matching is case-insensitive so "Black" on the option still finds "BLACK" on
+ * the product. Without an option, or an option that names nothing, this is the
+ * product's own list.
+ */
+export function variantBodyColours(
+  product: { bodyColours?: string[] },
+  variant?: { bodyColours?: string[] } | null
+): string[] {
+  const all = orderableBodyColours(product);
+  const own = (variant?.bodyColours || []).map(c => c.trim().toLowerCase()).filter(Boolean);
+  if (!own.length) return all;
+  return all.filter(c => own.includes(c.toLowerCase()));
+}
+
+/**
  * What the admin types on the product form, turned into the stored list.
  *
  * Two kinds of text arrive here and they must not be treated alike:

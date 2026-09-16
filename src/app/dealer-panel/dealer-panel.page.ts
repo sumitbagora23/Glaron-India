@@ -7,7 +7,7 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { ProductService, Product, ProductVariant } from '../admin/product.service';
 import { SpecDetail, SpecTab, SpecTabState, specDetails, orderableLightColours, lightColourCatalogPrice, lightColourSwatch, splitLightColourLabel } from '../product-spec-tabs';
-import { orderableBodyColours } from '../admin/body-colours';
+import { orderableBodyColours, variantBodyColours } from '../admin/body-colours';
 import { DealerService, Dealer } from '../admin/dealer.service';
 import { INDIA_STATES_CITIES } from '../dealer-apply/india-locations';
 import { OrderService, Order } from '../admin/order.service';
@@ -1129,7 +1129,10 @@ export class DealerPanelPage implements OnInit, OnDestroy {
 
   /** The finishes this product is sold in — empty when there is nothing to choose. */
   productBodyColours(product: Product): string[] {
-    const colours = orderableBodyColours(product);
+    // Narrowed to the finishes the OPEN option is sold in, so picking Striker's
+    // metal body leaves only black to choose. The picked finish falls back to
+    // the first one listed when the option changes underneath it.
+    const colours = variantBodyColours(product, this.openSpecTab(product)?.variant);
     return colours.length > 1 ? colours : [];
   }
 

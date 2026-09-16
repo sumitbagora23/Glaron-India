@@ -11,7 +11,7 @@ import { CategoryService, Category } from '../admin/category.service';
 import { QuotationService, QuotationItem, QuotationArea } from '../admin/quotation.service';
 import { CatalogShareService } from '../catalog-share.service';
 import { LightColourService } from '../admin/light-colour.service';
-import { orderableBodyColours } from '../admin/body-colours';
+import { orderableBodyColours, variantBodyColours } from '../admin/body-colours';
 import { APP_VERSION } from '../version';
 
 /** One line a visitor has put on their list. */
@@ -692,7 +692,10 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
 
   /** The finishes this product is sold in — empty when it has none to choose. */
   productBodyColours(product: Product): string[] {
-    const colours = orderableBodyColours(product);
+    // Narrowed to the finishes the OPEN option is sold in, so picking Striker's
+    // metal body leaves only black to choose. The picked finish falls back to
+    // the first one listed when the option changes underneath it.
+    const colours = variantBodyColours(product, this.openSpecTab(product)?.variant);
     return colours.length > 1 ? colours : [];
   }
 

@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { parseBodyColours } from './body-colours';
 import { Firestore, collection, doc, setDoc, deleteDoc, onSnapshot } from '@angular/fire/firestore';
+import { listCollectionViaRest, getDocViaRest } from './firestore-rest';
 
 export interface ProductVariant {
   /**
@@ -34,6 +35,10 @@ export interface ProductVariant {
   // price of that colour, not a surcharge. A colour with no entry here falls
   // back to the product's price for it, then to the option's own price.
   lightColourPrice?: { [colour: string]: number };
+  // The finishes THIS option is sold in, when fewer than the product's
+  // (Striker's metal body comes in black only). Left out when the option is
+  // sold in every finish the product is. Read by variantBodyColours().
+  bodyColours?: string[];
 }
 
 export interface Product {
@@ -114,6 +119,23 @@ export interface Product {
    * rest; the rope's own colours; and none at all on a driver or a profile.
    */
   lightColours2026?: boolean;
+  // Set once the September 2026 shade rates (Dimmable-Tunable, 3 In 1) are on
+  // a COB or Down Light product's options (see applyShadeRates2026). Live
+  // documents may also carry `cobDimmable2026` / `cobShadeRates2026` from the
+  // first passes of this.
+  shadeRates2026?: boolean;
+  // Set once the 3 In 1 and Dimmable-Tunable shades have been taken off the
+  // products that are not sold in them (see applyShadesRemoved2026).
+  shadesRemoved2026?: boolean;
+  // Set once Movable has its 7W, 30W and 50W options back (see
+  // applyMovableOptions2026).
+  movableOptions2026?: boolean;
+  // Set once Elegance and Prism carry the 16 September 2026 rates (see
+  // applyRates2026v3).
+  rates2026v3?: boolean;
+  // Set once the second 16 September 2026 page is on the product (see
+  // applySheet2026b).
+  sheet2026b?: boolean;
   /**
    * Set once the track rail has been taken off the tracklight.
    *
@@ -225,6 +247,11 @@ export class ProductService {
   private deletedIds = new Set<string>(this.loadDeletedIds());
   private firestore = inject(Firestore, { optional: true });
 
+  // HISTORY, not a source. Since 16 September 2026 nothing is seeded from
+  // this list: an empty server means an empty catalogue, and a product the
+  // server does not have is not shown. It is kept only because the dated
+  // migrations below (applyPriceList2026, applyLightColours2026, …) read the
+  // catalogue rows from it for a document that predates them.
   private defaultProducts: Product[] = [
     {
       "id": "GLR-DELT-3",
@@ -3239,6 +3266,244 @@ export class ProductService {
     return true;
   }
 
+  // What a shade adds to an option's own price, by category and wattage — the
+  // September 2026 rates. Nothing else changes.
+  private static readonly SHADE_RATES_2026: {
+    [category: string]: { [shade: string]: { [wattage: string]: number } };
+  } = {
+    'cob': {
+      'Dimmable-Tunable': { '7W': 1000, '12W': 1200, '18W': 1400, '24W': 1700 },
+      '3 In 1':           { '7W': 300, '12W': 370, '18W': 450 },
+    },
+    'down light': {
+      'Dimmable-Tunable': { '7W': 1000, '12W': 1200, '18W': 1400, '24W': 1700 },
+      '3 In 1':           { '7W': 300, '12W': 350, '18W': 450, '24W': 600 },
+    },
+    // Slim Panel and Surface Panel (Tile is on the removed list).
+    'panel': {
+      'Dimmable-Tunable': { '8W': 300, '15W': 400, '22W': 500 },
+      '3 In 1':           { '8W': 140, '15W': 200, '22W': 350 },
+    },
+  };
+
+  // Products whose options are counted in a way the category table does not
+  // cover (Duo R is sold as 2×7W and 2×12W). Read beside the category rates.
+  private static readonly SHADE_RATES_2026_BY_PRODUCT: {
+    [productId: string]: { [shade: string]: { [wattage: string]: number } };
+  } = {
+    'GLR-DUOR-14': {
+      'Dimmable-Tunable': { '2×7W': 800, '2×12W': 1000 },
+      '3 In 1':           { '2×7W': 300, '2×12W': 500 },
+    },
+  };
+
+  // Products not sold in 3 In 1 or Dimmable-Tunable (the 16 September 2026
+  // list, 24 products): Glare, Vogue, Glon, Elegance, Orbit, Prism, Pluto, Tera,
+  // Mirage, Nivo, Cresta, Galaxy, Linea, Linea-S, Duo, Pull Out, Nexus Surface,
+  // Nova, Tracklight, Movable Cylinder, Cylinder, Magna, Trimless Surface, Tile.
+  // The rate step below skips them and applyShadesRemoved2026 strips the shades
+  // if anything puts them back.
+  private static readonly SHADES_REMOVED_2026 = new Set([
+    'GLR-GLAR-6', 'GLR-VOGU-8', 'GLR-GLON-9', 'GLR-ELEG-10', 'GLR-ORBI-11', 'GLR-PRIS-12',
+    'GLR-PLUT-76', 'GLR-TERA-77', 'GLR-MIRA-78', 'GLR-NIVO-75', 'GLR-CRES-80', 'GLR-GALA-81',
+    'GLR-LINE-17', 'GLR-LINS-82', 'GLR-DUO-13', 'GLR-PULL-16', 'GLR-NEXU-21', 'GLR-NOVA-22',
+    'GLR-TRAC-24', 'GLR-MOVA-27', 'GLR-CYLI-28', 'GLR-MAGN-29', 'GLR-TRIM-33', 'GLR-TILE-34',
+    'GLR-MOVA-15',
+  ]);
+  private static readonly REMOVED_SHADES = ['3 In 1', 'Dimmable-Tunable'];
+
+  /**
+   * Takes the 3 In 1 and Dimmable-Tunable shades — and any price recorded for
+   * them — off the products in SHADES_REMOVED_2026, on the product and on every
+   * option. Applied to the live documents over REST on 16 September 2026.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyShadesRemoved2026(p: Product): boolean {
+    if (p.shadesRemoved2026) return false;
+    if (!ProductService.SHADES_REMOVED_2026.has(p.id)) return false;
+    const gone = new Set(ProductService.REMOVED_SHADES);
+    const strip = (o: { lightColours?: string[]; lightColourPrice?: { [c: string]: number } }) => {
+      if (o.lightColours) o.lightColours = o.lightColours.filter(c => !gone.has(c));
+      if (o.lightColourPrice) {
+        for (const c of Object.keys(o.lightColourPrice)) if (gone.has(c)) delete o.lightColourPrice[c];
+      }
+    };
+    strip(p);
+    (p.variants || []).forEach(strip);
+    p.shadesRemoved2026 = true;
+    return true;
+  }
+
+  /**
+   * Movable is sold in six wattages again — 7W (800), 30W (2,100) and 50W
+   * (2,700) join the 12W / 18W / 24W the 2026 catalogue kept. 7W carries the
+   * COB shade rates; 30W and 50W have no shade rate yet. Runs after
+   * applyCatalogue2026, which took 7W and 30W off. Applied to the live document
+   * over REST on 16 September 2026.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyMovableOptions2026(p: Product): boolean {
+    if (p.movableOptions2026) return false;
+    if (p.id !== 'GLR-MOVA-15') return false;
+    const have = new Set((p.variants || []).map(v => String(v.wattage || '').trim().toUpperCase()));
+    const rows: ProductVariant[] = [...(p.variants || [])];
+    if (!have.has('7W')) {
+      rows.unshift({ wattage: '7W', price: 800 });
+    }
+    if (!have.has('30W')) rows.push({ wattage: '30W', price: 2100 });
+    if (!have.has('50W')) rows.push({ wattage: '50W', price: 2700 });
+    p.variants = rows;
+    p.price = Math.min(...rows.map(r => r.price ?? p.price));
+    p.movableOptions2026 = true;
+    return true;
+  }
+
+  // The 16 September 2026 rate sheet, where it differs from what was stored:
+  // Elegance and Prism are sold in 7W / 12W / 18W at these prices. Every other
+  // product on that sheet already matched.
+  private static readonly RATES_2026_V3: { [productId: string]: { wattage: string; price: number }[] } = {
+    'GLR-ELEG-10': [{ wattage: '7W', price: 1100 }, { wattage: '12W', price: 1450 }, { wattage: '18W', price: 1840 }],
+    'GLR-PRIS-12': [{ wattage: '7W', price: 880 },  { wattage: '12W', price: 1120 }, { wattage: '18W', price: 1480 }],
+  };
+
+  /**
+   * Puts the 16 September 2026 options and prices on Elegance and Prism. A
+   * stored option with the same wattage keeps its other details (cut-out,
+   * packing); Elegance's single unnamed option becomes its 7W. Applied to the
+   * live documents over REST on 16 September 2026.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyRates2026v3(p: Product): boolean {
+    if (p.rates2026v3) return false;
+    const rows = ProductService.RATES_2026_V3[p.id];
+    if (!rows) return false;
+    const stored = p.variants || [];
+    const byWattage = (w: string) =>
+      stored.find(v => String(v.wattage || '').trim().toUpperCase() === w)
+      || (w === '7W' ? stored.find(v => !String(v.wattage || '').trim()) : undefined);
+    p.variants = rows.map(r => {
+      const keep = byWattage(r.wattage);
+      const { price: _p, pricePerMtr: _m, lightColourPrice: _l, ...rest } = keep || {};
+      return { ...rest, wattage: r.wattage, price: r.price };
+    });
+    p.price = Math.min(...rows.map(r => r.price));
+    p.rates2026v3 = true;
+    return true;
+  }
+
+  /**
+   * The second 16 September 2026 page, product by product:
+   *   Trimless Surface 12W 490 / 20W 640; Tile 30W 2,300 (1*1), 40W 3,000 and
+   *   50W 3,400 (2*2), 24W dropped; Strip Light loses Eco; Nexus Pro gains 24W
+   *   at 1,920 (3 In 1 2,520, Dimmable-Tunable 3,620); Nova gains 24W at 1,880;
+   *   Track Wall gains 20W 1,380 and 30W 1,780; PC Track becomes "Track" with
+   *   PC and metal 1M / 2M options (Metal Track is superseded); Streak is 1,480
+   *   in the three whites; Striker's metal body is black only; SMPS is picked
+   *   by voltage (12V / 24V, as a finish) then amps. Movable's shades and the
+   *   Panel uplifts are handled by the steps above.
+   * Applied to the live documents over REST on 16 September 2026.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applySheet2026b(p: Product): boolean {
+    if (p.sheet2026b) return false;
+    const w = (v: ProductVariant) => String(v.wattage || '').trim().toUpperCase().replace(/\s+/g, '');
+    const setPrice = (wattage: string, price: number) => {
+      const v = (p.variants || []).find(x => w(x) === wattage);
+      if (v) { v.price = price; delete v.pricePerMtr; }
+    };
+    const addOption = (row: ProductVariant) => {
+      if (!(p.variants || []).some(x => w(x) === w(row))) p.variants = [...(p.variants || []), row];
+    };
+    switch (p.id) {
+      case 'GLR-TRIM-33': setPrice('12W', 490); setPrice('20W', 640); p.price = 490; break;
+      case 'GLR-TILE-34': {
+        const keep = (p.variants || []).filter(v => ['30W', '40W', '50W'].includes(w(v)));
+        const spec: { [k: string]: [number, string] } = { '30W': [2300, '1*1'], '40W': [3000, '2*2'], '50W': [3400, '2*2'] };
+        p.variants = ['30W', '40W', '50W'].map(k => {
+          const { price: _p, pricePerMtr: _m, ...rest } = keep.find(v => w(v) === k) || {};
+          return { ...rest, wattage: k, price: spec[k][0], dimension: spec[k][1] };
+        });
+        p.price = 2300;
+        break;
+      }
+      case 'GLR-STRI-30': p.variants = (p.variants || []).filter(v => w(v) !== 'ECO'); p.price = 150; break;
+      case 'GLR-NEXU-20': addOption({ wattage: '24W', price: 1920, lightColourPrice: { '3 In 1': 2520, 'Dimmable-Tunable': 3620 } }); break;
+      case 'GLR-NOVA-22': addOption({ wattage: '24W', price: 1880 }); break;
+      case 'GLR-TRAC-25': addOption({ wattage: '20W', price: 1380 }); addOption({ wattage: '30W', price: 1780 }); p.price = 580; break;
+      case 'GLR-PCTR-71':
+        p.name = 'Track';
+        p.description = 'Track rail in PC or metal, sold by length in 1 m and 2 m sections. Body colour black or white.';
+        p.variants = [
+          { wattage: 'PC 1M', price: 210 }, { wattage: 'PC 2M', price: 420 },
+          { wattage: 'METAL 1M', price: 350 }, { wattage: 'METAL 2M', price: 700 },
+        ];
+        p.price = 210;
+        p.bodyColours = ['BLACK', 'WHITE'];
+        break;
+      case 'GLR-STRE-26':
+        (p.variants || []).forEach(v => { v.price = 1480; delete v.pricePerMtr; });
+        p.price = 1480;
+        p.lightColours = ['Cool White', 'Natural White', 'Warm White'];
+        break;
+      case 'GLR-STRI-35':
+        (p.variants || []).forEach(v => { if (w(v).startsWith('METAL')) v.bodyColours = ['BLACK']; });
+        break;
+      case 'GLR-SMPS-36': {
+        // Picked by voltage first (the tabs), then by amps beneath, each amp at
+        // its own price — the way a shade is listed under a wattage.
+        const amps: { [a: string]: number } = { '3A': 370, '5A': 485, '10A': 630, '16.7A': 900, '25A': 1100 };
+        p.variants = ['12V', '24V'].map(v => ({
+          wattage: v, price: 370, lightColours: Object.keys(amps), lightColourPrice: { ...amps },
+        }));
+        p.price = 370;
+        delete p.bodyColours;
+        delete p.lightColours;
+        break;
+      }
+      default:
+        return false;
+    }
+    p.sheet2026b = true;
+    return true;
+  }
+
+  /**
+   * Prices the Dimmable-Tunable and 3 In 1 shades on every COB and Down Light
+   * product's listed wattages at the option's own price plus the September
+   * 2026 uplift. Written as the shade's price (not a surcharge), the way
+   * lightColourPrice is read. Options in any other wattage (2×7W, 8W, 15W…)
+   * and every other shade are left exactly as stored. Applied to the live
+   * documents over REST on 14 September 2026; this catches a product restored
+   * or re-seeded since.
+   *
+   * Returns true when the document still needs the change saved.
+   */
+  private applyShadeRates2026(p: Product): boolean {
+    if (p.shadeRates2026) return false;
+    if (ProductService.SHADES_REMOVED_2026.has(p.id)) { p.shadeRates2026 = true; return true; }
+    const cats = [...(p.categories || []), ...String(p.category || '').split(',')]
+      .map(c => c.trim().toLowerCase());
+    const byCategory = cats.map(c => ProductService.SHADE_RATES_2026[c]).find(r => !!r);
+    const byProduct = ProductService.SHADE_RATES_2026_BY_PRODUCT[p.id];
+    if (!byCategory && !byProduct) return false;
+    const rates = byCategory || byProduct;
+    for (const v of p.variants || []) {
+      const w = String(v.wattage || '').trim().toUpperCase().replace(/\s+/g, '');
+      if (!v.price) continue;
+      for (const shade of Object.keys(rates)) {
+        const add = byProduct?.[shade]?.[w] ?? rates[shade][w];
+        if (!add) continue;
+        v.lightColourPrice = { ...(v.lightColourPrice || {}), [shade]: v.price + add };
+      }
+    }
+    p.shadeRates2026 = true;
+    return true;
+  }
+
   /**
    * Takes the rail rows off the tracklight. The rail is its own product now.
    *
@@ -3295,6 +3560,7 @@ export class ProductService {
   private static readonly SUPERSEDED = new Set([
     'GLR-MSYMX7N4-2779',   // "Track Patti - PC"     -> GLR-PCTR-71 PC Track
     'GLR-MSYNTUCV-2363',   // "Track Patti - Metal " -> GLR-METR-72 Metal Track
+    'GLR-METR-72',         // Metal Track -> GLR-PCTR-71 Track (PC and metal as options)
   ]);
 
   /**
@@ -3544,6 +3810,7 @@ export class ProductService {
     // device deleted: the products snapshot fires before the tombstone listener,
     // so without this a deleted product kept reappearing on every reader surface.
     await this.loadServerTombstones();
+    this.startRestRefresh();
     try {
       // Deleted-product tombstones, shared across every device so a removed
       // catalogue product is never re-seeded by another client. Public-read
@@ -3563,6 +3830,10 @@ export class ProductService {
 
       const prodCollection = collection(this.firestore, 'products');
       onSnapshot(prodCollection, (snapshot) => {
+        // A cache-only replay (the stream blocked, or not yet connected) must
+        // not put a stale copy over what the REST refresh has already read from
+        // the server. This device's own unsent edits still show at once.
+        if (snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites && this.serverSeen) return;
         if (!snapshot.empty) {
           const remoteProducts: Product[] = [];
           snapshot.forEach(docSnap => {
@@ -3664,6 +3935,27 @@ export class ProductService {
             if (this.applyPriceSheet2026(p) && this.firestore) {
               setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
             }
+            // ...and, last — after every step that rewrites the option list —
+            // the shade rates on the COB and Down Light options.
+            if (this.applyShadeRates2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // ...and the shades off the products that are not sold in them.
+            if (this.applyShadesRemoved2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // ...and Movable's 7W / 30W / 50W options.
+            if (this.applyMovableOptions2026(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // ...and Elegance's and Prism's 16 September 2026 rates.
+            if (this.applyRates2026v3(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
+            // ...and the rest of that day's page.
+            if (this.applySheet2026b(p) && this.firestore) {
+              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
+            }
             remoteProducts.push(p);
           });
 
@@ -3680,14 +3972,11 @@ export class ProductService {
             this.productsSignal.set(remoteProducts);
             this.saveToStorage(remoteProducts);
           }
-        } else {
-          // Seed Firestore with defaultProducts if database is empty
-          this.defaultProducts.forEach(p => {
-            if (this.deletedIds.has(p.id)) return;
-            if (this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
-          });
+        } else if (!snapshot.metadata.fromCache) {
+          // The server really has no products. Nothing is seeded from code any
+          // more — Firestore is the only source — so the list is simply empty.
+          this.productsSignal.set([]);
+          this.saveToStorage([]);
         }
       }, (err) => {
         console.warn('Firestore snapshot notice (using local storage fallback):', err?.message || err);
@@ -3695,6 +3984,82 @@ export class ProductService {
     } catch (e) {
       console.warn('Firestore sync notice:', e);
     }
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Firestore is the only source of products. Nothing is seeded from code any
+  // more (see the note on defaultProducts), and because the SDK's streaming
+  // connection is silently blocked on some of the customer's networks — where
+  // it keeps replaying the on-device cache — the list is also re-read over
+  // plain HTTPS: a cheap poll of every document's server write-stamp, then a
+  // full read of only the documents that changed. Same idea as
+  // DealerService.refreshFromServer.
+  // ---------------------------------------------------------------------------
+  private static readonly REST_SEEN_KEY = 'glaron_products_rest_seen_v1';
+  private static readonly REFRESH_MS = 30_000;
+  private restSeen: { [id: string]: string } = this.loadRestSeen();
+  private serverSeen = false;
+  private refreshInFlight: Promise<void> | null = null;
+
+  private loadRestSeen(): { [id: string]: string } {
+    try { return JSON.parse(localStorage.getItem(ProductService.REST_SEEN_KEY) || '{}') || {}; } catch { return {}; }
+  }
+  private saveRestSeen() {
+    try { localStorage.setItem(ProductService.REST_SEEN_KEY, JSON.stringify(this.restSeen)); } catch {}
+  }
+
+  private startRestRefresh() {
+    if (!this.firestore) return;
+    this.refreshFromServer();
+    if (typeof document !== 'undefined') {
+      setInterval(() => {
+        if (document.visibilityState === 'visible') this.refreshFromServer();
+      }, ProductService.REFRESH_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.refreshFromServer();
+      });
+    }
+  }
+
+  /** Re-read whatever changed on the server since the last look. */
+  refreshFromServer(): Promise<void> {
+    if (!this.firestore) return Promise.resolve();
+    if (this.refreshInFlight) return this.refreshInFlight;
+    const fs = this.firestore;
+    this.refreshInFlight = (async () => {
+      const stamps = await listCollectionViaRest(fs, 'products', { fields: ['id'] });
+      const onServer = new Set(stamps.map(d => d.id));
+      const current = this.productsSignal();
+      const byId = new Map(current.map(p => [p.id, p]));
+      const changed = stamps.filter(d =>
+        !this.deletedIds.has(d.id) && !ProductService.SUPERSEDED.has(d.id)
+        && (this.restSeen[d.id] !== d.updateTime || !byId.has(d.id)));
+      const fresh = await Promise.all(changed.map(d => getDocViaRest(fs, 'products', d.id)));
+      let list = current.filter(p => onServer.has(p.id));
+      const known = new Map(list.map(p => [p.id, p]));
+      for (const d of fresh) {
+        if (!d) continue;
+        const p = d.data as unknown as Product;
+        if (!p.id) p.id = d.id;
+        known.set(p.id, p);
+        this.restSeen[p.id] = d.updateTime;
+      }
+      for (const id of Object.keys(this.restSeen)) if (!onServer.has(id)) delete this.restSeen[id];
+      // Server order, so a new product lands where the stream would put it.
+      list = stamps.map(d => known.get(d.id)).filter((p): p is Product => !!p)
+        .filter(p => !this.deletedIds.has(p.id) && !ProductService.SUPERSEDED.has(p.id));
+      this.serverSeen = true;
+      this.saveRestSeen();
+      if (fresh.some(Boolean) || list.length !== current.length) {
+        this.productsSignal.set(list);
+        this.saveToStorage(list);
+      }
+    })().catch(err => {
+      // Offline or blocked: the stream (or the on-device cache) still serves.
+      console.warn('Firestore products refresh notice:', err?.message || err);
+    }).finally(() => { this.refreshInFlight = null; });
+    return this.refreshInFlight;
   }
 
   private loadFromStorage(): Product[] {
@@ -3733,6 +4098,11 @@ export class ProductService {
           this.applyBallRgbp(p);
           this.applyVariantDetails2026(p);
           this.applyPriceSheet2026(p);
+          this.applyShadeRates2026(p);
+          this.applyShadesRemoved2026(p);
+          this.applyMovableOptions2026(p);
+          this.applyRates2026v3(p);
+          this.applySheet2026b(p);
           return p;
         });
         // Keep the superseded duplicates — and anything the admin has deleted —
@@ -3749,8 +4119,9 @@ export class ProductService {
     } catch (e) {
       console.error('Error loading products from localStorage', e);
     }
-    this.saveToStorage(this.defaultProducts);
-    return this.defaultProducts;
+    // No cache yet: start empty and let the server fill the list. Nothing is
+    // seeded from code any more.
+    return [];
   }
 
   // localStorage tops out near 5 MB, and a single product's inline base64 image

@@ -20,5 +20,7 @@ Firestore rules are open, so the dev servers read and write the live database. D
 
 ## Firestore
 
+- **Products are not seeded from code.** `defaultProducts` in `product.service.ts` is history for the dated migrations only; Firestore is the only source of the catalogue. Price and option changes are made directly to the `products` documents (REST is fine — rules are open) and, where a rule is worth recording, as a flagged migration.
+
 - The SDK's streaming connection is blocked on some of the customer's networks. Writes that must land go through `firestore-rest.ts` first, with the SDK only as the offline fallback; lists that must be fresh are re-read over REST too (see `dealer.service.ts`).
 - Local `main` can lag `origin/main` — deploys are sometimes run from another checkout. Fetch and compare before working on a live issue.

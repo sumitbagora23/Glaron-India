@@ -6,7 +6,7 @@ import { IonContent } from '@ionic/angular/standalone';
 import { QuotationService, CustomerQuotation } from '../quotation.service';
 import { QuoteLine } from '../quotations/quotation-draft.service';
 import { AreaQuoteDraftService, AreaGroup, MergedLine } from '../quotations/area-draft.service';
-import { orderableBodyColours } from '../body-colours';
+import { orderableBodyColours, variantBodyColours } from '../body-colours';
 import { ProductService, Product, ProductVariant } from '../product.service';
 import { CategoryService, Category } from '../category.service';
 import { orderRefDigits } from '../../order-ref';
@@ -560,7 +560,9 @@ export class QuotationAreasPage implements OnInit, AfterViewChecked {
 
   /** The finishes this product is sold in — empty when there is no choice. */
   productBodyColours(product: Product): string[] {
-    const colours = orderableBodyColours(product);
+    // This copy of the page has no option tabs, so there is no open option to
+    // narrow the finishes by; the product's own list is shown.
+    const colours = variantBodyColours(product);
     return colours.length > 1 ? colours : [];
   }
 
