@@ -435,7 +435,7 @@
           </div>
 
           <div class="product-details-body" *ngIf="product.variants?.length">
-            <span class="specs-header">{{ product.priceOnEnquiry ? 'Price on enquiry' : (showPrices ? cardPriceVariantLabel : 'Available options') }}</span>
+            <span class="specs-header">{{ enquiryFor(product) ? 'Price on enquiry' : (showPrices ? cardPriceVariantLabel : 'Available options') }}</span>
 
             <!-- Wattage reads as small tabs; the open one carries the price and
                  the ⓘ that opens its size and the rest of the sheet. -->
@@ -500,7 +500,7 @@
                here — the light colours do not depend on there being a wattage
                to hang them off. -->
           <div class="product-details-body" *ngIf="!product.variants?.length && (pricesFor(product) || productLightColours(product).length)">
-            <span class="specs-header">{{ product.priceOnEnquiry ? 'Price on enquiry' : (showPrices ? cardPriceLabel : 'Available options') }}</span>
+            <span class="specs-header">{{ enquiryFor(product) ? 'Price on enquiry' : (showPrices ? cardPriceLabel : 'Available options') }}</span>
 
             <div class="spec-open-panel" *ngIf="productLightColours(product).length; else singleBasePrice">
               <div class="light-colour-row" *ngFor="let colour of productLightColours(product); trackBy: trackByColour">
@@ -521,10 +521,10 @@
             </ng-template>
           </div>
 
-          <div class="product-details-body" *ngIf="product.priceOnEnquiry">
+          <div class="product-details-body" *ngIf="enquiryFor(product)">
             <!-- Price on enquiry: no rate on the card. One button asks for it on
                  WhatsApp, with the option and finish picked above. -->
-            <div class="enquiry-row" *ngIf="product.priceOnEnquiry">
+            <div class="enquiry-row" *ngIf="enquiryFor(product)">
               <button type="button" class="enquiry-btn" *ngIf="callNumber; else enquiryNoNumber" (click)="enquirePrice(product, $event)">
                 <svg viewBox="0 0 32 32" fill="currentColor" class="wa-icon" aria-hidden="true"><path d="M16.003 3C9.373 3 3.999 8.373 3.999 15c0 2.65.86 5.104 2.32 7.104L4.5 28.5l6.57-1.72A11.94 11.94 0 0016.003 27C22.63 27 28 21.627 28 15S22.63 3 16.003 3zm0 21.75a9.7 9.7 0 01-4.94-1.353l-.354-.21-3.9 1.022 1.04-3.802-.23-.39A9.7 9.7 0 016.25 15c0-5.385 4.37-9.75 9.753-9.75 5.383 0 9.747 4.365 9.747 9.75s-4.364 9.75-9.747 9.75zm5.36-7.303c-.293-.147-1.735-.857-2.004-.955-.269-.098-.464-.147-.66.147-.195.293-.756.955-.927 1.15-.171.196-.342.22-.635.073-.293-.147-1.238-.456-2.36-1.456-.872-.778-1.46-1.738-1.632-2.03-.171-.294-.018-.452.128-.598.132-.132.293-.343.44-.514.146-.171.195-.293.293-.489.098-.196.049-.367-.025-.513-.073-.147-.66-1.59-.904-2.177-.238-.572-.48-.494-.66-.503l-.562-.01c-.196 0-.513.073-.782.367-.269.293-1.025 1.002-1.025 2.445s1.05 2.836 1.196 3.032c.146.196 2.066 3.156 5.006 4.425.7.302 1.246.482 1.672.617.703.224 1.342.192 1.848.117.564-.084 1.735-.709 1.98-1.394.244-.685.244-1.272.171-1.394-.073-.122-.269-.196-.562-.343z"/></svg>
                 <span>Get price on WhatsApp</span>

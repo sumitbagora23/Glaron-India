@@ -2213,9 +2213,20 @@ export class DealerPanelPage implements OnInit, OnDestroy {
   // prefilled with an enquiry that names the product and links its image so
   // WhatsApp renders a preview. Sending the image as a file isn't possible from
   // a wa.me link — the share button beside this one does that.
-  /** Prices on this card? Off for the whole list, or for a product sold on enquiry. */
-  pricesFor(product: Product): boolean {
-    return this.showPrices && !product.priceOnEnquiry;
+  /**
+   * Sold on enquiry: the whole product, or only the option that is open — SMPS
+   * prices its 12V and not its 24V. Without a variant the open tab is consulted,
+   * so a card-level check follows whatever the reader has picked.
+   */
+  enquiryFor(product: Product, variant?: ProductVariant): boolean {
+    if (product.priceOnEnquiry) return true;
+    if (variant) return !!variant.priceOnEnquiry;
+    return !!this.openSpecTab(product)?.variant?.priceOnEnquiry;
+  }
+
+  /** Prices on this card? Off for the whole list, or for anything on enquiry. */
+  pricesFor(product: Product, variant?: ProductVariant): boolean {
+    return this.showPrices && !this.enquiryFor(product, variant);
   }
 
   /** "Get price on WhatsApp": the enquiry, with the option and finish picked. */

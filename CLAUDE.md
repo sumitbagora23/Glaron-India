@@ -15,7 +15,7 @@ Firestore rules are open, so the dev servers read and write the live database. D
 
 ## Keep in step
 
-- **Product card, dealer vs agent.** `src/app/dealer-panel/dealer-panel.page.html` is the reference. The agent card in `src/app/agent-panel/agent-panel.page.html` shows everything the dealer card shows (finish tabs and per-finish photo, wattage tabs, ⓘ spec sheet with warranty, shades, prices), minus the order steppers and the dealer's `t()`/`tn()` translations. Their view helpers (`specTabs`, `specRows`, `productLightColours`, `colourPrice`, `displayImage`, the body-colour methods…) are copied verbatim between the two `.page.ts` files. Any change to one is made to the other in the same commit.
+- **Product card, dealer vs agent.** `src/app/dealer-panel/dealer-panel.page.html` is the reference. The agent card in `src/app/agent-panel/agent-panel.page.html` shows everything the dealer card shows (finish tabs and per-finish photo, wattage tabs, ⓘ spec sheet with warranty, shades, prices), minus the order steppers, the dealer's `t()`/`tn()` translations, and the Packing row in the ⓘ sheet (a trade figure the sales panel does not show). Their view helpers (`specTabs`, `specRows`, `productLightColours`, `colourPrice`, `displayImage`, the body-colour methods…) are copied verbatim between the two `.page.ts` files. Any change to one is made to the other in the same commit.
 - **Admin services are duplicated.** `src/app/admin/*.service.ts`, `src/app/admin/firestore-rest.ts` and their twins under `admin-app/src/app/admin/` must stay identical (`diff -q`). Edit one, copy to the other.
 
 ## Firestore

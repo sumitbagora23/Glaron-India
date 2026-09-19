@@ -35,6 +35,14 @@ export interface ProductVariant {
   // price of that colour, not a surcharge. A colour with no entry here falls
   // back to the product's price for it, then to the option's own price.
   lightColourPrice?: { [colour: string]: number };
+  // Sold on enquiry, this option only — the card hides its rate and offers
+  // "Get price on WhatsApp" while it is open, though its siblings keep theirs
+  // (SMPS: 12V is priced, 24V is not). `Product.priceOnEnquiry` does the same
+  // for a whole product.
+  priceOnEnquiry?: boolean;
+  // What the housing is made of, when the sheet says so ("Polycarbonate (PVC)").
+  // Printed in the ⓘ sheet; it is not a choice and never moves a price.
+  material?: string;
   // The finishes THIS option is sold in, when fewer than the product's
   // (Striker's metal body comes in black only). Left out when the option is
   // sold in every finish the product is. Read by variantBodyColours().
@@ -3288,8 +3296,8 @@ export class ProductService {
     },
     // Slim Panel and Surface Panel (Tile is on the removed list).
     'panel': {
-      'Dimmable-Tunable': { '8W': 300, '15W': 400, '22W': 500 },
-      '3 In 1':           { '8W': 140, '15W': 200, '22W': 350 },
+      'Dimmable-Tunable': { '8W': 400, '15W': 600, '22W': 800 },
+      '3 In 1':           { '8W': 200, '15W': 300, '22W': 450 },
     },
   };
 
@@ -4001,6 +4009,21 @@ export class ProductService {
           if (remoteProducts.length > 0) {
             this.productsSignal.set(remoteProducts);
             this.saveToStorage(remoteProducts);
+            if (snapshot.metadata.fromCache) {
+              // A cache replay is not authoritative, and it has just replaced
+              // the list. The REST stamps were taken against the list it
+              // replaced, so keeping them would let the next poll conclude
+              // "nothing changed" and leave this stale copy on screen — which
+              // is exactly how an old price survived a reload. Drop them so the
+              // poll re-reads every document, and run it as soon as any poll
+              // already in flight (which is reading against the old stamps)
+              // has finished.
+              this.restSeen = {};
+              this.saveRestSeen();
+              const inFlight = this.refreshInFlight;
+              if (inFlight) inFlight.then(() => this.refreshFromServer());
+              else this.refreshFromServer();
+            }
           }
         } else if (!snapshot.metadata.fromCache) {
           // The server really has no products. Nothing is seeded from code any

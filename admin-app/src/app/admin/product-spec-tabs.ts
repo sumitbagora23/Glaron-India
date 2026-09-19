@@ -91,6 +91,7 @@ export function specDetails(variant: ProductVariant, warranty?: string): SpecDet
   const size = dimensionLabel(variant);
   if (size) rows.push({ label: 'Dimension', value: size });
   push('Cut-out', variant.cutout);
+  push('Material', variant.material);
   push('Packing', variant.packing);
   // The guarantee belongs to the product rather than the option, but the sheet
   // behind the ⓘ is where a dealer looks for it.
