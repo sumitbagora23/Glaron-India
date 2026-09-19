@@ -34,37 +34,66 @@
       <ng-container *ngIf="activeTab === 'home' && !homeCategory">
         <!-- Hero. Whoever opens this link arrived from a chat message, not from
              a shop — the first screen has to say what this is before it asks
-             them to browse anything. -->
+             them to browse anything. The search pill below straddles its lower
+             edge, so the hero and the first way in read as one object and the
+             first row of categories still clears the fold. -->
         <section class="catalog-hero">
           <span class="hero-eyebrow">The Lighting Catalogue</span>
           <h1 class="hero-title">Light that makes<br />the room.</h1>
           <p class="hero-sub">Designer lights, profiles and fixtures — the complete Glaron India range, always up to date.</p>
+
+          <!-- What is actually in here, counted off the catalogue itself. It
+               only appears once the products have landed, so the hero never
+               shows a zero while the page is still filling. -->
+          <div class="hero-meta" *ngIf="products.length">
+            <span class="hero-stat"><strong>{{ products.length }}</strong> products</span>
+            <span class="hero-meta-dot" aria-hidden="true"></span>
+            <span class="hero-stat"><strong>{{ categoryCards.length }}</strong> categories</span>
+          </div>
         </section>
 
-        <button class="catalog-search as-button" (click)="showProducts()">
+        <button class="catalog-search as-button is-floating" (click)="showProducts()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-ic"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
           <span class="search-placeholder">Search the full range</span>
+          <span class="search-kbd" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+          </span>
         </button>
 
-        <section class="catalog-title-banner">
+        <section class="catalog-title-banner as-row">
           <div class="title-text-group">
             <h2 class="catalog-heading">Start with a space</h2>
             <p class="catalog-subheading">Pick a category and see everything made to light it.</p>
           </div>
+          <button type="button" class="banner-link" (click)="showProducts()">
+            See all
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+          </button>
         </section>
 
-        <section class="category-grid">
-          <button class="category-grid-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId" (click)="openCategory(cat.name)">
-            <div class="cat-grid-media" [class.no-image]="!cat.image">
-              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="cat-grid-img" [alt]="cat.name" decoding="async" loading="lazy" />
-            </div>
-            <span class="cat-grid-name">{{ cat.name }}</span>
+        <section class="home-category-grid">
+          <button class="home-cat-card" *ngFor="let cat of categoryCards; trackBy: trackByCategoryId" (click)="openCategory(cat.name)">
+            <span class="home-cat-media" [class.no-image]="!cat.image">
+              <img *ngIf="cat.image" [src]="cat.image" (error)="onImgError($event)" class="home-cat-img" [alt]="cat.name" decoding="async" loading="lazy" />
+            </span>
+            <span class="home-cat-foot">
+              <span class="home-cat-text">
+                <span class="home-cat-name">{{ cat.name }}</span>
+                <span class="home-cat-count" *ngIf="categoryCount(cat.name) as n">{{ n }} {{ n === 1 ? 'product' : 'products' }}</span>
+              </span>
+              <span class="home-cat-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+              </span>
+            </span>
           </button>
 
           <div class="category-empty-state" *ngIf="categoryCards.length === 0">
             <span>New pieces are being added right now. Look in again shortly.</span>
           </div>
         </section>
+
+        <!-- The last thing down the page: the maker's name, quietly. -->
+        <p class="home-signoff">Glaron India — Brightening your space</p>
       </ng-container>
 
       <!-- PRODUCTS TAB head: search + category filter (title is in the bar).

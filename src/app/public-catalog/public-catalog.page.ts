@@ -378,6 +378,34 @@ export class PublicCatalogPage implements OnInit, OnDestroy {
     return this.categoryService.categories;
   }
 
+  // How many products sit in a category, for the line under its name on the
+  // Home grid. Counted once per load rather than per card: the template asks
+  // for this on every change-detection pass, and walking the whole catalogue
+  // ten times a tick is how a grid starts to stutter. The catalogue only grows
+  // by arriving, so the two lengths are enough to know the count is stale.
+  private categoryCountCache: { key: string; counts: Record<string, number> } | null = null;
+
+  private get categoryCounts(): Record<string, number> {
+    const products = this.products;
+    const key = products.length + ':' + this.categoryService.categories.length;
+    if (this.categoryCountCache && this.categoryCountCache.key === key) {
+      return this.categoryCountCache.counts;
+    }
+    const counts: Record<string, number> = {};
+    for (const product of products) {
+      for (const name of this.productCategories(product)) {
+        const slot = name.toLowerCase();
+        counts[slot] = (counts[slot] || 0) + 1;
+      }
+    }
+    this.categoryCountCache = { key, counts };
+    return counts;
+  }
+
+  categoryCount(name: string): number {
+    return this.categoryCounts[(name || '').trim().toLowerCase()] || 0;
+  }
+
   // ---- The fixed catalogue bar ----
 
   // Which category the list is narrowed to, however it was reached: the

@@ -33,6 +33,9 @@ ion-content { --background: var(--g-bg); }
   align-items: center;
   justify-content: space-between;
   padding: 0 18px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
 /* Right side of the brand bar: the Catalogue chip with the build number beside
@@ -75,80 +78,161 @@ ion-content { --background: var(--g-bg); }
 }
 
 /* Quiet gold chip on the right of the brand bar, so the page reads as a
-   catalogue rather than a half-loaded app. */
+   catalogue rather than a half-loaded app. Outlined rather than filled, with a
+   lit dot in front of it — the filled block was the loudest thing in a bar
+   that is meant to sit behind the page. */
 .catalog-pill {
   flex: 0 0 auto;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: .7px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--g-gold-strong);
-  background: rgba(254,179,0,.13);
-  padding: 5px 10px;
+  background: rgba(254,179,0,.08);
+  border: 1px solid rgba(254,179,0,.28);
+  padding: 5px 11px;
   border-radius: 999px;
+
+  &::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--g-gold);
+    box-shadow: 0 0 0 2.5px rgba(254,179,0,.20);
+  }
 }
 
 /* ============ Main ============ */
 .catalog-main-container {
   /* What the fixed catalogue bar cancels to reach both edges. */
   --g-gutter: 16px;
-  padding: 12px 16px 8px;
+  padding: 14px 16px 8px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   animation: g-fade-in .3s ease;
+  /* The link is opened on a phone nine times in ten, but it is a plain web
+     page: on a laptop the column stops rather than stretching the hero across
+     a whole monitor. */
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
 /* ---- Hero ----
    Deliberately the same purple ground and gold bloom as the share card the link
    arrives with, so opening the message and opening the page feel like one piece
-   of brand rather than two. */
+   of brand rather than two.
+
+   It carries a deep bottom pad the search pill is then pulled up into, so the
+   two read as one object and the first row of categories still clears the fold
+   on a small phone. */
 .catalog-hero {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  padding: 26px 22px 28px;
-  border-radius: var(--g-r-lg);
-  background: linear-gradient(150deg, #24074f 0%, #170338 55%, #0c0120 100%);
-  box-shadow: var(--g-shadow-md);
+  gap: 8px;
+  padding: 26px 22px 44px;
+  border-radius: 26px;
+  background: linear-gradient(152deg, #2a0a5c 0%, #190439 52%, #0b0119 100%);
+  box-shadow: 0 18px 40px rgba(23, 3, 56, .22), 0 4px 12px rgba(23, 3, 56, .12);
   animation: g-fade-up .4s ease;
 
-  /* The light itself: a warm pool spilling in from the top right. */
+  /* The light itself: a warm pool spilling in from the top right, with a
+     second, colder one low on the left so the purple does not go flat. */
   &::before {
     content: '';
     position: absolute;
-    top: -55%; right: -30%;
-    width: 90%; aspect-ratio: 1;
+    top: -58%; right: -32%;
+    width: 96%; aspect-ratio: 1;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(254,179,0,.30) 0%, rgba(254,179,0,.06) 48%, rgba(254,179,0,0) 72%);
+    background: radial-gradient(circle, rgba(254,179,0,.34) 0%, rgba(254,179,0,.07) 46%, rgba(254,179,0,0) 72%);
     pointer-events: none;
+    z-index: -1;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    left: -26%; bottom: -46%;
+    width: 78%; aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(129, 92, 220, .26) 0%, rgba(129, 92, 220, 0) 68%);
+    pointer-events: none;
+    z-index: -1;
   }
   > * { position: relative; z-index: 1; }
 }
+
+/* Gold rule ahead of the label, the way a printed catalogue heads a page. */
 .hero-eyebrow {
-  font-size: 10.5px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   color: var(--g-gold);
+
+  &::before {
+    content: '';
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--g-gold), rgba(254,179,0,.15));
+    flex: 0 0 auto;
+  }
 }
 .hero-title {
-  margin: 0;
-  font-size: 30px;
-  line-height: 1.12;
+  margin: 2px 0 0;
+  font-size: 32px;
+  line-height: 1.08;
   font-weight: 800;
-  letter-spacing: -0.8px;
+  letter-spacing: -1.1px;
   color: #fff;
 }
 .hero-sub {
   margin: 2px 0 0;
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.6;
   font-weight: 500;
-  color: rgba(255,255,255,.74);
-  max-width: 30ch;
+  color: rgba(255,255,255,.66);
+  max-width: 29ch;
+}
+
+/* What is actually in here, counted off the catalogue. Sits on a hairline so
+   it reads as a footer to the hero rather than a third paragraph. */
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+.hero-stat {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,.58);
+
+  strong {
+    font-weight: 800;
+    font-size: 13px;
+    color: #fff;
+    margin-right: 3px;
+  }
+}
+.hero-meta-dot {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(254,179,0,.7);
+  flex: 0 0 auto;
 }
 
 /* ---- Search bar ---- */
@@ -192,13 +276,45 @@ ion-content { --background: var(--g-bg); }
     padding: 0;
     &:active { transform: scale(.99); }
   }
+
+  /* On Home it is lifted into the hero's bottom pad, so the two sit as one
+     piece. The heavier shadow is what makes it read as floating over the
+     purple rather than printed on it. */
+  &.is-floating {
+    margin-top: -28px;
+    margin-bottom: 2px;
+    z-index: 2;
+    padding-right: 6px;
+    border-color: transparent;
+    box-shadow:
+      0 12px 26px rgba(23, 3, 56, .18),
+      0 2px 6px rgba(23, 3, 56, .10);
+    animation: g-fade-up .45s .06s ease both;
+
+    .search-ic { color: var(--g-primary); opacity: .55; }
+    &:active { transform: scale(.985); }
+  }
+
   .search-placeholder {
     flex: 1;
     text-align: left;
-    padding: 14px 12px;
+    padding: 15px 12px;
     font-size: 15px;
     font-weight: 500;
     color: var(--g-text-faint);
+  }
+
+  /* The gold chevron on the right of the Home pill: this one goes somewhere. */
+  .search-kbd {
+    flex: 0 0 auto;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+    color: var(--g-primary);
+    box-shadow: 0 4px 12px rgba(254, 179, 0, .34);
+
+    svg { width: 16px; height: 16px; }
   }
 }
 
@@ -207,14 +323,48 @@ ion-content { --background: var(--g-bg); }
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  /* Home variant: the heading on the left, the way past it on the right. The
+     link holds the heading's own line, so a subheading that wraps does not
+     drag it down the card. */
+  &.as-row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+  }
 }
-.title-text-group { display: flex; flex-direction: column; gap: 4px; }
+.title-text-group { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .catalog-heading {
   margin: 0;
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
   color: var(--g-text);
+}
+
+/* Quiet text link beside a heading — "See all" over to the products list. */
+.banner-link {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 2px 2px 8px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .1px;
+  color: var(--g-gold-strong);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  svg { width: 14px; height: 14px; transition: transform .22s ease; }
+  &:active { opacity: .6; svg { transform: translateX(2px); } }
 }
 .catalog-subheading {
   margin: 0;
@@ -254,7 +404,154 @@ ion-content { --background: var(--g-bg); }
   &:focus { border-color: var(--g-primary); }
 }
 
-/* ============ Category grid (home) ============ */
+/* ============ Category cards (Home browser) ============
+   Two to a row rather than three: a light is a picture first, and at a third
+   of a phone's width the picture was the one thing you could not see. Each
+   card is the product on its own warm ground, then a footer that names the
+   category and says how much is behind it. */
+.home-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  /* A tablet or a desktop browser gets the extra columns the room allows. */
+  @media (min-width: 560px) { grid-template-columns: repeat(3, 1fr); }
+  @media (min-width: 900px) { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .category-empty-state { grid-column: 1 / -1; }
+}
+
+.home-cat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid var(--g-border);
+  border-radius: 20px;
+  background: var(--g-surface);
+  overflow: hidden;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  box-shadow: 0 2px 10px rgba(23, 3, 56, .05);
+  transition: transform .18s ease, box-shadow .24s ease, border-color .24s ease;
+  animation: g-fade-up .42s ease both;
+  -webkit-tap-highlight-color: transparent;
+
+  /* The grid comes in a wave rather than all at once. Capped at eight — past
+     that a visitor is scrolling, and a card that fades in under the thumb is
+     just a card that is late. */
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) { animation-delay: #{$i * 0.035}s; }
+  }
+
+  &:active {
+    transform: translateY(2px) scale(.985);
+    border-color: var(--g-border-strong);
+    box-shadow: 0 1px 4px rgba(23, 3, 56, .06);
+
+    .home-cat-img { transform: scale(1.05); }
+    .home-cat-arrow {
+      background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+      color: var(--g-primary);
+    }
+  }
+
+  /* Only where there is a pointer to hover with — on a phone this would fire
+     on every tap and fight the press state above. */
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-3px);
+      border-color: rgba(254, 179, 0, .45);
+      box-shadow: 0 14px 28px rgba(23, 3, 56, .12);
+
+      .home-cat-img { transform: scale(1.05); }
+      .home-cat-arrow {
+        background: linear-gradient(140deg, var(--g-gold) 0%, var(--g-accent) 100%);
+        color: var(--g-primary);
+      }
+    }
+  }
+}
+
+/* The ground the light stands on: warm, with the glow behind the piece itself
+   so a fixture shot on white does not look cut out. */
+.home-cat-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 5 / 4;
+  background:
+    radial-gradient(ellipse 70% 56% at 50% 44%, rgba(254, 179, 0, .13) 0%, rgba(254, 179, 0, 0) 70%),
+    linear-gradient(170deg, #FDFBFC 0%, #F3EFF3 100%);
+  overflow: hidden;
+
+  &.no-image {
+    background: linear-gradient(90deg, #e9e9ec 25%, #f4f4f6 37%, #e9e9ec 63%);
+    background-size: 840px 100%;
+    animation: g-shimmer 1.4s ease-in-out infinite;
+  }
+}
+.home-cat-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  display: block;
+  /* Nearly every catalogue shot is a fixture on white. Multiplied onto the
+     warm ground, that white drops out and the light sits on the card instead
+     of inside a white rectangle printed on it. */
+  mix-blend-mode: multiply;
+  transition: transform .3s cubic-bezier(.34, 1.2, .64, 1);
+}
+
+.home-cat-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px 12px;
+  border-top: 1px solid var(--g-border);
+}
+.home-cat-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-cat-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  color: var(--g-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-cat-count {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .15px;
+  color: var(--g-text-soft);
+}
+.home-cat-arrow {
+  flex: 0 0 auto;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--g-surface-2);
+  color: var(--g-text-soft);
+  transition: background .2s ease, color .2s ease;
+
+  svg { width: 13px; height: 13px; }
+}
+
+/* The maker's name at the foot of the page, quietly. */
+.home-signoff {
+  margin: 14px 0 2px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--g-text-faint);
+}
+
+/* ============ Category grid (the categories sheet) ============ */
 .category-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -279,7 +576,11 @@ ion-content { --background: var(--g-bg); }
 .cat-grid-media {
   position: relative;
   aspect-ratio: 1 / 1;
-  background: var(--g-surface);
+  /* The same warm ground the Home cards stand their light on, so the picker
+     and the browser are plainly the same set of categories. */
+  background:
+    radial-gradient(ellipse 70% 56% at 50% 44%, rgba(254, 179, 0, .13) 0%, rgba(254, 179, 0, 0) 70%),
+    linear-gradient(170deg, #FDFBFC 0%, #F3EFF3 100%);
   display: grid; place-items: center;
   overflow: hidden;
   &.no-image {
@@ -288,7 +589,7 @@ ion-content { --background: var(--g-bg); }
     animation: g-shimmer 1.4s ease-in-out infinite;
   }
 }
-.cat-grid-img { width: 100%; height: 100%; object-fit: contain; padding: 6px; display: block; }
+.cat-grid-img { width: 100%; height: 100%; object-fit: contain; padding: 6px; display: block; mix-blend-mode: multiply; }
 .cat-grid-name {
   padding: 9px 8px;
   font-size: 12px;
@@ -774,6 +1075,8 @@ ion-content { --background: var(--g-bg); }
   align-items: center;
   gap: 8px;
   padding: 5px;
+  max-width: 520px;
+  margin: 0 auto;
   border-radius: var(--g-r-xl);
   background: linear-gradient(150deg, var(--g-primary-80) 0%, var(--g-primary) 62%);
   box-shadow:
