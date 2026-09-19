@@ -77,7 +77,7 @@ export function specTabLabel(variant: ProductVariant): string {
 export function dimensionLabel(variant: ProductVariant): string {
   if (isBlank(variant.dimension)) return '';
   const d = variant.dimension!.trim();
-  return /mm|cm|inch|"/i.test(d) ? d : `${d} mm`;
+  return /mm|cm|inch|ft|feet|'|"/i.test(d) ? d : `${d} mm`;
 }
 
 /** Everything known about one option — what the ⓘ opens. */
@@ -193,7 +193,11 @@ export function buildSpecTabs(product: Product): SpecTab[] {
   const used = new Map<string, number>();
 
   return variants.map((variant, index) => {
-    let detail = suffix[index] ? `${base[index]} · ${suffix[index]}` : base[index];
+    // The option's own note wins over the clash separator: a range that asks to
+    // print its size on the tab has said which spec matters, and nothing is
+    // gained by printing a second one beside it.
+    const note = clean(variant.tabNote) || suffix[index];
+    let detail = note ? `${base[index]} · ${note}` : base[index];
     const seen = (used.get(detail) || 0) + 1;
     used.set(detail, seen);
     if (seen > 1) detail = `${detail} (${seen})`;

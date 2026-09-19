@@ -38,6 +38,12 @@ export interface ProductVariant {
   // (SMPS: 12V is priced, 24V is not). `Product.priceOnEnquiry` does the same
   // for a whole product.
   priceOnEnquiry?: boolean;
+  // Printed on the TAB beside the spec it is picked by, for a range where the
+  // wattage alone does not tell two options apart to the eye — Tile is chosen
+  // by its size as much as its wattage, so its tabs read "30W · 1*1". Left out
+  // everywhere else, where the size belongs in the ⓘ sheet and would only push
+  // the tabs off the row.
+  tabNote?: string;
   // What the housing is made of, when the sheet says so ("Polycarbonate (PVC)").
   // Printed in the ⓘ sheet; it is not a choice and never moves a price.
   material?: string;
@@ -3321,7 +3327,7 @@ export class ProductService {
     'GLR-PLUT-76', 'GLR-TERA-77', 'GLR-MIRA-78', 'GLR-NIVO-75', 'GLR-CRES-80', 'GLR-GALA-81',
     'GLR-LINE-17', 'GLR-LINS-82', 'GLR-DUO-13', 'GLR-PULL-16', 'GLR-NEXU-21', 'GLR-NOVA-22',
     'GLR-TRAC-24', 'GLR-MOVA-27', 'GLR-CYLI-28', 'GLR-MAGN-29', 'GLR-TRIM-33', 'GLR-TILE-34',
-    'GLR-MOVA-15',
+    'GLR-MOVA-15', 'GLR-SPOT-18',
   ]);
   private static readonly REMOVED_SHADES = ['3 In 1', 'Dimmable-Tunable'];
 
@@ -3832,6 +3838,18 @@ export class ProductService {
         // not put a stale copy over what the REST refresh has already read from
         // the server. This device's own unsent edits still show at once.
         if (snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites && this.serverSeen) return;
+
+        // A cache replay is not authoritative. The dated migrations below still
+        // run on it — the list on screen should be right — but their result is
+        // NEVER written back from one: the write sends the WHOLE document, so a
+        // migration firing on a stale copy would put every stale field on it
+        // back on the server, undoing an edit made elsewhere minutes earlier.
+        // That is not hypothetical: it silently reverted a just-saved product.
+        const authoritative = !snapshot.metadata.fromCache;
+        const persist = (product: Product) => {
+          if (!authoritative || !this.firestore) return;
+          setDoc(doc(this.firestore, 'products', product.id), product).catch(() => {});
+        };
         if (!snapshot.empty) {
           const remoteProducts: Product[] = [];
           snapshot.forEach(docSnap => {
@@ -3872,92 +3890,52 @@ export class ProductService {
             // Restore the catalogue categories. Persisted from whichever client
             // has write access (the admin); dealers just render them and the
             // write fails harmlessly.
-            if (this.applyCatalogueCategories(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyCatalogueCategories(p)) persist(p);
             // Same deal for the printed price list. Dealers apply it in memory
             // on every load; the admin's client is the one that persists it.
-            if (this.applyPriceList2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyPriceList2026(p)) persist(p);
             // The 2026 catalogue reconciliation, on the same terms.
-            if (this.applyCatalogue2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyCatalogue2026(p)) persist(p);
             // ...and the corrected reading of its finishes.
-            if (this.applyBodyColoursV2(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyBodyColoursV2(p)) persist(p);
             // ...and the finishes the catalogue prints that were never stored.
-            if (this.applyBodyColoursV3(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyBodyColoursV3(p)) persist(p);
             // ...and the option's two identity fields folded into one.
-            if (this.applyOptionFieldMerge(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyOptionFieldMerge(p)) persist(p);
             // ...and the shades the catalogue sells it in.
-            if (this.applyLightColours2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyLightColours2026(p)) persist(p);
             // ...and the rail taken off the tracklight.
-            if (this.applyTrackSplit(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyTrackSplit(p)) persist(p);
             // ...and the categories, Concealed split and junk labels.
-            if (this.applyCatalogueTidy(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyCatalogueTidy(p)) persist(p);
             // A hand-made product the catalogue has since superseded is
             // removed rather than listed beside the one that replaced it.
             if (ProductService.SUPERSEDED.has(p.id)) {
               if (this.firestore) deleteDoc(doc(this.firestore, 'products', p.id)).catch(() => {});
               return;
             }
-            if (this.applyWarranty(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyWarranty(p)) persist(p);
             // ...and the rope and strip read off the MODEL column.
-            if (this.applyRopeStripFix(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyRopeStripFix(p)) persist(p);
             // ...and the ball light's auto option cycling RGBP.
-            if (this.applyBallRgbp(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyBallRgbp(p)) persist(p);
             // ...and the option dimensions and cut-outs from the catalogue.
-            if (this.applyVariantDetails2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyVariantDetails2026(p)) persist(p);
             // ...and the per-wattage prices from the August 2026 sheet.
-            if (this.applyPriceSheet2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyPriceSheet2026(p)) persist(p);
             // ...and, last — after every step that rewrites the option list —
             // the shade rates on the COB and Down Light options.
-            if (this.applyShadeRates2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyShadeRates2026(p)) persist(p);
             // ...and the shades off the products that are not sold in them.
-            if (this.applyShadesRemoved2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyShadesRemoved2026(p)) persist(p);
             // ...and Movable's 7W / 30W / 50W options.
-            if (this.applyMovableOptions2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyMovableOptions2026(p)) persist(p);
             // ...and Elegance's and Prism's 16 September 2026 rates.
-            if (this.applyRates2026v3(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyRates2026v3(p)) persist(p);
             // ...and the rest of that day's page.
-            if (this.applySheet2026b(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applySheet2026b(p)) persist(p);
             // ...and the bollards on enquiry.
-            if (this.applyBollards2026(p) && this.firestore) {
-              setDoc(doc(this.firestore, 'products', p.id), p).catch(() => {});
-            }
+            if (this.applyBollards2026(p)) persist(p);
             remoteProducts.push(p);
           });
 
